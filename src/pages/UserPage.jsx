@@ -11,7 +11,10 @@ const Userstyles = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-    border-bottom: 3px solid #d6d6d6;
+    width: 100%;
+    padding-bottom: 50px;
+    margin-bottom: 50px;
+    border-bottom: 2px solid #d6d6d6;
   }
 
   .profile {
@@ -19,27 +22,80 @@ const Userstyles = styled.div`
     height: 100px;
     border-radius: 50%;
     background-color: var(--color-active);
+    margin-right: 25px;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-right: 200px;
+  }
+
+  .user-info h3 {
+    margin: 0;
+  }
+
+  .user-info > p {
+    margin: 0;
+    font-size: 12px; /* 3. 이메일 조그맣게 */
+    color: var(--color-deactive);
+  }
+
+  .user-stats {
+    display: flex;
+    gap: 16px;
+    margin-top: 6px;
+  }
+
+  .user-stats p {
+    margin: 0;
+    font-size: 14px;
   }
 
   .edit {
     width: 100px;
     height: 30px;
     border-radius: 50px;
+    border: none;
+    background-color: var(--color-active);
+    color: white;
+    cursor: pointer;
+    transition:
+      opacity 0.2s,
+      transform 0.2s; /* 4. 수정 버튼 호버 */
+  }
+
+  .edit:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
   }
 
   .profile-util {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 40px;
+    gap: 50px 100px;
   }
 
   .util {
     width: 200px;
     height: 200px;
-    background-color: var(--color-bg);
+    background-color: var(--color-deactive);
     border: none;
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2);
+    color: white;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      transform 0.2s,
+      background-color 0.2s;
+  }
+
+  .util:hover {
+    transform: translateY(-6px);
+    background-color: var(--color-active);
   }
 `;
 
@@ -51,9 +107,11 @@ const UserPage = () => {
         <div className="user-info">
           <h3>닉네임 님</h3>
           <p>이메일</p>
-          <p>약속 성공 30번</p>
-          <p>실패 2번</p>
-          <p>게시물 32개</p>
+          <div className="user-stats">
+            <p>약속 성공 30번</p>
+            <p>실패 2번</p>
+            <p>게시물 32개</p>
+          </div>
         </div>
         <button className="edit">수정</button>
       </div>
