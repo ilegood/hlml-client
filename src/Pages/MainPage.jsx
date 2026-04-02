@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const MainPage = () => {
   {
@@ -25,6 +26,8 @@ const MainPage = () => {
   return (
     <>
       <h1>우와웅</h1>
+      <Link to="/register">회원가입</Link>
+      <Link to="/login">로그인</Link>
     </>
   );
 };
