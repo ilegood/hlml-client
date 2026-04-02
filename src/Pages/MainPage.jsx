@@ -28,6 +28,7 @@ const MainPage = () => {
       <h1>우와웅</h1>
       <Link to="/register">회원가입</Link>
       <Link to="/login">로그인</Link>
+      <Link to="/user">마이페이지</Link>
     </>
   );
 };
