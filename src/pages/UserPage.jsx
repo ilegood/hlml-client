@@ -39,7 +39,6 @@ const Userstyles = styled.div`
   .user-info > p {
     margin: 0;
     font-size: 12px;
-    color: var(--color-deactive);
   }
 
   .user-stats {

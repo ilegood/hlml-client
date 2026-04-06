@@ -1,6 +1,12 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
 :root {
   --color-active: #fd9319;
   --color-deactive: #07b1bc;
-  --color-white: white;
-  --color-black: #121212;
+  --color-bg: white;
+  --color-text: #121212;
 }
