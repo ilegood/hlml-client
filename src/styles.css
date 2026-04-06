@@ -10,3 +10,8 @@
   --color-bg: white;
   --color-text: #121212;
 }
+
+.page-wrap {
+  display: flex;
+  justify-content: space-between;
+}

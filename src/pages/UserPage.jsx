@@ -4,7 +4,7 @@ const Userstyles = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: start;
   height: calc(100vh - 25px);
 
   .profile-wrap {
@@ -39,6 +39,7 @@ const Userstyles = styled.div`
   .user-info > p {
     margin: 0;
     font-size: 12px;
+    color: var(--color-deactive);
   }
 
   .user-stats {
