@@ -1,12 +1,19 @@
 import { Outlet } from "react-router";
+import Header from "./Header";
+import FriendsList from "./FriendsList";
+import Sidebar from "./Sidebar";
 
 const Layout = () => {
   return (
-    <div className="page-shell">
-      <main className="page-content">
-        {/* Outlet 자리에 현재 경로에 element 페이지 컴포넌트가 들어감 */}
-        <Outlet />
-      </main>
+    <div className="page">
+      <Header />
+      <div className="page-wrap">
+        <Sidebar />
+        <main>
+          <Outlet />
+        </main>
+        <FriendsList />
+      </div>
     </div>
   );
 };
