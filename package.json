@@ -3,13 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
-  "homepage": "https://github.com/ilegood/hlml-client#readme",
+  "homepage": "https://github.com/hanuel0119/hlml-client#readme",
   "bugs": {
-    "url": "https://github.com/ilegood/hlml-client/issues"
+    "url": "https://github.com/hanuel0119/hlml-client/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ilegood/hlml-client.git"
+    "url": "git+https://github.com/hanuel0119/hlml-client.git"
   },
   "license": "ISC",
   "author": "",
