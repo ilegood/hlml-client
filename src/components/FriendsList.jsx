@@ -1,5 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
+import friendsData from "../api/friendsData";
+import FriendModal from "./FriendModal";
 
 const FriendsStyles = styled.div`
   border: 2px solid #eee;
@@ -17,12 +19,24 @@ const FriendsStyles = styled.div`
   flex-direction: column;
   align-items: flex-start;
 
+  img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: red;
+  }
+
   input {
     margin: 10px 0 20px;
     padding: 10px 20px;
     width: 100%;
+    outline: none;
     border-radius: 50px;
     border: 1px solid #ccc;
+  }
+
+  input:focus {
+    border-color: black;
   }
 
   span {
@@ -35,13 +49,33 @@ const FriendsStyles = styled.div`
   }
 
   ul {
+    width: 100%;
     list-style: none;
+  }
+
+  li {
+    border: 1px solid #ccc;
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin: 5px 0;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  li:hover {
+    border: 1px solid var(--color-deactive);
   }
 `;
 
 const FriendsList = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isCardOpen, setIsCardOpen] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState(null);
+
+  const onlineFriends = friendsData.filter((f) => f.status === "online");
+  const offlineFriends = friendsData.filter((f) => f.status === "offline");
 
   return (
     <FriendsStyles $isOpen={isOpen}>
@@ -54,10 +88,31 @@ const FriendsList = () => {
           <input type="text" placeholder="친구 검색" />
 
           <span>온라인</span>
-          <ul></ul>
+          <ul>
+            {onlineFriends.map((friend) => (
+              <li key={friend.id} onClick={() => setSelectedFriend(friend)}>
+                <img src="" alt="" />
+                {friend.name}
+              </li>
+            ))}
+          </ul>
 
           <span>오프라인</span>
-          <ul></ul>
+          <ul>
+            {offlineFriends.map((friend) => (
+              <li key={friend.id} onClick={() => setSelectedFriend(friend)}>
+                <img src="" alt="" />
+                {friend.name}
+              </li>
+            ))}
+          </ul>
+
+          {selectedFriend && (
+            <FriendModal
+              friend={selectedFriend}
+              onClose={() => setSelectedFriend(null)}
+            />
+          )}
         </>
       )}
     </FriendsStyles>
