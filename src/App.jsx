@@ -40,4 +40,43 @@ const App = () => {
   );
 };
 
+import { useState } from "react";
+import CategoryFilter from "./components/CategoryFilter";
+import PostList from "./components/PostList";
+import Write from "./components/Write";
+
+function App() {
+  const [posts, setPosts] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState({});
+  const [page, setPage] = useState("main");
+
+  return (
+    <div style={{ maxWidth: 600, margin: "30px auto" }}>
+      <h1>알림센터</h1>
+
+      {page === "main" && (
+        <>
+          <button onClick={() => setPage("write")}>글쓰기</button>
+
+          <CategoryFilter
+            selected={selectedCategories}
+            setSelected={setSelectedCategories}
+          />
+
+          <PostList posts={posts} filter={selectedCategories} />
+        </>
+      )}
+
+      {page === "write" && (
+        <Write
+          onAdd={(post) => {
+            setPosts([post, ...posts]);
+            setPage("main");
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 export default App;

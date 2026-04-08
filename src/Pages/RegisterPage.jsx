@@ -36,7 +36,7 @@ const RegisterPage = () => {
             <input
               type="number"
               class="tel"
-              placeholder="'-' 없이 숫자만 입력해주세요"
+              placeholder="'-' 없이 자만 입력해주세요"
             />
           </label>
           <label>
