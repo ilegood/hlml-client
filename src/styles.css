@@ -11,7 +11,22 @@
   --color-text: #121212;
 }
 
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
 .page-wrap {
   display: flex;
-  justify-content: space-between;
+  flex: 1;
+  overflow: hidden;
+}
+
+main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  margin-left: 70px; /* Sidebar 닫힌 너비 */
+  margin-right: 60px; /* FriendsList 닫힌 너비 */
 }
