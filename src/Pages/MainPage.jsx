@@ -11,6 +11,7 @@ const MainPage = () => {
       <Link to="/register">회원가입</Link>
       <Link to="/login">로그인</Link>
       <Link to="/user">마이페이지</Link>
+      <Link to="/chat">채팅방 바로가기</Link>
     </MainStyles>
   );
 };
