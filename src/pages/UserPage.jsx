@@ -14,7 +14,7 @@ const Userstyles = styled.div`
     width: 100%;
     padding-bottom: 50px;
     margin-bottom: 50px;
-    border-bottom: 2px solid #d6d6d6;
+    border-bottom: 2px solid color-mix(in srgb, var(--color-text) 20%, transparent);
   }
 
   .profile {
@@ -30,6 +30,7 @@ const Userstyles = styled.div`
     flex-direction: column;
     gap: 2px;
     margin-right: 200px;
+    color: var(--color-text);
   }
 
   .user-info h3 {
@@ -51,6 +52,7 @@ const Userstyles = styled.div`
   .user-stats p {
     margin: 0;
     font-size: 14px;
+    color: var(--color-text);
   }
 
   .edit {

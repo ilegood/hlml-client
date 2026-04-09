@@ -5,14 +5,25 @@
 }
 
 :root {
-  --color-active: #fd9319;
-  --color-deactive: #07b1bc;
-  --color-bg: white;
-  --color-text: #121212;
+  --color-active: #fd9319; /* 다크 테마시 변경 없음 */
+  --color-deactive: #07b1bc; /* 다크 테마시 변경 없음 */
+  --color-bg: white; /* 다크 테마시 #1e1e24 */
+  --color-text: #121212; /* 다크 테마시 white */
+  --color-sidebar: white; /* 다크 테마시 #121212 */
+}
+
+body.dark-theme {
+  --color-bg: rgb(22, 22, 22);
+  --color-text: white;
+  --color-sidebar: #1e1e24;
 }
 
 body {
   background-color: var(--color-bg);
+  color: var(--color-text);
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
 
 .page {

@@ -1,17 +1,19 @@
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { useState, useEffect } from "react";
 
 const SidebarStyles = styled.div`
   width: 70px;
   padding: 30px 15px;
-  background-color: var(--color-bg);
+  background-color: var(--color-sidebar);
   box-shadow: 5px 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition:
     width 0.3s ease,
-    padding 0.3s ease;
+    padding 0.3s ease,
+    background-color 0.3s ease;
 
   left: 0;
   position: sticky;
@@ -34,6 +36,7 @@ const SidebarStyles = styled.div`
     opacity: 0;
     white-space: nowrap;
     transition: opacity 0.15s ease 0s;
+    color: var(--color-text);
   }
 
   &:hover .label {
@@ -91,7 +94,7 @@ const SidebarStyles = styled.div`
     gap: 10px;
     cursor: pointer;
     font-size: 14px;
-    color: #22234b;
+    color: var(--color-text);
   }
 
   .switch input {
@@ -153,6 +156,22 @@ const SidebarStyles = styled.div`
 `;
 
 const Sidebar = () => {
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return document.body.classList.contains("dark-theme");
+  });
+
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => !prev);
+  };
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add("dark-theme");
+    } else {
+      document.body.classList.remove("dark-theme");
+    }
+  }, [isDarkMode]);
+
   return (
     <SidebarStyles>
       <div className="top">
@@ -186,7 +205,7 @@ const Sidebar = () => {
         <label className="switch">
           <img src="" alt="dark" />
           <span className="label">다크모드</span>
-          <input type="checkbox" />
+          <input type="checkbox" checked={isDarkMode} onChange={toggleTheme} />
           <span className="slider"></span>
         </label>
         <button className="logout-btn">
