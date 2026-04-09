@@ -302,7 +302,7 @@ const FriendsList = () => {
   const [tempMemo, setTempMemo] = useState("");
 
   const filteredFriends = friendsData.filter((friend) =>
-    friend.name.toLowerCase().includes(searchQuery.toLowerCase())
+    friend.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const onlineFriends = filteredFriends.filter((f) => f.status === "online");
@@ -341,7 +341,7 @@ const FriendsList = () => {
   const handleCancelMemo = () => {
     setIsEditingMemo(false);
   };
-
+  //dd//
   return (
     <SidebarWrapper>
       <ToggleBtn onClick={handleToggleSidebar}>
@@ -383,7 +383,7 @@ const FriendsList = () => {
           </CategorySection>
 
           <CategorySection>
-            <CategoryTitle>오프라인</CategoryTitle>
+            <CategoryTitle>오프라인 ▾</CategoryTitle>
             <FriendTable>
               <tbody>
                 {offlineFriends.map((friend) => (
