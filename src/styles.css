@@ -11,6 +11,10 @@
   --color-text: #121212;
 }
 
+body {
+  background-color: var(--color-bg);
+}
+
 .page {
   display: flex;
   flex-direction: column;

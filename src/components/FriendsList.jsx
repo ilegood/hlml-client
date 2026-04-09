@@ -5,11 +5,11 @@ import friendsData from "../api/friendsData";
 const SidebarWrapper = styled.div`
   position: fixed;
   right: 0;
-  top: 40px;
-  height: calc(100vh - 40px);
+  height: calc(100vh - 25px);
   display: flex;
   align-items: flex-start;
   z-index: 1000;
+  box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
 `;
 
 const ToggleBtn = styled.button`
@@ -302,7 +302,7 @@ const FriendsList = () => {
   const [tempMemo, setTempMemo] = useState("");
 
   const filteredFriends = friendsData.filter((friend) =>
-    friend.name.toLowerCase().includes(searchQuery.toLowerCase())
+    friend.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const onlineFriends = filteredFriends.filter((f) => f.status === "online");

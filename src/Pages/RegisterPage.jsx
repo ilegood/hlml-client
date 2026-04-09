@@ -26,7 +26,8 @@ const RegisterStyled = styled.div`
     margin-bottom: 10px;
   }
 
-  input {
+  input,
+  select {
     background-color: var(--color-bg);
     border: 1.5px solid #d3d3d3;
     width: 100%;
@@ -42,6 +43,15 @@ const RegisterStyled = styled.div`
       background-color 0.2s;
   }
 
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    cursor: pointer;
+  }
+
   input::placeholder {
     color: #bbb;
     font-size: 12px;
@@ -50,6 +60,17 @@ const RegisterStyled = styled.div`
   input:focus {
     border-color: var(--color-active);
     background-color: #fff8f2;
+  }
+
+  .birth-wrap {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+  }
+
+  .birth-wrap select {
+    margin-top: 0;
+    flex: 1;
   }
 
   .button-wrap {
@@ -108,6 +129,14 @@ const RegisterStyled = styled.div`
 `;
 
 const RegisterPage = () => {
+  const currentYear = new Date().getFullYear();
+  const years = Array.from(
+    { length: currentYear - 1900 + 1 },
+    (_, i) => currentYear - i,
+  );
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+
   return (
     <RegisterStyled>
       <form>
@@ -170,7 +199,38 @@ const RegisterPage = () => {
           </label>
           <label>
             생년월일
-            <input type="date" className="birth" />
+            <div className="birth-wrap">
+              <select className="birth-year" defaultValue="">
+                <option value="" disabled>
+                  년
+                </option>
+                {years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+              <select className="birth-month" defaultValue="">
+                <option value="" disabled>
+                  월
+                </option>
+                {months.map((month) => (
+                  <option key={month} value={month}>
+                    {month}
+                  </option>
+                ))}
+              </select>
+              <select className="birth-day" defaultValue="">
+                <option value="" disabled>
+                  일
+                </option>
+                {days.map((day) => (
+                  <option key={day} value={day}>
+                    {day}
+                  </option>
+                ))}
+              </select>
+            </div>
           </label>
 
           <div className="button-wrap">

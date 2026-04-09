@@ -102,7 +102,7 @@ const SidebarStyles = styled.div`
     position: relative;
     width: 40px;
     height: 22px;
-    background: #ccc;
+    background: var(--color-active);
     border-radius: 20px;
     cursor: pointer;
     margin-left: auto;
@@ -123,7 +123,7 @@ const SidebarStyles = styled.div`
   }
 
   input:checked + .slider {
-    background: var(--color-active);
+    background: var(--color-deactive);
   }
 
   input:checked + .slider::before {
