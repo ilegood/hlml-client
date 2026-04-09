@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useParams } from "react-router-dom";
 
 const ChatStyles = styled.div`
   display: flex;
@@ -83,10 +84,12 @@ const ChatStyles = styled.div`
 `;
 
 const ChatPage = () => {
+  const { roomId } = useParams(); // URL에서 roomId 추출
+
   return (
     <ChatStyles>
       <div className="chat-header">
-        <h2>채팅방</h2>
+        <h2>채팅방 {roomId ? `(${roomId}번 방)` : ""}</h2>
       </div>
       <div className="messages">
         <div className="message received">안녕하세요! 반가워요.</div>

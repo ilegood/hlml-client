@@ -172,7 +172,7 @@ const Sidebar = () => {
           <img src="" alt="group" />
           <span className="label">그룹</span>
         </Link>
-        <Link to={"/chat"} className="btn">
+        <Link to={"/chatrooms"} className="btn">
           <img src="" alt="massage" />
           <span className="label">메세지</span>
         </Link>
