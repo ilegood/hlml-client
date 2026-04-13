@@ -2,23 +2,24 @@ import { useState } from "react";
 import styled from "styled-components";
 import friendsData from "../api/friendsData";
 
-const SidebarWrapper = styled.div`
-  position: fixed;
-  right: 0;
-  height: calc(100vh - 25px);
-  display: flex;
-  align-items: flex-start;
-  z-index: 1000;
-  box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
+const FriendsListStyled = styled.div`
+  .sidebar-wrapper {
+    position: fixed;
+    right: 0;
+    height: calc(100vh - 25px);
+    display: flex;
+    align-items: flex-start;
+    z-index: 1000;
+    box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
+  }
 
   .toggle-btn {
     position: absolute;
     left: -40px;
     top: 20px;
     padding: 10px 15px;
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+    background-color: #ffffff;
+    border: 1px solid #ddd;
     border-radius: 8px 0 0 8px;
     cursor: pointer;
     box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.1);
@@ -28,31 +29,34 @@ const SidebarWrapper = styled.div`
   .friend-sidebar {
     width: 335px;
     height: 100%;
-    background-color: var(--color-bg);
-    border-left: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
-    display: ${(props) => (props.$isOpen ? "flex" : "none")};
+    background-color: #ffffff;
+    border-left: 1px solid #e0e0e0;
+    display: flex;
     flex-direction: column;
     position: relative;
     box-sizing: border-box;
     transition: transform 0.3s ease;
+
+    &.hidden {
+      display: none;
+    }
   }
 
   .search-section {
     padding: 20px;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+    border-bottom: 1px solid #e0e0e0;
   }
 
   .search-input {
     width: 100%;
     padding: 10px;
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
+    border: 1px solid #ccc;
     border-radius: 6px;
     box-sizing: border-box;
     outline: none;
+
     &:focus {
-      border-color: var(--color-active);
+      border-color: #1abc9c;
     }
   }
 
@@ -71,8 +75,9 @@ const SidebarWrapper = styled.div`
     &::-webkit-scrollbar {
       width: 6px;
     }
+
     &::-webkit-scrollbar-thumb {
-      background-color: var(--color-active);
+      background-color: #1abc9c;
       border-radius: 4px;
     }
   }
@@ -83,7 +88,7 @@ const SidebarWrapper = styled.div`
 
   .category-title {
     font-size: 14px;
-    color: var(--color-text);
+    color: #333;
     margin: 20px 0 10px 0;
     font-weight: bold;
   }
@@ -99,11 +104,10 @@ const SidebarWrapper = styled.div`
     transition: all 0.2s ease;
 
     td {
-      border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+      border: 1px solid #e0e0e0;
       border-style: solid none;
       padding: 12px 10px;
-      background-color: var(--color-bg);
-      color: var(--color-text);
+      background-color: #fff;
     }
 
     td:first-child {
@@ -119,21 +123,36 @@ const SidebarWrapper = styled.div`
     }
 
     &:hover td {
-      border-color: var(--color-active);
+      border-color: #1abc9c;
     }
 
     &.active td {
-      border-color: var(--color-active);
-      box-shadow: 0 0 5px color-mix(in srgb, var(--color-active) 20%, transparent);
+      border-color: #1abc9c;
+      box-shadow: 0 0 5px rgba(26, 188, 156, 0.2);
     }
+  }
+
+  .avatar-cell {
+    width: 50px;
+    text-align: center;
   }
 
   .avatar {
     width: 32px;
     height: 32px;
-    background-color: var(--color-deactive);
+    background-color: #555;
     border-radius: 50%;
     display: inline-block;
+  }
+
+  .name-cell {
+    font-size: 14px;
+    color: #555;
+  }
+
+  .status-cell {
+    width: 50px;
+    text-align: center;
   }
 
   .status-square {
@@ -141,36 +160,37 @@ const SidebarWrapper = styled.div`
     height: 24px;
     border-radius: 4px;
     display: inline-block;
+
+    &.online {
+      background-color: #b2e0df;
+    }
+
+    &.offline {
+      background-color: #fbd2a4;
+    }
   }
 
-  .status-online {
-    background-color: var(--color-deactive);
-  }
-
-  .status-offline {
-    background-color: #fbd2a4;
-    opacity: 0.6;
-  }
-
-  .detail-card {
+  .friend-detail-card {
     position: absolute;
     top: 50%;
     left: -260px;
     transform: translateY(-50%);
     width: 250px;
-    background-color: var(--color-bg);
-    color: var(--color-text);
+    background-color: #fff;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     z-index: 1010;
-    border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
-    display: ${(props) => (props.$hasSelected ? "block" : "none")};
+    border: 1px solid #e0e0e0;
+
+    &.hidden {
+      display: none;
+    }
   }
 
   .detail-header {
     height: 80px;
-    background-color: var(--color-active);
+    background-color: #1abc9c;
     position: relative;
   }
 
@@ -179,7 +199,7 @@ const SidebarWrapper = styled.div`
     height: 60px;
     background-color: #777;
     border-radius: 50%;
-    border: 4px solid var(--color-bg);
+    border: 4px solid #fff;
     position: absolute;
     bottom: -30px;
     left: 20px;
@@ -192,77 +212,104 @@ const SidebarWrapper = styled.div`
       margin: 0 0 5px 0;
       font-size: 16px;
     }
+
     p {
       font-size: 12px;
-      color: var(--color-deactive);
+      color: #777;
       margin-bottom: 20px;
     }
   }
 
+  .detail-icons {
+    font-size: 11px;
+    color: #999;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .detail-action-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+
+    &:hover {
+      background-color: #f5f5f5;
+    }
+  }
+
   .memo-display {
-    background-color: color-mix(in srgb, var(--color-text) 5%, transparent);
+    background-color: #f9f9f9;
     padding: 10px;
     margin-bottom: 15px;
     font-size: 12px;
-    color: var(--color-text);
+    color: #333;
     border-radius: 0 4px 4px 0;
     word-break: break-all;
+
+    p {
+      margin: 0 !important;
+      color: #333 !important;
+    }
+  }
+
+  .memo-input-container {
+    margin-top: 10px;
   }
 
   .memo-textarea {
     width: 100%;
     height: 60px;
     padding: 10px;
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
+    border: 1px solid #ccc;
     border-radius: 6px;
     resize: none;
     box-sizing: border-box;
     font-family: inherit;
     font-size: 12px;
+
     &:focus {
       outline: none;
-      border-color: var(--color-active);
+      border-color: #1abc9c;
     }
   }
 
-  .btn-action {
-    width: 100%;
-    padding: 10px;
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
+  .memo-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    flex: 1;
+    padding: 8px;
+    border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
-    &:hover {
-      background-color: color-mix(in srgb, var(--color-text) 5%, transparent);
-    }
+    font-size: 12px;
+    font-weight: bold;
   }
 
-  .save-btn {
-    background-color: var(--color-active);
+  .btn-save {
+    background-color: #1abc9c;
     color: white;
-    padding: 8px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-    flex: 1;
+
+    &:hover {
+      background-color: #16a085;
+    }
   }
 
-  .cancel-btn {
-    background-color: color-mix(in srgb, var(--color-text) 10%, transparent);
-    color: var(--color-text);
-    padding: 8px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-    flex: 1;
+  .btn-cancel {
+    background-color: #eee;
+    color: #555;
+
+    &:hover {
+      background-color: #ddd;
+    }
   }
 `;
 
@@ -282,7 +329,7 @@ const FriendsList = () => {
   const offlineFriends = filteredFriends.filter((f) => f.status === "offline");
 
   const handleFriendClick = (friend) => {
-    if (selectedFriend && selectedFriend.id === friend.id) {
+    if (selectedFriend?.id === friend.id) {
       setSelectedFriend(null);
       setIsEditingMemo(false);
     } else {
@@ -293,9 +340,7 @@ const FriendsList = () => {
 
   const handleToggleSidebar = () => {
     setIsOpen(!isOpen);
-    if (isOpen) {
-      setSelectedFriend(null);
-    }
+    if (isOpen) setSelectedFriend(null);
   };
 
   const handleMemoEdit = () => {
@@ -304,122 +349,108 @@ const FriendsList = () => {
   };
 
   const handleSaveMemo = () => {
-    setMemos({
-      ...memos,
-      [selectedFriend.id]: tempMemo,
-    });
+    setMemos({ ...memos, [selectedFriend.id]: tempMemo });
     setIsEditingMemo(false);
   };
 
-  const handleCancelMemo = () => {
-    setIsEditingMemo(false);
-  };
+  const handleCancelMemo = () => setIsEditingMemo(false);
 
   return (
-    <SidebarWrapper $isOpen={isOpen} $hasSelected={!!selectedFriend}>
-      <button className="toggle-btn" onClick={handleToggleSidebar}>
-        {isOpen ? "〉" : "〈"}
-      </button>
+    <FriendsListStyled>
+      <div className="sidebar-wrapper">
+        <button className="toggle-btn" onClick={handleToggleSidebar}>
+          {isOpen ? "〉" : "〈"}
+        </button>
 
-      <div className="friend-sidebar">
-        <div className="search-section">
-          <input
-            className="search-input"
-            type="text"
-            placeholder="친구 검색"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="scroll-container">
-          <div className="category-section">
-            <h3 className="category-title">온라인 ▾</h3>
-            <table className="friend-table">
-              <tbody>
-                {onlineFriends.map((friend) => (
-                  <tr
-                    key={friend.id}
-                    className={`friend-row ${selectedFriend?.id === friend.id ? "active" : ""}`}
-                    onClick={() => handleFriendClick(friend)}
-                  >
-                    <td style={{ width: "50px", textAlign: "center" }}>
-                      <div className="avatar" />
-                    </td>
-                    <td style={{ fontSize: "14px" }}>{friend.name}</td>
-                    <td style={{ width: "50px", textAlign: "center" }}>
-                      <div className="status-square status-online" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className={`friend-sidebar ${!isOpen ? "hidden" : ""}`}>
+          <div className="search-section">
+            <input
+              className="search-input"
+              type="text"
+              placeholder="친구 검색"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
-          <div className="category-section">
-            <h3 className="category-title">오프라인</h3>
-            <table className="friend-table">
-              <tbody>
-                {offlineFriends.map((friend) => (
-                  <tr
-                    key={friend.id}
-                    className={`friend-row ${selectedFriend?.id === friend.id ? "active" : ""}`}
-                    onClick={() => handleFriendClick(friend)}
-                  >
-                    <td style={{ width: "50px", textAlign: "center" }}>
-                      <div className="avatar" />
-                    </td>
-                    <td style={{ fontSize: "14px" }}>{friend.name}</td>
-                    <td style={{ width: "50px", textAlign: "center" }}>
-                      <div className="status-square status-offline" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="detail-card">
-          <div className="detail-header">
-            <div className="detail-avatar-large" />
-          </div>
-          <div className="detail-body">
-            <h4>{selectedFriend?.name}</h4>
-            <p>{selectedFriend?.statusMessage || "상태 메시지가 없습니다."}</p>
-
-            {memos[selectedFriend?.id] && !isEditingMemo && (
-              <div className="memo-display">
-                <p style={{ margin: 0 }}>{memos[selectedFriend.id]}</p>
+          <div className="scroll-container">
+            {[
+              { label: "온라인 ▾", friends: onlineFriends, status: "online" },
+              { label: "오프라인", friends: offlineFriends, status: "offline" },
+            ].map(({ label, friends, status }) => (
+              <div className="category-section" key={status}>
+                <h3 className="category-title">{label}</h3>
+                <table className="friend-table">
+                  <tbody>
+                    {friends.map((friend) => (
+                      <tr
+                        key={friend.id}
+                        className={`friend-row ${selectedFriend?.id === friend.id ? "active" : ""}`}
+                        onClick={() => handleFriendClick(friend)}
+                      >
+                        <td className="avatar-cell">
+                          <div className="avatar" />
+                        </td>
+                        <td className="name-cell">{friend.name}</td>
+                        <td className="status-cell">
+                          <div className={`status-square ${status}`} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
+            ))}
+          </div>
 
-            {!isEditingMemo ? (
-              <button className="btn-action" onClick={handleMemoEdit}>
-                {memos[selectedFriend?.id] ? "메모 수정" : "메모 추가"}
-              </button>
-            ) : (
-              <div style={{ marginTop: "10px" }}>
-                <textarea
-                  className="memo-textarea"
-                  value={tempMemo}
-                  onChange={(e) => setTempMemo(e.target.value)}
-                  placeholder="이 친구에 대한 메모를 남겨보세요..."
-                />
-                <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-                  <button className="save-btn" onClick={handleSaveMemo}>
-                    저장
-                  </button>
-                  <button className="cancel-btn" onClick={handleCancelMemo}>
-                    취소
-                  </button>
+          <div
+            className={`friend-detail-card ${!selectedFriend ? "hidden" : ""}`}
+          >
+            <div className="detail-header">
+              <div className="detail-avatar-large" />
+            </div>
+            <div className="detail-body">
+              <h4>{selectedFriend?.name}</h4>
+              <p>
+                {selectedFriend?.statusMessage || "상태 메시지가 없습니다."}
+              </p>
+              <div className="detail-icons">
+                <span>안녕하세요.</span>
+              </div>
+
+              {memos[selectedFriend?.id] && !isEditingMemo && (
+                <div className="memo-display">
+                  <p>{memos[selectedFriend.id]}</p>
                 </div>
-              </div>
-            )}
+              )}
+
+              {!isEditingMemo ? (
+                <button className="detail-action-btn" onClick={handleMemoEdit}>
+                  {memos[selectedFriend?.id] ? "메모 수정" : "메모 추가"}
+                </button>
+              ) : (
+                <div className="memo-input-container">
+                  <textarea
+                    className="memo-textarea"
+                    value={tempMemo}
+                    onChange={(e) => setTempMemo(e.target.value)}
+                    placeholder="이 친구에 대한 메모를 남겨보세요..."
+                  />
+                  <div className="memo-actions">
+                    <button className="btn-save" onClick={handleSaveMemo}>
+                      저장
+                    </button>
+                    <button className="btn-cancel" onClick={handleCancelMemo}>
+                      취소
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </SidebarWrapper>
+    </FriendsListStyled>
   );
 };
 

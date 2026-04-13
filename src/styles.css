@@ -12,12 +12,6 @@
   --color-sidebar: white; /* 다크 테마시 #121212 */
 }
 
-body.dark-theme {
-  --color-bg: rgb(22, 22, 22);
-  --color-text: white;
-  --color-sidebar: #1e1e24;
-}
-
 body {
   background-color: var(--color-bg);
   color: var(--color-text);

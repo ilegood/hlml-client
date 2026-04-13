@@ -36,7 +36,7 @@ const SidebarStyles = styled.div`
     opacity: 0;
     white-space: nowrap;
     transition: opacity 0.15s ease 0s;
-    color: var(--color-text);
+    color: var(--color-deactive);
   }
 
   &:hover .label {
@@ -79,6 +79,10 @@ const SidebarStyles = styled.div`
     font-weight: bold;
     color: var(--color-active);
     background: color-mix(in srgb, var(--color-active) 15%, transparent);
+  }
+
+  .btn:hover .label {
+    color: var(--color-active);
   }
 
   .bottom {
@@ -153,25 +157,15 @@ const SidebarStyles = styled.div`
   .logout-btn:hover {
     opacity: 0.85;
   }
+
+  &:hover .logout-btn .label {
+    opacity: 1;
+    transition: opacity 0.2s ease 0.2s;
+    color: white;
+  }
 `;
 
 const Sidebar = () => {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return document.body.classList.contains("dark-theme");
-  });
-
-  const toggleTheme = () => {
-    setIsDarkMode((prev) => !prev);
-  };
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.body.classList.add("dark-theme");
-    } else {
-      document.body.classList.remove("dark-theme");
-    }
-  }, [isDarkMode]);
-
   return (
     <SidebarStyles>
       <div className="top">
@@ -205,7 +199,7 @@ const Sidebar = () => {
         <label className="switch">
           <img src="" alt="dark" />
           <span className="label">다크모드</span>
-          <input type="checkbox" checked={isDarkMode} onChange={toggleTheme} />
+          <input type="checkbox" />
           <span className="slider"></span>
         </label>
         <button className="logout-btn">

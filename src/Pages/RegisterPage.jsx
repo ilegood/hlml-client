@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const RegisterStyled = styled.div`
@@ -73,6 +74,37 @@ const RegisterStyled = styled.div`
     flex: 1;
   }
 
+  .gender-wrap {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+  }
+
+  .gender-option {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 40px;
+    border: 1.5px solid #d3d3d3;
+    border-radius: 8px;
+    font-weight: normal;
+    cursor: pointer;
+    margin-bottom: 0;
+    transition: border-color 0.2s;
+
+    &:has(input:checked) {
+      border-color: var(--color-active);
+      background-color: #fff8f2;
+    }
+  }
+
+  .gender-option input {
+    display: none;
+  }
+
   .button-wrap {
     display: flex;
     gap: 10px;
@@ -129,6 +161,63 @@ const RegisterStyled = styled.div`
 `;
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    nickname: "",
+    email: "",
+    password: "",
+    pw_check: "",
+    phone_number: "",
+    gender: "",
+    birthday: { year: "", month: "", day: "" },
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleBirthChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      birthday: { ...prev.birthday, [name]: value },
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (form.password !== form.pw_check) {
+      alert("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    const body = {
+      nickname: form.nickname,
+      email: form.email,
+      password: form.password,
+      phone_number: form.phone_number,
+      gender: form.gender,
+      birthday: `${form.birthday.year}-${form.birthday.month}-${form.birthday.day}`,
+    };
+
+    const res = await fetch("http://localhost:4000/users/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("회원가입 완료!");
+      navigate("/login");
+    } else {
+      alert(data.message);
+    }
+  };
+
   const currentYear = new Date().getFullYear();
   const years = Array.from(
     { length: currentYear - 1900 + 1 },
@@ -139,21 +228,35 @@ const RegisterPage = () => {
 
   return (
     <RegisterStyled>
-      <form>
+      <form onSubmit={handleSubmit}>
         <div className="container">
           <label>
-            아이디
+            닉네임
             <input
               type="text"
-              className="id"
-              placeholder="아이디를 입력해주세요"
+              name="nickname"
+              value={form.nickname}
+              onChange={handleChange}
+              placeholder="닉네임을 입력해주세요"
+            />
+          </label>
+          <label>
+            이메일 주소
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="example@email.com"
             />
           </label>
           <label>
             비밀번호
             <input
               type="password"
-              className="pw"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
               placeholder="비밀번호를 입력해주세요"
             />
           </label>
@@ -161,46 +264,30 @@ const RegisterPage = () => {
             비밀번호 확인
             <input
               type="password"
-              className="pw_check"
+              name="pw_check"
+              value={form.pw_check}
+              onChange={handleChange}
               placeholder="비밀번호를 다시 입력해주세요"
-            />
-          </label>
-          <label>
-            이메일 주소
-            <input
-              type="email"
-              className="email"
-              placeholder="example@email.com"
             />
           </label>
           <label>
             휴대전화
             <input
               type="tel"
-              className="tel"
+              name="phone_number"
+              value={form.phone_number}
+              onChange={handleChange}
               placeholder="'-' 없이 숫자만 입력해주세요"
-            />
-          </label>
-          <label>
-            이름
-            <input
-              type="text"
-              className="user_name"
-              placeholder="이름을 입력해주세요"
-            />
-          </label>
-          <label>
-            닉네임
-            <input
-              type="text"
-              className="nickname"
-              placeholder="닉네임을 입력해주세요"
             />
           </label>
           <label>
             생년월일
             <div className="birth-wrap">
-              <select className="birth-year" defaultValue="">
+              <select
+                name="year"
+                value={form.birthday.year}
+                onChange={handleBirthChange}
+              >
                 <option value="" disabled>
                   년
                 </option>
@@ -210,7 +297,11 @@ const RegisterPage = () => {
                   </option>
                 ))}
               </select>
-              <select className="birth-month" defaultValue="">
+              <select
+                name="month"
+                value={form.birthday.month}
+                onChange={handleBirthChange}
+              >
                 <option value="" disabled>
                   월
                 </option>
@@ -220,7 +311,11 @@ const RegisterPage = () => {
                   </option>
                 ))}
               </select>
-              <select className="birth-day" defaultValue="">
+              <select
+                name="day"
+                value={form.birthday.day}
+                onChange={handleBirthChange}
+              >
                 <option value="" disabled>
                   일
                 </option>
@@ -230,6 +325,22 @@ const RegisterPage = () => {
                   </option>
                 ))}
               </select>
+            </div>
+          </label>
+          <label>
+            성별
+            <div className="gender-wrap">
+              {["남", "여"].map((g) => (
+                <label key={g} className="gender-option">
+                  <input
+                    type="radio"
+                    name="gender"
+                    value={g}
+                    onChange={handleChange}
+                  />
+                  {g}
+                </label>
+              ))}
             </div>
           </label>
 
