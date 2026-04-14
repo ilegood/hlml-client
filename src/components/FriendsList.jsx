@@ -6,11 +6,11 @@ const FriendsListStyled = styled.div`
   .sidebar-wrapper {
     position: fixed;
     right: 0;
+    top: 25px; /* Header 높이 */
     height: calc(100vh - 25px);
     display: flex;
     align-items: flex-start;
     z-index: 1000;
-    box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
   }
 
   .toggle-btn {
@@ -18,8 +18,9 @@ const FriendsListStyled = styled.div`
     left: -40px;
     top: 20px;
     padding: 10px 15px;
-    background-color: #ffffff;
-    border: 1px solid #ddd;
+    background-color: var(--color-sidebar);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
     border-radius: 8px 0 0 8px;
     cursor: pointer;
     box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.1);
@@ -29,34 +30,39 @@ const FriendsListStyled = styled.div`
   .friend-sidebar {
     width: 335px;
     height: 100%;
-    background-color: #ffffff;
-    border-left: 1px solid #e0e0e0;
+    background-color: var(--color-sidebar);
+    border-left: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;
     position: relative;
     box-sizing: border-box;
     transition: transform 0.3s ease;
+    transform: translateX(100%); /* 기본적으로 숨김 */
+    box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
 
-    &.hidden {
-      display: none;
+    &.active {
+      transform: translateX(0); /* 열렸을 때 보임 */
     }
   }
 
   .search-section {
     padding: 20px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .search-input {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
     border-radius: 6px;
     box-sizing: border-box;
     outline: none;
 
     &:focus {
-      border-color: #1abc9c;
+      border-color: var(--color-active);
+      background-color: var(--color-input-focus-bg);
     }
   }
 
@@ -77,7 +83,7 @@ const FriendsListStyled = styled.div`
     }
 
     &::-webkit-scrollbar-thumb {
-      background-color: #1abc9c;
+      background-color: var(--color-active);
       border-radius: 4px;
     }
   }
@@ -88,9 +94,10 @@ const FriendsListStyled = styled.div`
 
   .category-title {
     font-size: 14px;
-    color: #333;
+    color: var(--color-text);
     margin: 20px 0 10px 0;
     font-weight: bold;
+    opacity: 0.8;
   }
 
   .friend-table {
@@ -104,10 +111,11 @@ const FriendsListStyled = styled.div`
     transition: all 0.2s ease;
 
     td {
-      border: 1px solid #e0e0e0;
+      border: 1px solid var(--color-border);
       border-style: solid none;
       padding: 12px 10px;
-      background-color: #fff;
+      background-color: var(--color-item-bg);
+      color: var(--color-text);
     }
 
     td:first-child {
@@ -123,12 +131,13 @@ const FriendsListStyled = styled.div`
     }
 
     &:hover td {
-      border-color: #1abc9c;
+      border-color: var(--color-active);
+      background-color: var(--color-item-hover);
     }
 
     &.active td {
-      border-color: #1abc9c;
-      box-shadow: 0 0 5px rgba(26, 188, 156, 0.2);
+      border-color: var(--color-active);
+      box-shadow: 0 0 5px rgba(253, 147, 25, 0.2);
     }
   }
 
@@ -147,7 +156,7 @@ const FriendsListStyled = styled.div`
 
   .name-cell {
     font-size: 14px;
-    color: #555;
+    color: var(--color-text);
   }
 
   .status-cell {
@@ -176,12 +185,13 @@ const FriendsListStyled = styled.div`
     left: -260px;
     transform: translateY(-50%);
     width: 250px;
-    background-color: #fff;
+    background-color: var(--color-sidebar);
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     overflow: hidden;
     z-index: 1010;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
 
     &.hidden {
       display: none;
@@ -190,7 +200,7 @@ const FriendsListStyled = styled.div`
 
   .detail-header {
     height: 80px;
-    background-color: #1abc9c;
+    background-color: var(--color-active);
     position: relative;
   }
 
@@ -199,7 +209,7 @@ const FriendsListStyled = styled.div`
     height: 60px;
     background-color: #777;
     border-radius: 50%;
-    border: 4px solid #fff;
+    border: 4px solid var(--color-sidebar);
     position: absolute;
     bottom: -30px;
     left: 20px;
@@ -211,18 +221,21 @@ const FriendsListStyled = styled.div`
     h4 {
       margin: 0 0 5px 0;
       font-size: 16px;
+      color: var(--color-text);
     }
 
     p {
       font-size: 12px;
-      color: #777;
+      color: var(--color-text);
+      opacity: 0.7;
       margin-bottom: 20px;
     }
   }
 
   .detail-icons {
     font-size: 11px;
-    color: #999;
+    color: var(--color-text);
+    opacity: 0.6;
     line-height: 1.5;
     margin-bottom: 20px;
   }
@@ -230,41 +243,40 @@ const FriendsListStyled = styled.div`
   .detail-action-btn {
     width: 100%;
     padding: 10px;
-    background-color: #fff;
-    border: 1px solid #ccc;
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
     border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
 
     &:hover {
-      background-color: #f5f5f5;
+      background-color: var(--color-item-hover);
     }
   }
 
   .memo-display {
-    background-color: #f9f9f9;
+    background-color: var(--color-input-bg);
     padding: 10px;
     margin-bottom: 15px;
     font-size: 12px;
-    color: #333;
+    color: var(--color-text);
     border-radius: 0 4px 4px 0;
     word-break: break-all;
 
     p {
       margin: 0 !important;
-      color: #333 !important;
+      color: var(--color-text) !important;
     }
-  }
-
-  .memo-input-container {
-    margin-top: 10px;
   }
 
   .memo-textarea {
     width: 100%;
     height: 60px;
     padding: 10px;
-    border: 1px solid #ccc;
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
     border-radius: 6px;
     resize: none;
     box-sizing: border-box;
@@ -273,7 +285,7 @@ const FriendsListStyled = styled.div`
 
     &:focus {
       outline: none;
-      border-color: #1abc9c;
+      border-color: var(--color-active);
     }
   }
 
@@ -295,20 +307,26 @@ const FriendsListStyled = styled.div`
   }
 
   .btn-save {
-    background-color: #1abc9c;
+    background-color: var(--color-active);
     color: white;
 
     &:hover {
-      background-color: #16a085;
+      opacity: 0.8;
     }
   }
 
   .btn-cancel {
-    background-color: #eee;
-    color: #555;
+    background-color: var(--color-border);
+    color: var(--color-text);
 
     &:hover {
-      background-color: #ddd;
+      opacity: 0.8;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .friend-sidebar {
+      width: 280px;
     }
   }
 `;
@@ -358,11 +376,10 @@ const FriendsList = () => {
   return (
     <FriendsListStyled>
       <div className="sidebar-wrapper">
-        <button className="toggle-btn" onClick={handleToggleSidebar}>
-          {isOpen ? "〉" : "〈"}
-        </button>
-
-        <div className={`friend-sidebar ${!isOpen ? "hidden" : ""}`}>
+        <div className={`friend-sidebar ${isOpen ? "active" : ""}`}>
+          <button className="toggle-btn" onClick={handleToggleSidebar}>
+            {isOpen ? "〉" : "〈"}
+          </button>
           <div className="search-section">
             <input
               className="search-input"

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import styled from "styled-components";
 
 const RegisterStyled = styled.div`
@@ -24,18 +25,18 @@ const RegisterStyled = styled.div`
     font-size: 13px;
     font-weight: 600;
     color: var(--color-text);
-    margin-bottom: 10px;
+    margin-bottom: 22px;
+    gap: 8px;
   }
 
   input,
   select {
-    background-color: var(--color-bg);
-    border: 1.5px solid #d3d3d3;
+    background-color: var(--color-input-bg);
+    border: 1.5px solid var(--color-border);
     width: 100%;
-    height: 40px;
+    height: 45px;
     border-radius: 50px;
-    padding: 0 15px;
-    margin-top: 5px;
+    padding: 0 20px;
     font-size: 14px;
     color: var(--color-text);
     outline: none;
@@ -51,16 +52,17 @@ const RegisterStyled = styled.div`
     background-position: right 10px center;
     background-size: 14px;
     cursor: pointer;
+    color: var(--color-text);
   }
 
   input::placeholder {
-    color: #bbb;
+    color: #888;
     font-size: 12px;
   }
 
   input:focus {
     border-color: var(--color-active);
-    background-color: #fff8f2;
+    background-color: var(--color-input-focus-bg);
   }
 
   .birth-wrap {
@@ -87,17 +89,21 @@ const RegisterStyled = styled.div`
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 40px;
-    border: 1.5px solid #d3d3d3;
+    height: 45px;
+    border: 1.5px solid var(--color-border);
+    background-color: var(--color-input-bg);
+    color: var(--color-text);
     border-radius: 8px;
     font-weight: normal;
     cursor: pointer;
     margin-bottom: 0;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
 
     &:has(input:checked) {
       border-color: var(--color-active);
-      background-color: #fff8f2;
+      background-color: var(--color-input-focus-bg);
+      color: var(--color-active);
+      font-weight: 600;
     }
   }
 
@@ -188,10 +194,17 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (form.password !== form.pw_check) {
-      alert("비밀번호가 일치하지 않습니다.");
-      return;
+    // 입력값 검증
+    if (!form.nickname) return toast.error("닉네임을 입력해주세요.");
+    if (!form.email) return toast.error("이메일 주소를 입력해주세요.");
+    if (!form.password) return toast.error("비밀번호를 입력해주세요.");
+    if (!form.pw_check) return toast.error("비밀번호 확인을 입력해주세요.");
+    if (form.password !== form.pw_check) return toast.error("비밀번호가 일치하지 않습니다.");
+    if (!form.phone_number) return toast.error("휴대전화 번호를 입력해주세요.");
+    if (!form.birthday.year || !form.birthday.month || !form.birthday.day) {
+      return toast.error("생년월일을 모두 선택해주세요.");
     }
+    if (!form.gender) return toast.error("성별을 선택해주세요.");
 
     const body = {
       nickname: form.nickname,
@@ -202,20 +215,36 @@ const RegisterPage = () => {
       birthday: `${form.birthday.year}-${form.birthday.month}-${form.birthday.day}`,
     };
 
-    const res = await fetch("http://localhost:4000/users/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await fetch("http://localhost:4000/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      alert("회원가입 완료!");
-      navigate("/login");
-    } else {
-      alert(data.message);
+      if (res.ok) {
+        toast.success("회원가입 완료! 로그인해 주세요.");
+        navigate("/login");
+      } else {
+        toast.error(data.message || "회원가입 중 오류가 발생했습니다.");
+      }
+    } catch (error) {
+      toast.error("서버와 통신 중 오류가 발생했습니다.");
     }
+  };
+
+  const handleReset = () => {
+    setForm({
+      nickname: "",
+      email: "",
+      password: "",
+      pw_check: "",
+      phone_number: "",
+      gender: "",
+      birthday: { year: "", month: "", day: "" },
+    });
   };
 
   const currentYear = new Date().getFullYear();
@@ -288,7 +317,7 @@ const RegisterPage = () => {
                 value={form.birthday.year}
                 onChange={handleBirthChange}
               >
-                <option value="" disabled>
+                <option value="">
                   년
                 </option>
                 {years.map((year) => (
@@ -302,7 +331,7 @@ const RegisterPage = () => {
                 value={form.birthday.month}
                 onChange={handleBirthChange}
               >
-                <option value="" disabled>
+                <option value="">
                   월
                 </option>
                 {months.map((month) => (
@@ -316,7 +345,7 @@ const RegisterPage = () => {
                 value={form.birthday.day}
                 onChange={handleBirthChange}
               >
-                <option value="" disabled>
+                <option value="">
                   일
                 </option>
                 {days.map((day) => (
@@ -336,6 +365,7 @@ const RegisterPage = () => {
                     type="radio"
                     name="gender"
                     value={g}
+                    checked={form.gender === g}
                     onChange={handleChange}
                   />
                   {g}
@@ -345,7 +375,7 @@ const RegisterPage = () => {
           </label>
 
           <div className="button-wrap">
-            <button type="reset" className="btn-cancel">
+            <button type="button" className="btn-cancel" onClick={handleReset}>
               취소
             </button>
             <button type="submit" className="btn-submit">
