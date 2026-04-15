@@ -138,6 +138,7 @@ body {
   background: var(--surface); border-radius: var(--radius); border: 1.5px solid var(--border);
   overflow: hidden; transition: box-shadow .2s, transform .2s, border-color .2s;
   animation: cardIn .3s ease both;
+  box-shadow: var(--shadow);
 }
 @keyframes cardIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: #d0cfc9; }

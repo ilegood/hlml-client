@@ -22,12 +22,12 @@ export default function WritePage() {
       alert("제목과 내용을 입력해주세요!");
       return;
     }
-    
+
     try {
       await createPost({
         title: title.trim(),
         content: content.trim(),
-        date, 
+        date,
         time,
         place: place.trim(),
         capacity,
@@ -45,10 +45,23 @@ export default function WritePage() {
   return (
     <main className="container write-container">
       {/* 뒤로가기 헤더 */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
-        <button className="back-btn" onClick={() => navigate(-1)} style={{ marginRight: "10px" }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="15 18 9 12 15 6"/>
+      <div
+        style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}
+      >
+        <button
+          className="back-btn"
+          onClick={() => navigate(-1)}
+          style={{ marginRight: "10px" }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
         <h2 style={{ fontSize: "18px", fontWeight: "800" }}>게시글 작성</h2>
@@ -78,11 +91,21 @@ export default function WritePage() {
         <div className="form-row-2">
           <div className="form-group">
             <label className="form-label">📅 약속 날짜</label>
-            <input className="form-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <input
+              className="form-input"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
           </div>
           <div className="form-group">
             <label className="form-label">⏰ 약속 시간</label>
-            <input className="form-input" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            <input
+              className="form-input"
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
           </div>
         </div>
 
@@ -99,9 +122,19 @@ export default function WritePage() {
         <div className="form-group">
           <label className="form-label">👥 모집 인원</label>
           <div className="capacity-row">
-            <button className="cap-btn" onClick={() => setCapacity((c) => Math.max(1, c - 1))}>−</button>
+            <button
+              className="cap-btn"
+              onClick={() => setCapacity((c) => Math.max(1, c - 1))}
+            >
+              −
+            </button>
             <span className="cap-display">{capacity}명</span>
-            <button className="cap-btn" onClick={() => setCapacity((c) => Math.min(99, c + 1))}>＋</button>
+            <button
+              className="cap-btn"
+              onClick={() => setCapacity((c) => Math.min(99, c + 1))}
+            >
+              ＋
+            </button>
           </div>
         </div>
 
@@ -115,7 +148,9 @@ export default function WritePage() {
           <ImageDropZone value={image} onChange={setImage} />
         </div>
 
-        <button className="submit-btn" onClick={handleSubmit}>등록하기</button>
+        <button className="submit-btn" onClick={handleSubmit}>
+          등록하기
+        </button>
       </div>
     </main>
   );
