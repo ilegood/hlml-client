@@ -1,16 +1,4 @@
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-:root {
-  --color-active: #fd9319;
-  --color-deactive: #07b1bc;
-  --color-bg: white;
-  --color-text: #121212;
-}
-
+/* 기본 레이아웃 스타일 */
 .page {
   display: flex;
   flex-direction: column;
@@ -25,8 +13,6 @@
 
 main {
   flex: 1;
-  min-width: 0;
   overflow-y: auto;
-  margin-left: 70px; /* Sidebar 닫힌 너비 */
-  margin-right: 60px; /* FriendsList 닫힌 너비 */
+  background-color: #ffffff;
 }

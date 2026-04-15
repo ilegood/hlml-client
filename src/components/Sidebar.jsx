@@ -157,45 +157,46 @@ const Sidebar = () => {
     <SidebarStyles>
       <div className="top">
         <Link to={"/"} className="logo">
-          <img src="" alt="LOGO" />
+          <div className="logo-placeholder" style={{ width: 24, height: 24, background: "var(--color-active)", borderRadius: 4 }}></div>
           <span className="label">할래말래</span>
         </Link>
         <Link to={"/register"} className="btn">
-          <img src="" alt="dashboard" />
+          <div className="icon-placeholder">📁</div>
           <span className="label">대시보드</span>
         </Link>
-        <Link to={"/login"} className="btn">
-          <img src="" alt="post" />
+        <Link to={"/write"} className="btn">
+          <div className="icon-placeholder">✍️</div>
           <span className="label">게시글쓰기</span>
         </Link>
         <Link to={"/"} className="btn">
-          <img src="" alt="group" />
+          <div className="icon-placeholder">👥</div>
           <span className="label">그룹</span>
         </Link>
         <Link to={"/"} className="btn">
-          <img src="" alt="massage" />
+          <div className="icon-placeholder">💬</div>
           <span className="label">메세지</span>
         </Link>
         <Link to={"/user"} className="btn">
-          <img src="" alt="mypage" />
+          <div className="icon-placeholder">👤</div>
           <span className="label">마이페이지</span>
         </Link>
       </div>
 
       <div className="bottom">
         <label className="switch">
-          <img src="" alt="dark" />
+          <div className="icon-placeholder">🌙</div>
           <span className="label">다크모드</span>
           <input type="checkbox" />
           <span className="slider"></span>
         </label>
         <button className="logout-btn">
-          <img src="" alt="logout" />
+          <div className="icon-placeholder">🚪</div>
           <span className="label">로그아웃</span>
         </button>
       </div>
     </SidebarStyles>
   );
 };
+
 
 export default Sidebar;

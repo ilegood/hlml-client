@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { addRecipes } from "../api/recipes.js";
 import styled from "styled-components";
 
 const FriendCardStyles = styled.div``;
