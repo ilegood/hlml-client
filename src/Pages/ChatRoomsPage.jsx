@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 
 const ChatRoomsStyles = styled.div`
+  /* ... (Existing styles remain the same) ... */
   display: flex;
   flex-direction: column;
   height: calc(100vh - 25px);
@@ -76,41 +77,57 @@ const ChatRoomsStyles = styled.div`
 `;
 
 const ChatRoomsPage = () => {
-  const [chatRooms, setChatRooms] = useState([
-    { id: "1", name: "친구와 대화", lastMessage: "안녕하세요! 잘 지내시죠?" },
-    { id: "2", name: "그룹 채팅방", lastMessage: "오늘 저녁에 만날까요?" },
-    { id: "3", name: "새로운 친구", lastMessage: "반갑습니다!" },
-    { id: "4", name: "스터디 그룹", lastMessage: "다음 스터디는 언제인가요?" },
-    { id: "5", name: "가족 채팅", lastMessage: "어머니 생신 축하드려요!" },
-  ]);
+  const [chatRooms, setChatRooms] = useState([]);
   const [newRoomName, setNewRoomName] = useState("");
 
-  const handleAddRoom = () => {
+  // 서버에서 실제 방 목록 가져오기
+  const fetchRooms = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/rooms");
+      const data = await response.json();
+      setChatRooms(data);
+    } catch (error) {
+      console.error("Failed to fetch rooms:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const handleAddRoom = async () => {
     if (newRoomName.trim() === "") {
       alert("채팅방 이름을 입력해주세요.");
       return;
     }
 
-    const newRoom = {
-      id: String(Date.now()), // 임시로 현재 시간을 ID로 사용
-      name: newRoomName,
-      lastMessage: "새로운 채팅방이 생성되었습니다.",
-    };
+    try {
+      const response = await fetch("http://localhost:4000/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newRoomName }),
+      });
 
-    setChatRooms((prevRooms) => [...prevRooms, newRoom]);
-    setNewRoomName(""); // 입력 필드 초기화
+      if (response.ok) {
+        setNewRoomName("");
+        fetchRooms(); // 목록 새로고침
+      } else {
+        const errorData = await response.json();
+        alert(`방 생성 실패: ${errorData.message || "알 수 없는 오류"}`);
+        console.error("Server Error:", errorData);
+      }
+    } catch (error) {
+      alert("서버 연결에 실패했습니다.");
+      console.error("Failed to add room:", error);
+    }
   };
 
   return (
     <ChatRoomsStyles>
       <div className="chat-rooms-header">
-        <h2>
-          채팅방 목록(베타버전 현재 my SQL은 없습니다. 임의적으로 만든
-          방들입니다)
-        </h2>
+        <h2>실시간 채팅방 목록</h2>
       </div>
 
-      {/* 새로운 채팅방 추가 UI */}
       <div
         style={{
           display: "flex",
@@ -145,27 +162,32 @@ const ChatRoomsPage = () => {
             borderRadius: "8px",
             cursor: "pointer",
             fontWeight: "600",
-            transition: "opacity 0.2s",
           }}
         >
-          추가
+          방 생성
         </button>
       </div>
 
       <div className="chat-room-list">
-        {chatRooms.map((room) => (
-          <Link
-            to={`/chat/${room.id}`}
-            className="chat-room-item"
-            key={room.id}
-          >
-            <div className="room-avatar"></div>
-            <div className="room-info">
-              <div className="room-name">{room.name}</div>
-              <div className="last-message">{room.lastMessage}</div>
-            </div>
-          </Link>
-        ))}
+        {chatRooms.length > 0 ? (
+          chatRooms.map((room) => (
+            <Link
+              to={`/chat/${room.id}`}
+              className="chat-room-item"
+              key={room.id}
+            >
+              <div className="room-avatar"></div>
+              <div className="room-info">
+                <div className="room-name">{room.title}</div>
+                <div className="last-message">클릭하여 대화에 참여하세요</div>
+              </div>
+            </Link>
+          ))
+        ) : (
+          <div style={{ textAlign: "center", color: "#888", marginTop: "20px" }}>
+            생성된 채팅방이 없습니다. 방을 만들어보세요!
+          </div>
+        )}
       </div>
     </ChatRoomsStyles>
   );

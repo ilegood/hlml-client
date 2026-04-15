@@ -157,40 +157,40 @@ const Sidebar = () => {
     <SidebarStyles>
       <div className="top">
         <Link to={"/"} className="logo">
-          <img src="" alt="LOGO" />
+          <img src={null} alt="LOGO" />
           <span className="label">할래말래</span>
         </Link>
         <Link to={"/register"} className="btn">
-          <img src="" alt="dashboard" />
+          <img src={null} alt="dashboard" />
           <span className="label">대시보드</span>
         </Link>
         <Link to={"/login"} className="btn">
-          <img src="" alt="post" />
+          <img src={null} alt="post" />
           <span className="label">게시글쓰기</span>
         </Link>
         <Link to={"/"} className="btn">
-          <img src="" alt="group" />
+          <img src={null} alt="group" />
           <span className="label">그룹</span>
         </Link>
         <Link to={"/chatrooms"} className="btn">
-          <img src="" alt="massage" />
+          <img src={null} alt="massage" />
           <span className="label">메세지</span>
         </Link>
         <Link to={"/user"} className="btn">
-          <img src="" alt="mypage" />
+          <img src={null} alt="mypage" />
           <span className="label">마이페이지</span>
         </Link>
       </div>
 
       <div className="bottom">
         <label className="switch">
-          <img src="" alt="dark" />
+          <img src={null} alt="dark" />
           <span className="label">다크모드</span>
           <input type="checkbox" />
           <span className="slider"></span>
         </label>
         <button className="logout-btn">
-          <img src="" alt="logout" />
+          <img src={null} alt="logout" />
           <span className="label">로그아웃</span>
         </button>
       </div>
