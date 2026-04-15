@@ -6,7 +6,7 @@ const FriendsListStyled = styled.div`
   .sidebar-wrapper {
     position: fixed;
     right: 0;
-    top: 25px; /* Header 높이 */
+    top: 25px;
     height: calc(100vh - 25px);
     display: flex;
     align-items: flex-start;
@@ -37,11 +37,11 @@ const FriendsListStyled = styled.div`
     position: relative;
     box-sizing: border-box;
     transition: transform 0.3s ease;
-    transform: translateX(100%); /* 기본적으로 숨김 */
+    transform: translateX(100%);
     box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
 
     &.active {
-      transform: translateX(0); /* 열렸을 때 보임 */
+      transform: translateX(0);
     }
   }
 

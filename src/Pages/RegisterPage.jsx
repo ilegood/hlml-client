@@ -194,7 +194,6 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 입력값 검증
     if (!form.nickname) return toast.error("닉네임을 입력해주세요.");
     if (!form.email) return toast.error("이메일 주소를 입력해주세요.");
     if (!form.password) return toast.error("비밀번호를 입력해주세요.");

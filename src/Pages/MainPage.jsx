@@ -7,7 +7,7 @@ const MainStyles = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 25px); /* Header 높이 제외 */
+  height: calc(100vh - 25px);
   gap: 20px;
 
   h1 {

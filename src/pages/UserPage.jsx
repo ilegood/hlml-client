@@ -24,7 +24,8 @@ const Userstyles = styled.div`
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background-color: var(--color-active);
+    background-color: #ffffff;
+    border: 1px solid var(--color-border);
     margin-right: 25px;
     overflow: hidden;
     img {
@@ -123,6 +124,7 @@ const UserPage = () => {
     name: localStorage.getItem("name") || "닉네임",
     email: localStorage.getItem("email") || "이메일 정보 없음",
     bio: localStorage.getItem("bio") || "소개 없음",
+    profile_img: localStorage.getItem("profile_img") || "",
   });
 
   useEffect(() => {
@@ -137,29 +139,29 @@ const UserPage = () => {
       name: localStorage.getItem("name") || "닉네임",
       email: localStorage.getItem("email") || "이메일 정보 없음",
       bio: localStorage.getItem("bio") || "소개 없음",
+      profile_img: localStorage.getItem("profile_img") || "",
     });
-  };
-
-  const stats = {
-    success: 0,
-    fail: 0,
-    posts: 0,
   };
 
   return (
     <Userstyles>
       <div className="profile-wrap">
         <div className="profile">
-          {/* 이미지 기능 연동 시 여기에 img 태그 삽입 */}
+          {userInfo.profile_img && (
+            <img 
+              src={`http://localhost:4000${userInfo.profile_img}`} 
+              alt="profile" 
+            />
+          )}
         </div>
         <div className="user-info">
           <h3>{userInfo.name} 님</h3>
           <p className="email">{userInfo.email}</p>
           <p className="bio">{userInfo.bio}</p>
           <div className="user-stats">
-            <p>약속 성공 {stats.success}번</p>
-            <p>실패 {stats.fail}번</p>
-            <p>게시물 {stats.posts}개</p>
+            <p>약속 성공 0번</p>
+            <p>실패 0번</p>
+            <p>게시물 0개</p>
           </div>
         </div>
         <button className="edit" onClick={() => setIsModalOpen(true)}>수정</button>

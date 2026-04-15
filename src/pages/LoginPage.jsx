@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../api/users";
 import { toast } from "sonner";
 import styled from "styled-components";
+
+import { login as loginAPI } from "../api/users";
+import { useAuth } from "../context/AuthContext";
 
 const LoginStyles = styled.div`
   display: flex;
@@ -111,13 +113,13 @@ const LoginPage = () => {
     password: "",
   });
 
+  const { login } = useAuth();
+
   const handlesubmit = async (e) => {
     e.preventDefault();
     try {
-      const data = await login(form);
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("name", data.nickname);
-      localStorage.setItem("email", form.email);
+      const data = await loginAPI(form);
+      login(data);
       navigate("/");
     } catch (error) {
       toast.error(error.response.data.message);

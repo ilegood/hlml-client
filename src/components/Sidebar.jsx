@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
-import styled from "styled-components";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useAuth } from "../context/AuthContext";
+import styled from "styled-components";
 
 const SidebarStyles = styled.div`
   width: 70px;
@@ -18,7 +19,7 @@ const SidebarStyles = styled.div`
 
   left: 0;
   position: fixed;
-  top: 25px; /* Header 높이만큼 띄움 */
+  top: 25px;
   height: calc(100vh - 25px);
   z-index: 1000;
 
@@ -171,33 +172,24 @@ const SidebarStyles = styled.div`
     width: 0;
     padding: 0;
     transform: translateX(-100%);
-    transition: transform 0.3s ease, width 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      width 0.3s ease;
 
-    /* 필요한 경우 햄버거 메뉴 버튼을 통해 활성화된 상태(.active) 클래스 추가 가능 */
     &.active {
       width: 250px;
       padding: 20px;
       transform: translateX(0);
     }
   }
-
-  @media (max-width: 480px) {
-    /* 모바일에서는 하단 바로 전환하고 싶을 경우의 스타일 예시 */
-    /* 여기서는 일단 숨김 처리만 유지합니다. */
-  }
 `;
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { logout, token } = useAuth();
   const [isDark, setIsDark] = useState(
     localStorage.getItem("theme") === "dark",
   );
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
 
   useEffect(() => {
     if (isDark) {
@@ -210,9 +202,7 @@ const Sidebar = () => {
   }, [isDark]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("name");
-    setIsLoggedIn(false);
+    logout();
     toast.success("로그아웃 되었습니다.");
     navigate("/login");
   };
@@ -257,7 +247,7 @@ const Sidebar = () => {
           <input type="checkbox" checked={isDark} onChange={toggleTheme} />
           <span className="slider"></span>
         </label>
-        {isLoggedIn ? (
+        {token ? (
           <button onClick={handleLogout} className="logout-btn">
             <img src="" alt="logout" />
             <span className="label">로그아웃</span>

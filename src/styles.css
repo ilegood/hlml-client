@@ -52,22 +52,18 @@ main {
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  padding-left: 70px; /* Sidebar 접힌 너비만큼 여백 */
-  padding-right: 60px; /* FriendsList 접힌 너비만큼 여백 */
+  padding-left: 70px;
+  padding-right: 60px;
   transition: padding 0.3s ease;
 }
 
-/* 태블릿 대응 (768px 이하) */
 @media (max-width: 768px) {
   main {
     padding-left: 0;
     padding-right: 0;
   }
-
-  /* 사이드바와 친구목록을 숨기거나 햄버거 메뉴로 대체하는 로직이 필요할 수 있음 */
 }
 
-/* 모바일 대응 (480px 이하) */
 @media (max-width: 480px) {
   .page-wrap {
     flex-direction: column;
