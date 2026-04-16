@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { CATEGORY_MAP } from "../../pages/homeConstants";
+import { CATEGORY_MAP } from "../api/homeConstants";
 
 const CategoryRow = styled.div`
   display: flex;
+  gap: 8px;
   flex-wrap: wrap;
-  gap: 10px;
-  position: relative;
 `;
 
 const CategoryWrapper = styled.div`
@@ -14,76 +13,84 @@ const CategoryWrapper = styled.div`
 `;
 
 const CategoryTitle = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: var(--color-input-bg);
-  border: 1px solid var(--color-border);
+  cursor: pointer;
+  padding: 6px 12px;
+  background: var(--color-sidebar);
+  border: 1.5px solid var(--color-border);
   border-radius: 20px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text);
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    border-color: var(--color-active);
-    background: var(--color-input-focus-bg);
-  }
-
-  &.has-selection {
-    background: var(--color-active);
-    border-color: var(--color-active);
-    color: white;
-  }
-
-  svg {
-    opacity: 0.6;
-  }
-`;
-
-const SelectedDot = styled.span`
-  width: 6px;
-  height: 6px;
-  background: white;
-  border-radius: 50%;
-`;
-
-const Dropdown = styled.div`
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  background: var(--color-sidebar);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 12px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  width: 280px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-`;
-
-const TagBtn = styled.div`
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  background: var(--color-input-bg);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  cursor: pointer;
-  transition: all 0.2s;
+  align-items: center;
+  gap: 5px;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+  white-space: nowrap;
+  user-select: none;
 
   &:hover {
     border-color: var(--color-active);
     color: var(--color-active);
   }
 
+  &.has-selection {
+    border-color: var(--color-active);
+    background: var(--color-active);
+    color: white;
+  }
+`;
+
+const SelectedDot = styled.span`
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  display: inline-block;
+`;
+
+const CategoryDropdown = styled.div`
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--color-sidebar);
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13);
+  z-index: 100;
+  min-width: 110px;
+  animation: dropIn 0.12s ease;
+
+  @keyframes dropIn {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const TagBtn = styled.div`
+  padding: 8px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 13px;
+  border-radius: 8px;
+  transition: background 0.1s;
+  color: var(--color-text);
+
+  &:hover {
+    background: var(--color-input-focus-bg);
+    color: var(--color-active);
+  }
+
   &.active {
     background: var(--color-active);
-    border-color: var(--color-active);
     color: white;
   }
 `;
@@ -105,7 +112,7 @@ export default function CategorySelector({ selected, onChange }) {
       {Object.entries(CATEGORY_MAP).map(([cat, opts]) => (
         <CategoryWrapper key={cat}>
           <CategoryTitle
-            className={selected[cat] ? " has-selection" : ""}
+            className={selected[cat] ? "has-selection" : ""}
             onClick={(e) => {
               e.stopPropagation();
               setOpen(open === cat ? null : cat);
@@ -119,18 +126,25 @@ export default function CategorySelector({ selected, onChange }) {
             ) : (
               <>
                 {cat}
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                >
                   <path d="M6 9l6 6 6-6" />
                 </svg>
               </>
             )}
           </CategoryTitle>
           {open === cat && (
-            <Dropdown>
+            <CategoryDropdown>
               {opts.map((opt) => (
                 <TagBtn
                   key={opt}
-                  className={selected[cat] === opt ? " active" : ""}
+                  className={selected[cat] === opt ? "active" : ""}
                   onClick={(e) => {
                     e.stopPropagation();
                     onChange({
@@ -143,7 +157,7 @@ export default function CategorySelector({ selected, onChange }) {
                   {opt}
                 </TagBtn>
               ))}
-            </Dropdown>
+            </CategoryDropdown>
           )}
         </CategoryWrapper>
       ))}

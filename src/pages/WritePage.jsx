@@ -1,57 +1,59 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { todayString } from "./homeConstants";
+import { useAuth } from "../context/AuthContext";
+import { todayString } from "../api/homeConstants";
 import { createPost } from "../api/posts";
-import CategorySelector from "../components/home/CategorySelector";
-import ImageDropZone from "../components/home/ImageDropZone";
+import CategorySelector from "../components/CategorySelector";
+import ImageDropZone from "../components/ImageDropZone";
 
+// ── Styled Components ─────────────────────────────────────
 const Container = styled.main`
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 16px;
+  padding-top: 24px;
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 `;
 
 const BackBtn = styled.button`
+  background: none;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: var(--color-sidebar);
   cursor: pointer;
-  margin-right: 15px;
-  transition: all 0.2s;
+  color: var(--color-text);
+  margin-right: 10px;
+  transition: background 0.15s;
 
   &:hover {
-    border-color: var(--color-active);
-    color: var(--color-active);
+    background: var(--color-border);
   }
 `;
 
 const PageTitle = styled.h2`
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--color-text);
 `;
 
-const Form = styled.div`
+const WriteForm = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 20px;
   background: var(--color-sidebar);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  border-radius: 18px;
+  border: 1.5px solid var(--color-border);
 `;
 
 const FormGroup = styled.div`
@@ -61,19 +63,20 @@ const FormGroup = styled.div`
 `;
 
 const FormLabel = styled.label`
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--color-text);
-  margin-left: 4px;
+  opacity: 0.8;
 `;
 
 const FormInput = styled.input`
-  height: 48px;
-  padding: 0 16px;
-  border-radius: 10px;
+  width: 100%;
+  padding: 12px 16px;
   border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
   background: var(--color-input-bg);
-  font-size: 15px;
   color: var(--color-text);
   outline: none;
   transition: all 0.2s;
@@ -85,16 +88,18 @@ const FormInput = styled.input`
 `;
 
 const FormTextarea = styled.textarea`
-  min-height: 150px;
-  padding: 16px;
-  border-radius: 10px;
+  width: 100%;
+  padding: 14px 16px;
   border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
   background: var(--color-input-bg);
-  font-size: 15px;
   color: var(--color-text);
-  outline: none;
   resize: vertical;
-  transition: all 0.2s;
+  min-height: 150px;
+  outline: none;
+  line-height: 1.6;
 
   &:focus {
     border-color: var(--color-active);
@@ -105,31 +110,31 @@ const FormTextarea = styled.textarea`
 const FormRow2 = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 15px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const CapacityRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 15px;
-  background: var(--color-input-bg);
-  border: 1.5px solid var(--color-border);
-  width: fit-content;
-  padding: 6px 12px;
-  border-radius: 10px;
+  gap: 14px;
 `;
 
 const CapBtn = styled.button`
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border);
   background: white;
+  font-size: 18px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  cursor: pointer;
+  color: var(--color-text);
   transition: all 0.2s;
 
   &:hover {
@@ -140,33 +145,38 @@ const CapBtn = styled.button`
 
 const CapDisplay = styled.span`
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
   min-width: 40px;
   text-align: center;
 `;
 
 const SubmitBtn = styled.button`
-  height: 54px;
+  width: 100%;
+  padding: 16px;
   background: var(--color-active);
   color: white;
   border: none;
   border-radius: 12px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
   cursor: pointer;
-  margin-top: 10px;
   transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(253, 147, 25, 0.3);
+  box-shadow: 0 4px 12px rgba(253, 147, 25, 0.2);
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(253, 147, 25, 0.4);
     opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 `;
 
+// ── Main Page Component ───────────────────────────────────
 export default function WritePage() {
   const navigate = useNavigate();
+  const { name } = useAuth();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [date, setDate] = useState(todayString());
@@ -181,18 +191,18 @@ export default function WritePage() {
       alert("제목과 내용을 입력해주세요!");
       return;
     }
-    
+
     try {
       await createPost({
         title: title.trim(),
         content: content.trim(),
-        date, 
+        date,
         time,
         place: place.trim(),
         capacity,
         categories,
         image,
-        author: localStorage.getItem("name") || "익명",
+        author: name || "익명",
       });
       navigate("/");
     } catch (err) {
@@ -205,27 +215,34 @@ export default function WritePage() {
     <Container>
       <Header>
         <BackBtn onClick={() => navigate(-1)}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="15 18 9 12 15 6"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <polyline points="15 18 9 12 15 6" />
           </svg>
         </BackBtn>
-        <PageTitle>새로운 모임 만들기</PageTitle>
+        <PageTitle>게시글 작성</PageTitle>
       </Header>
 
-      <Form>
+      <WriteForm>
         <FormGroup>
-          <FormLabel>활동 제목</FormLabel>
+          <FormLabel>제목</FormLabel>
           <FormInput
-            placeholder="어떤 활동을 하고 싶나요?"
+            placeholder="제목을 입력하세요"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </FormGroup>
 
         <FormGroup>
-          <FormLabel>상세 설명</FormLabel>
+          <FormLabel>내용</FormLabel>
           <FormTextarea
-            placeholder="모임에 대해 자세히 설명해주세요 (일정, 준비물, 주의사항 등)"
+            placeholder="어떤 활동을 함께 하고 싶나요?"
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
@@ -234,18 +251,26 @@ export default function WritePage() {
         <FormRow2>
           <FormGroup>
             <FormLabel>📅 약속 날짜</FormLabel>
-            <FormInput type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <FormInput
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
           </FormGroup>
           <FormGroup>
             <FormLabel>⏰ 약속 시간</FormLabel>
-            <FormInput type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            <FormInput
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
           </FormGroup>
         </FormRow2>
 
         <FormGroup>
           <FormLabel>📍 약속 장소</FormLabel>
           <FormInput
-            placeholder="어디서 만나면 좋을까요? (선택)"
+            placeholder="장소 이름 또는 주소 (선택)"
             value={place}
             onChange={(e) => setPlace(e.target.value)}
           />
@@ -254,9 +279,13 @@ export default function WritePage() {
         <FormGroup>
           <FormLabel>👥 모집 인원</FormLabel>
           <CapacityRow>
-            <CapBtn onClick={() => setCapacity((c) => Math.max(1, c - 1))}>−</CapBtn>
+            <CapBtn onClick={() => setCapacity((c) => Math.max(1, c - 1))}>
+              −
+            </CapBtn>
             <CapDisplay>{capacity}명</CapDisplay>
-            <CapBtn onClick={() => setCapacity((c) => Math.min(99, c + 1))}>＋</CapBtn>
+            <CapBtn onClick={() => setCapacity((c) => Math.min(99, c + 1))}>
+              ＋
+            </CapBtn>
           </CapacityRow>
         </FormGroup>
 
@@ -266,12 +295,12 @@ export default function WritePage() {
         </FormGroup>
 
         <FormGroup>
-          <FormLabel>이미지 추가 (선택)</FormLabel>
+          <FormLabel>이미지 (선택)</FormLabel>
           <ImageDropZone value={image} onChange={setImage} />
         </FormGroup>
 
-        <SubmitBtn onClick={handleSubmit}>모집 시작하기</SubmitBtn>
-      </Form>
+        <SubmitBtn onClick={handleSubmit}>등록하기</SubmitBtn>
+      </WriteForm>
     </Container>
   );
 }

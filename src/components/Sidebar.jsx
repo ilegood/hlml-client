@@ -4,19 +4,27 @@ import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import styled from "styled-components";
 
+// 이미지 임포트
+import logoImg from "../assets/logo.png";
+import dashboardImg from "../assets/dashboard.png";
+import homeImg from "../assets/home.png";
+import postImg from "../assets/post.png";
+import messageImg from "../assets/message.png";
+import profileImg from "../assets/profile.png";
+import darkImg from "../assets/dark.png";
+import logoutImg from "../assets/logout.png";
+
 const SidebarStyles = styled.div`
   width: 70px;
-  padding: 30px 15px;
+  padding: 30px 0;
   background-color: var(--color-sidebar);
   box-shadow: 5px 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition:
-    width 0.3s ease,
-    padding 0.3s ease,
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     background-color 0.3s ease;
-
   left: 0;
   position: fixed;
   top: 25px;
@@ -24,161 +32,160 @@ const SidebarStyles = styled.div`
   z-index: 1000;
 
   &:hover {
-    width: 300px;
-    padding: 30px;
+    width: 260px;
+  }
+
+  /* 메뉴 아이템 공통 스타일 */
+  .item-wrap {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 54px;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    background: none;
+    /* 중앙 정렬을 위한 패딩 계산: (사이드바너비 70px - 아이콘 24px) / 2 = 23px */
+    padding-left: 23px;
+    transition:
+      padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 0.2s ease;
+    gap: 20px;
+    color: var(--color-deactive);
+  }
+
+  /* 로고는 약간 더 큼 (30px) */
+  .logo {
+    padding-left: 20px;
+    margin-bottom: 25px;
+    img {
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+  &:hover .item-wrap {
+    padding-left: 25px; /* 확장 시 왼쪽으로 살짝 이동하며 자리 잡음 */
+  }
+
+  .item-wrap:hover {
+    background-color: color-mix(in srgb, var(--color-active) 10%, transparent);
+    color: var(--color-active);
   }
 
   img {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     flex-shrink: 0;
-    background-color: red;
+    object-fit: contain;
+    transition: transform 0.3s ease;
   }
 
   .label {
     opacity: 0;
     white-space: nowrap;
-    transition: opacity 0.15s ease 0s;
-    color: var(--color-deactive);
+    font-size: 15px;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
   }
 
   &:hover .label {
     opacity: 1;
-    transition: opacity 0.2s ease 0.2s;
+    pointer-events: auto;
+  }
+
+  .logo .label {
+    color: var(--color-active);
+    font-size: 20px;
+    font-weight: 800;
   }
 
   .top {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 32px;
-    text-decoration: none;
-    color: var(--color-active);
-    font-size: 20px;
-    font-weight: bold;
-  }
-
-  .btn {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 0 14px;
-    width: 100%;
-    height: 48px;
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--color-deactive);
-    font-size: 15px;
-    transition: 0.2s ease;
-  }
-
-  .btn:hover {
-    font-weight: bold;
-    color: var(--color-active);
-    background: color-mix(in srgb, var(--color-active) 15%, transparent);
-  }
-
-  .btn:hover .label {
-    color: var(--color-active);
+    gap: 4px;
   }
 
   .bottom {
     margin-top: auto;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 8px;
   }
 
-  .switch {
+  /* 다크모드 스위치 영역 전용 */
+  .switch-area {
     display: flex;
     align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--color-text);
-  }
-
-  .switch input {
-    display: none;
+    justify-content: space-between;
+    width: 100%;
+    padding-right: 20px;
   }
 
   .slider {
     position: relative;
-    width: 40px;
-    height: 22px;
+    width: 38px;
+    height: 20px;
     background: var(--color-active);
     border-radius: 20px;
-    cursor: pointer;
-    margin-left: auto;
-    flex-shrink: 0;
-    transition: 0.3s ease;
-  }
-
-  .slider::before {
-    content: "";
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    left: 3px;
-    top: 3px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.3s ease;
-  }
-
-  input:checked + .slider {
-    background: var(--color-deactive);
-  }
-
-  input:checked + .slider::before {
-    transform: translateX(18px);
-  }
-
-  .logout-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    height: 44px;
-    padding: 0 16px;
-    border: none;
-    background-color: var(--color-active);
-    border-radius: 8px;
-    color: white;
-    font-size: 15px;
-    font-weight: 500;
-    text-decoration: none;
-    cursor: pointer;
-    width: 100%;
+    opacity: 0;
     transition: opacity 0.2s ease;
+
+    &::before {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+      transform: ${(props) =>
+        props.isDark ? "translateX(18px)" : "translateX(0)"};
+    }
   }
 
-  .logout-btn:hover {
-    opacity: 0.85;
-  }
-
-  &:hover .logout-btn .label {
+  &:hover .slider {
     opacity: 1;
-    transition: opacity 0.2s ease 0.2s;
+  }
+
+  /* 로그아웃 버튼 */
+  .logout-btn {
+    background-color: var(--color-active);
+    margin: 10px 10px;
+    width: calc(100% - 20px);
+    height: 48px;
+    border-radius: 12px;
+    padding-left: 0;
+    justify-content: center;
     color: white;
+
+    .label {
+      color: white;
+      margin-left: 0;
+    }
+
+    &:hover {
+      background-color: var(--color-active);
+      opacity: 0.9;
+    }
+  }
+
+  &:hover .logout-btn {
+    justify-content: flex-start;
+    padding-left: 20px;
+    .label {
+      margin-left: 14px;
+    }
   }
 
   @media (max-width: 768px) {
     width: 0;
-    padding: 0;
     transform: translateX(-100%);
-    transition:
-      transform 0.3s ease,
-      width 0.3s ease;
-
     &.active {
-      width: 250px;
-      padding: 20px;
+      width: 260px;
       transform: translateX(0);
     }
   }
@@ -212,49 +219,52 @@ const Sidebar = () => {
   };
 
   return (
-    <SidebarStyles>
+    <SidebarStyles isDark={isDark}>
       <div className="top">
-        <Link to={"/"} className="logo">
-          <img src="" alt="LOGO" />
+        <Link to="/" className="item-wrap logo">
+          <img src={logoImg} alt="LOGO" />
           <span className="label">할래말래</span>
         </Link>
-        <Link to={"/"} className="btn">
-          <img src="" alt="dashboard" />
+        <Link to="/" className="item-wrap">
+          <img src={homeImg} alt="home" />
           <span className="label">대시보드</span>
         </Link>
-        <Link to={"/"} className="btn">
-          <img src="" alt="post" />
+        <Link to="/write" className="item-wrap">
+          <img src={postImg} alt="post" />
           <span className="label">게시글쓰기</span>
         </Link>
-        <Link to={"/"} className="btn">
-          <img src="" alt="group" />
+        <Link to="/" className="item-wrap">
+          <img src={dashboardImg} alt="group" />
           <span className="label">그룹</span>
         </Link>
-        <Link to={"/"} className="btn">
-          <img src="" alt="massage" />
+        <Link to="/" className="item-wrap">
+          <img src={messageImg} alt="message" />
           <span className="label">메세지</span>
         </Link>
-        <Link to={"/user"} className="btn">
-          <img src="" alt="mypage" />
+        <Link to="/user" className="item-wrap">
+          <img src={profileImg} alt="mypage" />
           <span className="label">마이페이지</span>
         </Link>
       </div>
 
       <div className="bottom">
-        <label className="switch">
-          <img src="" alt="dark" />
-          <span className="label">다크모드</span>
-          <input type="checkbox" checked={isDark} onChange={toggleTheme} />
-          <span className="slider"></span>
-        </label>
+        <div className="item-wrap" onClick={toggleTheme}>
+          <div className="switch-area">
+            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+              <img src={darkImg} alt="dark" />
+              <span className="label">다크모드</span>
+            </div>
+            <div className="slider"></div>
+          </div>
+        </div>
+
         {token ? (
-          <button onClick={handleLogout} className="logout-btn">
-            <img src="" alt="logout" />
+          <button onClick={handleLogout} className="item-wrap logout-btn">
+            <img src={logoutImg} alt="dark" />
             <span className="label">로그아웃</span>
           </button>
         ) : (
-          <Link to="/login" className="logout-btn">
-            <img src="" alt="logout" />
+          <Link to="/login" className="item-wrap logout-btn">
             <span className="label">로그인</span>
           </Link>
         )}

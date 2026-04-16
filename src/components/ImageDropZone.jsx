@@ -1,91 +1,78 @@
 import { useRef, useState } from "react";
 import styled from "styled-components";
-import { fileToBase64 } from "../../pages/homeConstants";
+import { fileToBase64 } from "../api/homeConstants";
 
 const DropZoneContainer = styled.div`
-  width: 100%;
-  min-height: 140px;
-  background: var(--color-input-bg);
-  border: 2px dashed var(--color-border);
-  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px dashed var(--color-border);
+  border-radius: 12px;
+  padding: 40px 20px;
   cursor: pointer;
+  color: #aaa;
   transition: all 0.2s;
-  position: relative;
-  overflow: hidden;
-  padding: 20px;
+  user-select: none;
 
   &:hover {
     border-color: var(--color-active);
+    color: var(--color-active);
     background: var(--color-input-focus-bg);
   }
 
-  &.drag-over {
-    border-color: var(--color-active);
-    background: var(--color-input-focus-bg);
-    transform: scale(1.01);
+  &.drop-zone-sm {
+    padding: 18px 16px;
   }
 
   &.has-img {
     padding: 0;
     border: none;
   }
+`;
 
-  &.drop-zone-sm {
-    min-height: 80px;
-    padding: 10px;
-  }
+const DropZoneText = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+`;
+
+const DropZoneSub = styled.div`
+  font-size: 12px;
 `;
 
 const ImagePreview = styled.div`
-  width: 100%;
-  height: 100%;
   position: relative;
-  
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+
   img {
     width: 100%;
-    height: 100%;
+    max-height: 300px;
     object-fit: cover;
     display: block;
   }
 `;
 
-const RemoveBtn = styled.button`
+const RemoveImgBtn = styled.button`
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 24px;
-  height: 24px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   color: white;
   border: none;
   border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background 0.2s;
 
   &:hover {
     background: rgba(0, 0, 0, 0.8);
   }
-`;
-
-const DropZoneText = styled.div`
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text);
-  margin-bottom: 2px;
-`;
-
-const DropZoneSub = styled.div`
-  font-size: 11px;
-  color: var(--color-deactive);
-  text-align: center;
 `;
 
 export default function ImageDropZone({ value, onChange, small = false }) {
@@ -119,7 +106,7 @@ export default function ImageDropZone({ value, onChange, small = false }) {
 
   return (
     <DropZoneContainer
-      className={`${small ? "drop-zone-sm" : ""}${isDragging ? " drag-over" : ""}${value ? " has-img" : ""}`}
+      className={`${small ? "drop-zone-sm" : ""} ${isDragging ? "drag-over" : ""} ${value ? "has-img" : ""}`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
@@ -132,22 +119,30 @@ export default function ImageDropZone({ value, onChange, small = false }) {
         accept="image/*"
         onChange={(e) => handleFile(e.target.files[0])}
       />
-      
+
       {value ? (
         <ImagePreview>
           <img src={value} alt="preview" />
-          <RemoveBtn
+          <RemoveImgBtn
             onClick={(e) => {
               e.stopPropagation();
               onChange("");
             }}
           >
             ✕
-          </RemoveBtn>
+          </RemoveImgBtn>
         </ImagePreview>
       ) : (
         <>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginBottom: "4px" }}>
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            style={{ marginBottom: "4px" }}
+          >
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
             <circle cx="8.5" cy="8.5" r="1.5" />
             <polyline points="21 15 16 10 5 21" />

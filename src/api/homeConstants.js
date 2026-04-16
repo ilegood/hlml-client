@@ -1,3 +1,4 @@
+// ── 상수 ──────────────────────────────────────────────────
 export const CATEGORY_MAP = {
   성별: ["남성", "여성", "혼성"],
   나이: ["10대", "20대", "30대", "40대", "50대 이상"],
@@ -10,9 +11,11 @@ export const STATUS_LIST = ["모집중", "모집완료"];
 export const STATUS_EMOJI = { 모집중: "🟢", 모집완료: "🔴" };
 export const STATUS_CLASS = { 모집중: "status-open", 모집완료: "status-full" };
 
+// ── 유틸 ──────────────────────────────────────────────────
 export function getTimeAgo(ts) {
   if (!ts) return "";
   const date = new Date(ts);
+  if (isNaN(date.getTime())) return "";
   const diff = Date.now() - date.getTime();
   const min = Math.floor(diff / 60000);
   const hr = Math.floor(diff / 3600000);
