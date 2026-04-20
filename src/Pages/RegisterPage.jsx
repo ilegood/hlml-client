@@ -11,10 +11,7 @@ const RegisterStyled = styled.div`
     display: flex;
     flex-direction: column;
     width: 480px;
-    background-color: var(--color-bg);
-    border-radius: 16px;
-    padding: 40px 36px 32px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    background-color: var(--color-bg);hadow: 0 4px 24px rgba(0, 0, 0, 0.1);
   }
 
   label {
