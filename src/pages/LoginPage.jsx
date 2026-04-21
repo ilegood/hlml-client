@@ -1,5 +1,10 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import styled from "styled-components";
+
+import { login as loginAPI } from "../api/users";
+import { useAuth } from "../context/AuthContext";
 
 const LoginStyles = styled.div`
   display: flex;
@@ -11,20 +16,35 @@ const LoginStyles = styled.div`
     display: flex;
     flex-direction: column;
     width: 480px;
-    background-color: var(--color-bg);
+    background-color: var(--color-sidebar);
     border-radius: 16px;
     padding: 40px 36px 32px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
   }
 
+  .input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    gap: 8px;
+  }
+
   input {
-    background-color: var(--color-bg);
-    border: 1.5px solid #d3d3d3;
+    background-color: var(--color-input-bg);
+    border: 1.5px solid var(--color-border);
     width: 100%;
-    height: 40px;
+    height: 45px;
     border-radius: 50px;
-    padding: 0 15px;
-    margin-top: 5px;
+    padding: 0 20px;
     font-size: 14px;
     color: var(--color-text);
     outline: none;
@@ -34,13 +54,13 @@ const LoginStyles = styled.div`
   }
 
   input::placeholder {
-    color: #bbb;
+    color: #888;
     font-size: 12px;
   }
 
   input:focus {
     border-color: var(--color-active);
-    background-color: #fff8f2;
+    background-color: var(--color-input-focus-bg);
   }
 
   .signup-link {
@@ -87,17 +107,39 @@ const LoginStyles = styled.div`
 `;
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const { login } = useAuth();
+
+  const handlesubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const data = await loginAPI(form);
+      login(data);
+      navigate("/");
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  };
   return (
     <LoginStyles>
-      <form>
+      <form onSubmit={handlesubmit}>
         <div className="container">
           <div className="input-wrap">
             <label>
-              아이디
+              이메일
               <input
                 type="text"
                 className="id"
-                placeholder="아이디를 입력해주세요"
+                placeholder="이메일을 입력해주세요"
+                value={form.email}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, email: event.target.value }))
+                }
               />
             </label>
             <label>
@@ -106,15 +148,19 @@ const LoginPage = () => {
                 type="password"
                 className="pw"
                 placeholder="비밀번호를 입력해주세요"
+                value={form.password}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, password: event.target.value }))
+                }
               />
             </label>
-            <Link to="/register" className="signup-link">
-              계정이 없으신가요? <span>회원가입 하러가기</span>
-            </Link>
           </div>
           <button type="submit" className="login-box">
             로그인
           </button>
+          <Link to="/register" className="signup-link">
+            계정이 없으신가요? <span>회원가입 하러가기</span>
+          </Link>
         </div>
       </form>
     </LoginStyles>

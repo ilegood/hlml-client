@@ -9,6 +9,31 @@
   --color-deactive: #07b1bc;
   --color-bg: white;
   --color-text: #121212;
+  --color-sidebar: white;
+  --color-border: #e0e0e0;
+  --color-input-bg: #f9f9f9;
+  --color-input-focus-bg: #fff8f2;
+  --color-item-bg: white;
+  --color-item-hover: #f5f5f5;
+}
+
+[data-theme='dark'] {
+  --color-bg: #1e1e24;
+  --color-text: #e0e0e0;
+  --color-sidebar: #121212;
+  --color-border: #333;
+  --color-input-bg: #2a2a32;
+  --color-input-focus-bg: #352b20;
+  --color-item-bg: #25252d;
+  --color-item-hover: #32323d;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
 
 .page {
@@ -27,6 +52,20 @@ main {
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  margin-left: 70px; /* Sidebar 닫힌 너비 */
-  margin-right: 60px; /* FriendsList 닫힌 너비 */
+  padding-left: 70px;
+  padding-right: 60px;
+  transition: padding 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  main {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-wrap {
+    flex-direction: column;
+  }
 }
