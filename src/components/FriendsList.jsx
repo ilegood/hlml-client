@@ -15,7 +15,7 @@ const FriendsListStyled = styled.div`
 
   .toggle-btn {
     position: absolute;
-    left: -40px;
+    left: -45px;
     top: 20px;
     padding: 10px 15px;
     background-color: var(--color-sidebar);
@@ -70,13 +70,7 @@ const FriendsListStyled = styled.div`
     flex: 1;
     overflow-y: auto;
     padding: 10px 20px;
-    mask-image: linear-gradient(
-      to bottom,
-      transparent,
-      black 2%,
-      black 98%,
-      transparent
-    );
+    mask-image: linear-gradient(to bottom, transparent, black 98%, transparent);
 
     &::-webkit-scrollbar {
       width: 6px;
