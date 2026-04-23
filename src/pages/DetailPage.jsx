@@ -1011,6 +1011,12 @@ export default function DetailPage() {
   };
 
   const toggleJoin = () => {
+    // 작성자는 참여를 취소할 수 없음
+    if (post.author === userId) {
+      alert("게시글 작성자는 참여를 취소할 수 없습니다.");
+      return;
+    }
+
     const list = [...(post.joinedBy || [])];
     const i = list.indexOf(userId);
     let count = post.participants || 0;
@@ -1090,6 +1096,8 @@ export default function DetailPage() {
       alert("삭제에 실패했습니다.");
     }
   };
+
+  const isAuthor = post.author === userId;
 
   return (
     <DetailStyles>
@@ -1253,7 +1261,7 @@ export default function DetailPage() {
             <button
               className={`action-btn-lg ${joined ? "joined" : ""}`}
               onClick={toggleJoin}
-              disabled={isFull && !joined}
+              disabled={(isFull && !joined) || isAuthor}
             >
               <svg
                 width="16"
@@ -1268,7 +1276,7 @@ export default function DetailPage() {
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              {joined ? "참여중" : isFull ? "인원 마감" : "참여하기"}
+              {isAuthor ? "방장(참여중)" : joined ? "참여중" : isFull ? "인원 마감" : "참여하기"}
             </button>
           </div>
         </div>

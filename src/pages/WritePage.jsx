@@ -192,6 +192,11 @@ export default function WritePage() {
       return;
     }
 
+    if (capacity < 2 || capacity > 10) {
+      alert("모집 인원은 2명에서 10명 사이여야 합니다.");
+      return;
+    }
+
     try {
       await createPost({
         title: title.trim(),
@@ -279,11 +284,11 @@ export default function WritePage() {
         <FormGroup>
           <FormLabel>👥 모집 인원</FormLabel>
           <CapacityRow>
-            <CapBtn onClick={() => setCapacity((c) => Math.max(1, c - 1))}>
+            <CapBtn onClick={() => setCapacity((c) => Math.max(2, c - 1))}>
               −
             </CapBtn>
             <CapDisplay>{capacity}명</CapDisplay>
-            <CapBtn onClick={() => setCapacity((c) => Math.min(99, c + 1))}>
+            <CapBtn onClick={() => setCapacity((c) => Math.min(10, c + 1))}>
               ＋
             </CapBtn>
           </CapacityRow>
