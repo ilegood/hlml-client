@@ -143,7 +143,7 @@ const SidebarStyles = styled.div`
       border-radius: 50%;
       transition: transform 0.3s ease;
       transform: ${(props) =>
-        props.isDark ? "translateX(18px)" : "translateX(0)"};
+        props.$isDark ? "translateX(18px)" : "translateX(0)"};
     }
   }
 
@@ -219,7 +219,7 @@ const Sidebar = () => {
   };
 
   return (
-    <SidebarStyles isDark={isDark}>
+    <SidebarStyles $isDark={isDark}>
       <div className="top">
         <Link to="/" className="item-wrap logo">
           <img src={logoImg} alt="LOGO" />
