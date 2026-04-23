@@ -32,6 +32,7 @@ export function setNickname(n) {
 export function getTimeAgo(ts) {
   if (!ts) return "";
   const date = new Date(ts);
+  if (isNaN(date.getTime())) return "";
   const diff = Date.now() - date.getTime();
   const min = Math.floor(diff / 60000);
   const hr = Math.floor(diff / 3600000);
@@ -48,14 +49,16 @@ export function countComments(comments = []) {
 
 export function formatDateTime(dateStr, timeStr) {
   if (!dateStr) return null;
-  // dateStr에서 날짜만 추출 (YYYY-MM-DD)
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
 
-  const dateFormatted = d.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
-  
+  const dateFormatted = d.toLocaleDateString("ko-KR", {
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  });
+
   if (timeStr) {
-    // HH:MM:SS 형태에서 HH:MM만 추출
     const [h, m] = timeStr.split(":");
     return `${dateFormatted} ${h}:${m}`;
   }
