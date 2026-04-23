@@ -1,10 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getNickname, todayString } from "./constants";
+import { getNickname, todayString, MIN_CAPACITY, MAX_CAPACITY } from "./constants";
 import { createPost } from "../../api/post";
 import CategorySelector from "./components/CategorySelector";
 import ImageDropZone from "./components/ImageDropZone";
 import "./App.css";
+
+const CapacityInput = ({ value, onChange }) => (
+  <div className="capacity-row">
+    <button className="cap-btn" onClick={() => onChange(Math.max(MIN_CAPACITY, value - 1))}>−</button>
+    <span className="cap-display">{value}명</span>
+    <button className="cap-btn" onClick={() => onChange(Math.min(MAX_CAPACITY, value + 1))}>＋</button>
+  </div>
+);
 
 export default function WritePage() {
   const navigate = useNavigate();
@@ -121,21 +129,7 @@ export default function WritePage() {
 
         <div className="form-group">
           <label className="form-label">👥 모집 인원</label>
-          <div className="capacity-row">
-            <button
-              className="cap-btn"
-              onClick={() => setCapacity((c) => Math.max(1, c - 1))}
-            >
-              −
-            </button>
-            <span className="cap-display">{capacity}명</span>
-            <button
-              className="cap-btn"
-              onClick={() => setCapacity((c) => Math.min(99, c + 1))}
-            >
-              ＋
-            </button>
-          </div>
+          <CapacityInput value={capacity} onChange={setCapacity} />
         </div>
 
         <div className="form-group">

@@ -11,6 +11,9 @@ export const STATUS_LIST = ["모집중", "모집완료"];
 export const STATUS_EMOJI = { 모집중: "🟢", 모집완료: "🔴" };
 export const STATUS_CLASS = { 모집중: "status-open", 모집완료: "status-full" };
 
+export const MIN_CAPACITY = 2;
+export const MAX_CAPACITY = 10;
+
 // ── 스토리지 ──────────────────────────────────────────────
 export function loadData() {
   return JSON.parse(localStorage.getItem("posts") || "[]");
@@ -40,7 +43,7 @@ export function getTimeAgo(ts) {
 }
 
 export function countComments(comments = []) {
-  return comments.reduce((s, c) => s + 1 + (c.replies || []).length, 0);
+  return comments.reduce((s, c) => s + 1 + countComments(c.replies), 0);
 }
 
 export function formatDateTime(dateStr, timeStr) {

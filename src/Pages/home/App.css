@@ -140,6 +140,8 @@ body {
   animation: cardIn .3s ease both;
   box-shadow: var(--shadow);
 }
+.card-closed { opacity: 0.65; background: #fafafa; }
+.card-closed:hover { transform: none; box-shadow: var(--shadow); }
 @keyframes cardIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: #d0cfc9; }
 .card-inner { display: flex; gap: 12px; padding: 14px 14px 10px; cursor: pointer; }
