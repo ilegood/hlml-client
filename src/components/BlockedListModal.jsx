@@ -59,10 +59,7 @@ const ModalWrapper = styled.div`
 `;
 
 export default function BlockedListModal({ onClose }) {
-  const blockedUsers = [
-    { id: 1, name: "빌런1" },
-    { id: 2, name: "노쇼전문가" }
-  ];
+  const blockedUsers = [];
 
   return (
     <ModalWrapper onClick={onClose}>

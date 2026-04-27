@@ -371,11 +371,12 @@ const EmptyState = styled.div`
 `;
 
 // ── PostCard Component ────────────────────────────────────
-function PostCard({ post, onLike, onOpen }) {
+function PostCard({ post, onLike, onOpen, currentUserId }) {
   if (!post) return null;
   const liked = Array.isArray(post.likedBy)
-    ? post.likedBy.includes("me")
+    ? post.likedBy.includes(currentUserId || "me")
     : false;
+  const isAuthor = post.author === currentUserId;
   const participants = post.participants || 0;
   const capacity = post.capacity || 4;
   const pct = Math.min(100, Math.round((participants / capacity) * 100));
@@ -473,6 +474,8 @@ function PostCard({ post, onLike, onOpen }) {
               e.stopPropagation();
               onLike(post);
             }}
+            disabled={isAuthor}
+            style={{ opacity: isAuthor ? 0.5 : 1, cursor: isAuthor ? 'not-allowed' : 'pointer' }}
           >
             <svg
               width="12"
@@ -637,6 +640,7 @@ export default function MainPage() {
               post={post}
               onLike={handleLike}
               onOpen={(id) => navigate("/detail/" + id)}
+              currentUserId={name || "me"}
             />
           ))
         )}
