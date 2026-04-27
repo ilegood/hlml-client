@@ -244,7 +244,7 @@ const Sidebar = () => {
           <img src={dashboardImg} alt="group" />
           <span className="label">그룹</span>
         </Link>
-        <Link to="/" className="item-wrap">
+        <Link to="/message" className="item-wrap">
           <img src={messageImg} alt="message" />
           <span className="label">메세지</span>
         </Link>

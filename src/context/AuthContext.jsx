@@ -7,14 +7,15 @@ export const AuthProvider = ({ children }) => {
   const [name, setName] = useState(localStorage.getItem("name"));
 
   const login = (data) => {
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("name", data.nickname);
-    localStorage.setItem("email", data.email);
-    localStorage.setItem("bio", data.bio || "");
-    localStorage.setItem("profile_img", data.profile_img || "");
+    const { token, user } = data;
+    localStorage.setItem("token", token);
+    localStorage.setItem("name", user.nickname);
+    localStorage.setItem("email", user.email);
+    localStorage.setItem("bio", user.bio || "");
+    localStorage.setItem("profile_img", user.profile_img || "");
     
-    setToken(data.token);
-    setName(data.nickname);
+    setToken(token);
+    setName(user.nickname);
   };
 
   const logout = () => {

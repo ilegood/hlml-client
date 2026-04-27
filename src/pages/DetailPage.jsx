@@ -1098,8 +1098,6 @@ export default function DetailPage() {
     }
   };
 
-  const isAuthor = post.author === userId;
-
   return (
     <DetailStyles>
       <main className="container">

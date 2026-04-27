@@ -148,15 +148,40 @@ export default function UserPage() {
     });
   };
 
+  const getProfileImg = (img) => {
+    if (!img || img === "null" || img === "undefined") return null;
+    if (img.startsWith("data:")) return img; 
+    return `http://localhost:4000${img}`; 
+  };
+
+  const profileSrc = getProfileImg(userInfo.profile_img);
+
   return (
     <Userstyles>
       <div className="profile-wrap">
         <div className="profile">
-          {userInfo.profile_img && (
+          {profileSrc ? (
             <img 
-              src={`http://localhost:4000${userInfo.profile_img}`} 
+              src={profileSrc} 
               alt="profile" 
+              onError={(e) => {
+                e.target.onerror = null; 
+                e.target.style.display = 'none';
+              }}
             />
+          ) : (
+            <div style={{ 
+              width: '100%', 
+              height: '100%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              backgroundColor: '#eee',
+              color: '#aaa',
+              fontSize: '40px'
+            }}>
+              👤
+            </div>
           )}
         </div>
         <div className="user-info">
