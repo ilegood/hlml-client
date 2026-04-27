@@ -13,6 +13,7 @@ import messageImg from "../assets/message.png";
 import profileImg from "../assets/profile.png";
 import darkImg from "../assets/dark.png";
 import logoutImg from "../assets/logout.png";
+import loginImg from "../assets/login.png";
 
 const SidebarStyles = styled.div`
   width: 70px;
@@ -161,10 +162,14 @@ const SidebarStyles = styled.div`
     padding-left: 0;
     justify-content: center;
     color: white;
+    gap: 0;
 
     .label {
       color: white;
       margin-left: 0;
+      width: 0;
+      overflow: hidden;
+      opacity: 0;
     }
 
     &:hover {
@@ -175,9 +180,11 @@ const SidebarStyles = styled.div`
 
   &:hover .logout-btn {
     justify-content: flex-start;
-    padding-left: 20px;
+    padding-left: 25px;
+    gap: 20px;
     .label {
-      margin-left: 14px;
+      width: auto;
+      opacity: 1;
     }
   }
 
@@ -265,6 +272,7 @@ const Sidebar = () => {
           </button>
         ) : (
           <Link to="/login" className="item-wrap logout-btn">
+            <img src={loginImg} alt="dark" />
             <span className="label">로그인</span>
           </Link>
         )}

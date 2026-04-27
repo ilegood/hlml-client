@@ -79,7 +79,7 @@ const RegisterStyled = styled.div`
   .gender-wrap {
     display: flex;
     gap: 10px;
-    margin-top: 5px;
+    margin-bottom: 22px;
   }
 
   .gender-option {
@@ -355,23 +355,21 @@ const RegisterPage = () => {
               </select>
             </div>
           </label>
-          <label>
-            성별
-            <div className="gender-wrap">
-              {["남", "여"].map((g) => (
-                <label key={g} className="gender-option">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value={g}
-                    checked={form.gender === g}
-                    onChange={handleChange}
-                  />
-                  {g}
-                </label>
-              ))}
-            </div>
-          </label>
+          
+          <div className="gender-wrap">
+            {["남", "여"].map((g) => (
+              <label key={g} className="gender-option">
+                <input
+                  type="radio"
+                  name="gender"
+                  value={g}
+                  checked={form.gender === g}
+                  onChange={handleChange}
+                />
+                {g}
+              </label>
+            ))}
+          </div>
 
           <div className="button-wrap">
             <button type="button" className="btn-cancel" onClick={handleReset}>

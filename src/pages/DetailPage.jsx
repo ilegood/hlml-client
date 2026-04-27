@@ -973,6 +973,7 @@ export default function DetailPage() {
   }
 
   const userId = name || "me";
+  const isAuthor = post.author === userId;
   const liked = (post.likedBy || []).includes(userId);
   const joined = (post.joinedBy || []).includes(userId);
   const isFull = (post.participants || 0) >= (post.capacity || 4);
@@ -1116,36 +1117,40 @@ export default function DetailPage() {
             </svg>
           </button>
           <div className="more-menu-wrap">
-            <button
-              className="more-btn"
-              onClick={() => setShowMoreMenu(!showMoreMenu)}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <circle cx="12" cy="5" r="1.5" />
-                <circle cx="12" cy="12" r="1.5" />
-                <circle cx="12" cy="19" r="1.5" />
-              </svg>
-            </button>
-            {showMoreMenu && (
-              <div className="more-menu">
-                <div
-                  className="more-item"
-                  onClick={() => {
-                    setShowEditModal(true);
-                    setShowMoreMenu(false);
-                  }}
+            {isAuthor && (
+              <>
+                <button
+                  className="more-btn"
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
                 >
-                  수정
-                </div>
-                <div className="more-item delete" onClick={handleDelete}>
-                  삭제
-                </div>
-              </div>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <circle cx="12" cy="5" r="1.5" />
+                    <circle cx="12" cy="12" r="1.5" />
+                    <circle cx="12" cy="19" r="1.5" />
+                  </svg>
+                </button>
+                {showMoreMenu && (
+                  <div className="more-menu">
+                    <div
+                      className="more-item"
+                      onClick={() => {
+                        setShowEditModal(true);
+                        setShowMoreMenu(false);
+                      }}
+                    >
+                      수정
+                    </div>
+                    <div className="more-item delete" onClick={handleDelete}>
+                      삭제
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -1245,6 +1250,7 @@ export default function DetailPage() {
             <button
               className={`action-btn-lg ${liked ? "liked" : ""}`}
               onClick={toggleLike}
+              disabled={isAuthor}
             >
               <svg
                 width="16"
@@ -1256,12 +1262,12 @@ export default function DetailPage() {
               >
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
-              좋아요 {post.likes || 0}
+              찜하기 {post.likes || 0}
             </button>
             <button
               className={`action-btn-lg ${joined ? "joined" : ""}`}
               onClick={toggleJoin}
-              disabled={(isFull && !joined) || isAuthor}
+              disabled={isAuthor || (isFull && !joined)}
             >
               <svg
                 width="16"
@@ -1276,7 +1282,13 @@ export default function DetailPage() {
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              {isAuthor ? "방장(참여중)" : joined ? "참여중" : isFull ? "인원 마감" : "참여하기"}
+              {isAuthor
+                ? "내 게시글"
+                : joined
+                  ? "참여중"
+                  : isFull
+                    ? "인원 마감"
+                    : "참여하기"}
             </button>
           </div>
         </div>

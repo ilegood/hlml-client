@@ -110,12 +110,23 @@ const ModalWrapper = styled.div`
         .place { font-size: 12px; opacity: 0.6; }
       }
     }
+
+    .empty-msg {
+      text-align: center;
+      padding: 30px 0;
+      font-size: 14px;
+      color: var(--color-deactive);
+      background: var(--color-input-bg);
+      border-radius: 12px;
+      border: 1px dashed var(--color-border);
+    }
   }
 `;
 
 export default function AppointmentModal({ onClose }) {
-  // 샘플 데이터
-  const events = [15, 23]; 
+  // 샘플 데이터 (빈 배열로 변경)
+  const events = []; 
+  const todayAppts = [];
 
   return (
     <ModalWrapper onClick={onClose}>
@@ -149,13 +160,19 @@ export default function AppointmentModal({ onClose }) {
 
         <div className="appt-list">
           <h3 style={{fontSize:'14px', marginBottom:'10px'}}>오늘의 약속</h3>
-          <div className="appt-item">
-            <div className="time-tag">19:00</div>
-            <div className="info">
-              <div className="title">맛있는 저녁 식사 모임</div>
-              <div className="place">강남역 10번 출구</div>
-            </div>
-          </div>
+          {todayAppts.length > 0 ? (
+            todayAppts.map((appt, idx) => (
+              <div key={idx} className="appt-item">
+                <div className="time-tag">{appt.time}</div>
+                <div className="info">
+                  <div className="title">{appt.title}</div>
+                  <div className="place">{appt.place}</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="empty-msg">오늘 예정된 약속이 없습니다.</div>
+          )}
         </div>
       </div>
     </ModalWrapper>
