@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
+import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import {
   STATUS_LIST,
@@ -324,12 +325,13 @@ const ActionBtn = styled.button`
   border-radius: 20px;
   padding: 4px 10px;
   font-size: 12px;
+  font-weight: 800;
   cursor: pointer;
   font-family: inherit;
   color: var(--color-text);
   transition: all 0.15s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: var(--color-active);
     color: var(--color-active);
   }
@@ -337,6 +339,13 @@ const ActionBtn = styled.button`
   &.liked {
     border-color: #ff4757;
     color: #ff4757;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    border-color: var(--color-border);
+    color: var(--color-text);
+    opacity: 0.6;
   }
 `;
 
@@ -474,8 +483,11 @@ function PostCard({ post, onLike, onOpen, currentUserId }) {
               e.stopPropagation();
               onLike(post);
             }}
-            disabled={isAuthor}
-            style={{ opacity: isAuthor ? 0.5 : 1, cursor: isAuthor ? 'not-allowed' : 'pointer' }}
+            disabled={isAuthor || !currentUserId || currentUserId === "me"}
+            style={{ 
+              opacity: (isAuthor || !currentUserId || currentUserId === "me") ? 0.5 : 1, 
+              cursor: (isAuthor || !currentUserId || currentUserId === "me") ? 'not-allowed' : 'pointer' 
+            }}
           >
             <svg
               width="12"
@@ -511,7 +523,7 @@ function PostCard({ post, onLike, onOpen, currentUserId }) {
 // ── Main Page Component ───────────────────────────────────
 export default function MainPage() {
   const navigate = useNavigate();
-  const { name } = useAuth();
+  const { name, token } = useAuth();
   const [posts, setPosts] = useState([]);
   const [search, setSearch] = useState("");
   const [selStatus, setSelStatus] = useState("");
@@ -538,13 +550,25 @@ export default function MainPage() {
         it.title.toLowerCase().includes(kw) ||
         it.content.toLowerCase().includes(kw);
       const matchCat = Object.entries(selCats).every(
-        ([k, v]) => !v || it.categories?.[k] === v,
+        ([k, v]) => {
+          if (!v) return true;
+          if (k === "인원") {
+            const num = parseInt(v); // "4명" -> 4
+            return it.capacity === num;
+          }
+          return it.categories?.[k] === v;
+        }
       );
       const matchStat = !selStatus || it.status === selStatus;
       return matchText && matchCat && matchStat;
     });
 
   const handleLike = async (post) => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
     const likedBy = post.likedBy || [];
     const userId = name || "me";
     const idx = likedBy.indexOf(userId);
@@ -571,6 +595,15 @@ export default function MainPage() {
     }
   };
 
+  const handleWriteClick = () => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
+    navigate("/write");
+  };
+
   return (
     <Container>
       <HeaderControls>
@@ -595,17 +628,30 @@ export default function MainPage() {
 
         <FilterRow>
           <StatusFilterRow>
-            {["", ...STATUS_LIST].map((s) => (
-              <StatusFilterBtn
-                key={s}
-                className={selStatus === s ? "active" : ""}
-                onClick={() => setSelStatus(s)}
-              >
-                {s === "" ? "전체" : `${STATUS_EMOJI[s]} ${s}`}
-              </StatusFilterBtn>
-            ))}
+            {["", ...STATUS_LIST].map((s) => {
+              const isAllBtn = s === "";
+              const noCatsActive = Object.values(selCats).every((v) => !v);
+              const isActive = isAllBtn
+                ? selStatus === "" && noCatsActive
+                : selStatus === s;
+
+              return (
+                <StatusFilterBtn
+                  key={s}
+                  className={isActive ? "active" : ""}
+                  onClick={() => {
+                    setSelStatus(s);
+                    if (isAllBtn) {
+                      setSelCats({});
+                    }
+                  }}
+                >
+                  {isAllBtn ? "전체" : `${STATUS_EMOJI[s]} ${s}`}
+                </StatusFilterBtn>
+              );
+            })}
           </StatusFilterRow>
-          <WriteBtn onClick={() => navigate("/write")}>
+          <WriteBtn onClick={handleWriteClick}>
             <svg
               width="13"
               height="13"

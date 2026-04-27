@@ -198,7 +198,8 @@ const RegisterPage = () => {
     if (!form.email) return toast.error("이메일 주소를 입력해주세요.");
     if (!form.password) return toast.error("비밀번호를 입력해주세요.");
     if (!form.pw_check) return toast.error("비밀번호 확인을 입력해주세요.");
-    if (form.password !== form.pw_check) return toast.error("비밀번호가 일치하지 않습니다.");
+    if (form.password !== form.pw_check)
+      return toast.error("비밀번호가 일치하지 않습니다.");
     if (!form.phone_number) return toast.error("휴대전화 번호를 입력해주세요.");
     if (!form.birthday.year || !form.birthday.month || !form.birthday.day) {
       return toast.error("생년월일을 모두 선택해주세요.");
@@ -316,9 +317,7 @@ const RegisterPage = () => {
                 value={form.birthday.year}
                 onChange={handleBirthChange}
               >
-                <option value="">
-                  년
-                </option>
+                <option value="">년</option>
                 {years.map((year) => (
                   <option key={year} value={year}>
                     {year}
@@ -330,9 +329,7 @@ const RegisterPage = () => {
                 value={form.birthday.month}
                 onChange={handleBirthChange}
               >
-                <option value="">
-                  월
-                </option>
+                <option value="">월</option>
                 {months.map((month) => (
                   <option key={month} value={month}>
                     {month}
@@ -344,9 +341,7 @@ const RegisterPage = () => {
                 value={form.birthday.day}
                 onChange={handleBirthChange}
               >
-                <option value="">
-                  일
-                </option>
+                <option value="">일</option>
                 {days.map((day) => (
                   <option key={day} value={day}>
                     {day}
@@ -355,7 +350,7 @@ const RegisterPage = () => {
               </select>
             </div>
           </label>
-          
+
           <div className="gender-wrap">
             {["남", "여"].map((g) => (
               <label key={g} className="gender-option">
@@ -372,7 +367,11 @@ const RegisterPage = () => {
           </div>
 
           <div className="button-wrap">
-            <button type="button" className="btn-cancel" onClick={handleReset}>
+            <button
+              type="button"
+              className="btn-cancel"
+              onClick={() => navigate("/login")}
+            >
               취소
             </button>
             <button type="submit" className="btn-submit">

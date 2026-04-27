@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
+import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { todayString } from "../api/homeConstants";
-import { createPost } from "../api/posts";
+import { createPost, getPost, updatePost } from "../api/posts";
 import CategorySelector from "../components/CategorySelector";
 import ImageDropZone from "../components/ImageDropZone";
 
@@ -81,9 +82,15 @@ const FormInput = styled.input`
   outline: none;
   transition: all 0.2s;
 
-  &:focus {
+  &:focus:not(:disabled) {
     border-color: var(--color-active);
     background: var(--color-input-focus-bg);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--color-bg);
   }
 `;
 
@@ -124,30 +131,38 @@ const CapacityRow = styled.div`
 `;
 
 const CapBtn = styled.button`
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   border: 1.5px solid var(--color-border);
-  background: white;
-  font-size: 18px;
+  background: var(--color-input-bg);
+  font-size: 20px;
+  font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text);
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: var(--color-active);
+    background: var(--color-input-focus-bg);
     color: var(--color-active);
+  }
+
+  &:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
   }
 `;
 
 const CapDisplay = styled.span`
-  font-size: 16px;
-  font-weight: 700;
-  min-width: 40px;
+  font-size: 18px;
+  font-weight: 800;
+  min-width: 50px;
   text-align: center;
+  color: var(--color-text);
 `;
 
 const SubmitBtn = styled.button`
@@ -175,16 +190,53 @@ const SubmitBtn = styled.button`
 
 // ── Main Page Component ───────────────────────────────────
 export default function WritePage() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const { name } = useAuth();
+  
+  const isEdit = !!id;
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [date, setDate] = useState(todayString());
   const [time, setTime] = useState("");
   const [place, setPlace] = useState("");
-  const [capacity, setCapacity] = useState(4);
+  const [capacity, setCapacity] = useState(2);
+  const [status, setStatus] = useState("모집중");
   const [categories, setCategories] = useState({});
   const [image, setImage] = useState("");
+  const [isLoading, setIsLoading] = useState(isEdit);
+
+  useEffect(() => {
+    if (isEdit) {
+      const fetchPostData = async () => {
+        try {
+          const post = await getPost(id);
+          if (post) {
+            setTitle(post.title || "");
+            setContent(post.content || "");
+            setDate(post.date || todayString());
+            setTime(post.time || "");
+            setPlace(post.place || "");
+            setCapacity(post.capacity || 2);
+            setStatus(post.status || "모집중");
+            setCategories(post.categories || {});
+            setImage(post.image || "");
+          } else {
+            alert("게시글을 찾을 수 없습니다.");
+            navigate("/");
+          }
+        } catch (err) {
+          console.error("Failed to load post:", err);
+          alert("데이터를 불러오는 중 오류가 발생했습니다.");
+          navigate("/");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchPostData();
+    }
+  }, [id, isEdit, navigate]);
 
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
@@ -192,24 +244,35 @@ export default function WritePage() {
       return;
     }
 
+    const postData = {
+      title: title.trim(),
+      content: content.trim(),
+      date,
+      time,
+      place: place.trim(),
+      capacity,
+      categories,
+      image,
+      status,
+      author: name || "익명",
+    };
+
     try {
-      await createPost({
-        title: title.trim(),
-        content: content.trim(),
-        date,
-        time,
-        place: place.trim(),
-        capacity,
-        categories,
-        image,
-        author: name || "익명",
-      });
-      navigate("/");
+      if (isEdit) {
+        await updatePost(id, { ...postData, edited: true });
+        toast.success("게시글이 수정되었습니다.");
+      } else {
+        await createPost(postData);
+        toast.success("게시글이 등록되었습니다.");
+      }
+      navigate(isEdit ? `/detail/${id}` : "/");
     } catch (err) {
-      console.error("Failed to create post:", err);
-      alert("게시글 저장에 실패했습니다.");
+      console.error("Failed to save post:", err);
+      toast.error("저장에 실패했습니다.");
     }
   };
+
+  if (isLoading) return <Container><PageTitle>불러오는 중...</PageTitle></Container>;
 
   return (
     <Container>
@@ -226,7 +289,7 @@ export default function WritePage() {
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </BackBtn>
-        <PageTitle>게시글 작성</PageTitle>
+        <PageTitle>{isEdit ? "게시글 수정" : "게시글 작성"}</PageTitle>
       </Header>
 
       <WriteForm>
@@ -250,19 +313,21 @@ export default function WritePage() {
 
         <FormRow2>
           <FormGroup>
-            <FormLabel>📅 약속 날짜</FormLabel>
+            <FormLabel>📅 약속 날짜 {isEdit && "(수정 불가)"}</FormLabel>
             <FormInput
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              disabled={isEdit}
             />
           </FormGroup>
           <FormGroup>
-            <FormLabel>⏰ 약속 시간</FormLabel>
+            <FormLabel>⏰ 약속 시간 {isEdit && "(수정 불가)"}</FormLabel>
             <FormInput
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
+              disabled={isEdit}
             />
           </FormGroup>
         </FormRow2>
@@ -277,13 +342,19 @@ export default function WritePage() {
         </FormGroup>
 
         <FormGroup>
-          <FormLabel>👥 모집 인원</FormLabel>
+          <FormLabel>👥 모집 인원 (2~10명) {isEdit && "(수정 불가)"}</FormLabel>
           <CapacityRow>
-            <CapBtn onClick={() => setCapacity((c) => Math.max(1, c - 1))}>
+            <CapBtn 
+              onClick={() => setCapacity((c) => Math.max(2, c - 1))}
+              disabled={isEdit || capacity <= 2}
+            >
               −
             </CapBtn>
             <CapDisplay>{capacity}명</CapDisplay>
-            <CapBtn onClick={() => setCapacity((c) => Math.min(99, c + 1))}>
+            <CapBtn 
+              onClick={() => setCapacity((c) => Math.min(10, c + 1))}
+              disabled={isEdit || capacity >= 10}
+            >
               ＋
             </CapBtn>
           </CapacityRow>
@@ -299,7 +370,9 @@ export default function WritePage() {
           <ImageDropZone value={image} onChange={setImage} />
         </FormGroup>
 
-        <SubmitBtn onClick={handleSubmit}>등록하기</SubmitBtn>
+        <SubmitBtn onClick={handleSubmit}>
+          {isEdit ? "수정 완료" : "등록하기"}
+        </SubmitBtn>
       </WriteForm>
     </Container>
   );

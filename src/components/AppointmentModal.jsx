@@ -1,4 +1,7 @@
+import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { useAuth } from "../context/AuthContext";
+import { getPosts } from "../api/posts";
 
 const ModalWrapper = styled.div`
   position: fixed;
@@ -51,6 +54,16 @@ const ModalWrapper = styled.div`
       align-items: center;
       margin-bottom: 15px;
       font-weight: 700;
+
+      .nav-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px 10px;
+        color: var(--color-text);
+        font-size: 18px;
+        &:disabled { opacity: 0.2; cursor: not-allowed; }
+      }
     }
 
     .days-grid {
@@ -64,19 +77,26 @@ const ModalWrapper = styled.div`
       .day-cell {
         aspect-ratio: 1;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s;
+        position: relative;
         &:hover { background: var(--color-border); }
-        &.has-event { 
-          background: var(--color-active); 
-          color: white; 
-          font-weight: 700;
-          box-shadow: 0 4px 8px rgba(253, 147, 25, 0.3);
-        }
         &.today { border: 1.5px solid var(--color-active); }
+        &.selected { background: var(--color-active); color: white; }
+        &.other-month { opacity: 0.2; pointer-events: none; }
+
+        .dot {
+          width: 6px;
+          height: 6px;
+          background: #ffdb58; /* 노란색 점 */
+          border-radius: 50%;
+          position: absolute;
+          bottom: 4px;
+        }
       }
     }
   }
@@ -87,6 +107,8 @@ const ModalWrapper = styled.div`
     flex-direction: column;
     gap: 12px;
     
+    h3 { font-size: 14px; margin-bottom: 5px; }
+
     .appt-item {
       display: flex;
       align-items: center;
@@ -95,6 +117,9 @@ const ModalWrapper = styled.div`
       background: var(--color-input-bg);
       border-radius: 12px;
       border: 1px solid var(--color-border);
+      cursor: pointer;
+      transition: transform 0.1s;
+      &:active { transform: scale(0.98); }
 
       .time-tag {
         background: var(--color-active);
@@ -103,6 +128,7 @@ const ModalWrapper = styled.div`
         border-radius: 6px;
         font-size: 11px;
         font-weight: 700;
+        white-space: nowrap;
       }
       .info {
         flex: 1;
@@ -124,9 +150,74 @@ const ModalWrapper = styled.div`
 `;
 
 export default function AppointmentModal({ onClose }) {
-  // 샘플 데이터 (빈 배열로 변경)
-  const events = []; 
-  const todayAppts = [];
+  const { name } = useAuth();
+  const [appointments, setAppointments] = useState([]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState(new Date());
+  
+  const today = new Date();
+  const userId = name || "me";
+
+  useEffect(() => {
+    const fetchAppts = async () => {
+      try {
+        const allPosts = await getPosts();
+        // 내가 작성자이거나 참가한 게시글 필터링
+        const filtered = allPosts.filter(p => 
+          p.author === userId || (Array.isArray(p.joinedBy) && p.joinedBy.includes(userId))
+        );
+        setAppointments(filtered);
+      } catch (err) {
+        console.error("Failed to fetch appointments:", err);
+      }
+    };
+    fetchAppts();
+  }, [userId]);
+
+  // 캘린더 계산 로직
+  const viewYear = currentMonth.getFullYear();
+  const viewMonth = currentMonth.getMonth();
+
+  const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const prevMonthLastDay = new Date(viewYear, viewMonth, 0).getDate();
+
+  const handlePrevMonth = () => {
+    // 오늘 기준 이전 달은 못 보게 하거나 제한 (사용자 요청은 앞으로 12개월)
+    const prev = new Date(viewYear, viewMonth - 1, 1);
+    if (prev >= new Date(today.getFullYear(), today.getMonth(), 1)) {
+      setCurrentMonth(prev);
+    }
+  };
+
+  const handleNextMonth = () => {
+    const next = new Date(viewYear, viewMonth + 1, 1);
+    const limit = new Date(today.getFullYear(), today.getMonth() + 12, 1);
+    if (next < limit) {
+      setCurrentMonth(next);
+    }
+  };
+
+  const isToday = (d) => {
+    return d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
+  };
+
+  const isSelected = (d) => {
+    return d === selectedDay.getDate() && viewMonth === selectedDay.getMonth() && viewYear === selectedDay.getFullYear();
+  };
+
+  const getDayAppts = (d) => {
+    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    return appointments.filter(a => a.date === dateStr);
+  };
+
+  const selectedDateStr = `${selectedDay.getFullYear()}년 ${selectedDay.getMonth() + 1}월 ${selectedDay.getDate()}일`;
+  const selectedDateAppts = appointments.filter(a => {
+    const d = new Date(a.date);
+    return d.getFullYear() === selectedDay.getFullYear() && 
+           d.getMonth() === selectedDay.getMonth() && 
+           d.getDate() === selectedDay.getDate();
+  });
 
   return (
     <ModalWrapper onClick={onClose}>
@@ -143,35 +234,51 @@ export default function AppointmentModal({ onClose }) {
 
         <div className="calendar-container">
           <div className="cal-header">
-            <span>2024년 4월</span>
-            <div style={{display:'flex', gap:'10px'}}>
-              <span>〈</span><span>〉</span>
-            </div>
+            <button className="nav-btn" onClick={handlePrevMonth} disabled={viewMonth === today.getMonth() && viewYear === today.getFullYear()}>〈</button>
+            <span>{viewYear}년 {viewMonth + 1}월</span>
+            <button className="nav-btn" onClick={handleNextMonth}>〉</button>
           </div>
           <div className="days-grid">
             {['일','월','화','수','목','금','토'].map(d => <div key={d} className="day-label">{d}</div>)}
-            {Array.from({length: 30}, (_, i) => i + 1).map(d => (
-              <div key={d} className={`day-cell ${events.includes(d) ? 'has-event' : ''} ${d === 23 ? 'today' : ''}`}>
-                {d}
+            
+            {/* 이전 달의 마지막 날들 */}
+            {Array.from({length: firstDayOfMonth}).map((_, i) => (
+              <div key={`prev-${i}`} className="day-cell other-month">
+                {prevMonthLastDay - firstDayOfMonth + i + 1}
               </div>
             ))}
+
+            {/* 현재 달의 날들 */}
+            {Array.from({length: daysInMonth}, (_, i) => i + 1).map(d => {
+              const hasAppt = getDayAppts(d).length > 0;
+              return (
+                <div 
+                  key={d} 
+                  className={`day-cell ${isToday(d) ? 'today' : ''} ${isSelected(d) ? 'selected' : ''}`}
+                  onClick={() => setSelectedDay(new Date(viewYear, viewMonth, d))}
+                >
+                  {d}
+                  {hasAppt && <div className="dot" />}
+                </div>
+              );
+            })}
           </div>
         </div>
 
         <div className="appt-list">
-          <h3 style={{fontSize:'14px', marginBottom:'10px'}}>오늘의 약속</h3>
-          {todayAppts.length > 0 ? (
-            todayAppts.map((appt, idx) => (
-              <div key={idx} className="appt-item">
-                <div className="time-tag">{appt.time}</div>
+          <h3>{selectedDateStr} 약속</h3>
+          {selectedDateAppts.length > 0 ? (
+            selectedDateAppts.map((appt, idx) => (
+              <div key={idx} className="appt-item" onClick={() => window.location.href = `/detail/${appt.id}`}>
+                <div className="time-tag">{appt.time || "시간 미정"}</div>
                 <div className="info">
                   <div className="title">{appt.title}</div>
-                  <div className="place">{appt.place}</div>
+                  <div className="place">{appt.place || "장소 미정"}</div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="empty-msg">오늘 예정된 약속이 없습니다.</div>
+            <div className="empty-msg">선택한 날짜에 예정된 약속이 없습니다.</div>
           )}
         </div>
       </div>

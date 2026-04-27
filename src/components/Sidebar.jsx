@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import styled from "styled-components";
+import FriendsList from "./FriendsList";
 
 // 이미지 임포트
 import logoImg from "../assets/logo.png";
@@ -225,6 +226,15 @@ const Sidebar = () => {
     setIsDark((prev) => !prev);
   };
 
+  const handleProtectedNav = (path) => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
+    navigate(path);
+  };
+
   return (
     <SidebarStyles $isDark={isDark}>
       <div className="top">
@@ -236,22 +246,22 @@ const Sidebar = () => {
           <img src={homeImg} alt="home" />
           <span className="label">대시보드</span>
         </Link>
-        <Link to="/write" className="item-wrap">
+        <div className="item-wrap" onClick={() => handleProtectedNav("/write")}>
           <img src={postImg} alt="post" />
           <span className="label">게시글쓰기</span>
-        </Link>
-        <Link to="/" className="item-wrap">
+        </div>
+        <div className="item-wrap" onClick={() => handleProtectedNav("/")}>
           <img src={dashboardImg} alt="group" />
           <span className="label">그룹</span>
-        </Link>
-        <Link to="/" className="item-wrap">
+        </div>
+        <div className="item-wrap" onClick={() => handleProtectedNav("/")}>
           <img src={messageImg} alt="message" />
           <span className="label">메세지</span>
-        </Link>
-        <Link to="/user" className="item-wrap">
+        </div>
+        <div className="item-wrap" onClick={() => handleProtectedNav("/user")}>
           <img src={profileImg} alt="mypage" />
           <span className="label">마이페이지</span>
-        </Link>
+        </div>
       </div>
 
       <div className="bottom">
@@ -277,6 +287,8 @@ const Sidebar = () => {
           </Link>
         )}
       </div>
+
+      <FriendsList />
     </SidebarStyles>
   );
 };
