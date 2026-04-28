@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { toast } from "sonner";
+import { useAuth } from "../context/AuthContext";
 import friendsData from "../api/friendsData";
 
 const FriendsListStyled = styled.div`
@@ -25,6 +27,15 @@ const FriendsListStyled = styled.div`
     cursor: pointer;
     box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 1001;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: var(--color-item-hover);
+    }
+    
+    &.locked {
+      opacity: 0.7;
+    }
   }
 
   .friend-sidebar {
@@ -326,12 +337,21 @@ const FriendsListStyled = styled.div`
 `;
 
 const FriendsList = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const { token } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [memos, setMemos] = useState({});
   const [isEditingMemo, setIsEditingMemo] = useState(false);
   const [tempMemo, setTempMemo] = useState("");
+
+  // 로그인 상태가 변할 때(로그아웃 등) 목록을 닫음
+  useEffect(() => {
+    if (!token) {
+      setIsOpen(false);
+      setSelectedFriend(null);
+    }
+  }, [token]);
 
   const filteredFriends = friendsData.filter((friend) =>
     friend.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -341,6 +361,7 @@ const FriendsList = () => {
   const offlineFriends = filteredFriends.filter((f) => f.status === "offline");
 
   const handleFriendClick = (friend) => {
+    if (!token) return; // 비로그인 시 클릭 차단
     if (selectedFriend?.id === friend.id) {
       setSelectedFriend(null);
       setIsEditingMemo(false);
@@ -351,6 +372,10 @@ const FriendsList = () => {
   };
 
   const handleToggleSidebar = () => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      return;
+    }
     setIsOpen(!isOpen);
     if (isOpen) setSelectedFriend(null);
   };
@@ -371,47 +396,58 @@ const FriendsList = () => {
     <FriendsListStyled>
       <div className="sidebar-wrapper">
         <div className={`friend-sidebar ${isOpen ? "active" : ""}`}>
-          <button className="toggle-btn" onClick={handleToggleSidebar}>
+          <button 
+            className={`toggle-btn ${!token ? 'locked' : ''}`} 
+            onClick={handleToggleSidebar}
+          >
             {isOpen ? "〉" : "〈"}
           </button>
+          
           <div className="search-section">
             <input
               className="search-input"
               type="text"
-              placeholder="친구 검색"
+              placeholder={token ? "친구 검색" : "로그인 후 이용 가능"}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              disabled={!token}
             />
           </div>
 
           <div className="scroll-container">
-            {[
-              { label: "온라인 ▾", friends: onlineFriends, status: "online" },
-              { label: "오프라인", friends: offlineFriends, status: "offline" },
-            ].map(({ label, friends, status }) => (
-              <div className="category-section" key={status}>
-                <h3 className="category-title">{label}</h3>
-                <table className="friend-table">
-                  <tbody>
-                    {friends.map((friend) => (
-                      <tr
-                        key={friend.id}
-                        className={`friend-row ${selectedFriend?.id === friend.id ? "active" : ""}`}
-                        onClick={() => handleFriendClick(friend)}
-                      >
-                        <td className="avatar-cell">
-                          <div className="avatar" />
-                        </td>
-                        <td className="name-cell">{friend.name}</td>
-                        <td className="status-cell">
-                          <div className={`status-square ${status}`} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {token ? (
+              [
+                { label: "온라인 ▾", friends: onlineFriends, status: "online" },
+                { label: "오프라인", friends: offlineFriends, status: "offline" },
+              ].map(({ label, friends, status }) => (
+                <div className="category-section" key={status}>
+                  <h3 className="category-title">{label}</h3>
+                  <table className="friend-table">
+                    <tbody>
+                      {friends.map((friend) => (
+                        <tr
+                          key={friend.id}
+                          className={`friend-row ${selectedFriend?.id === friend.id ? "active" : ""}`}
+                          onClick={() => handleFriendClick(friend)}
+                        >
+                          <td className="avatar-cell">
+                            <div className="avatar" />
+                          </td>
+                          <td className="name-cell">{friend.name}</td>
+                          <td className="status-cell">
+                            <div className={`status-square ${status}`} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', padding: '50px 0', opacity: 0.5, fontSize: '13px' }}>
+                로그인 후 친구 목록을 확인하세요.
               </div>
-            ))}
+            )}
           </div>
 
           <div

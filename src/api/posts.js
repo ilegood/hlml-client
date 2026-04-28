@@ -8,7 +8,7 @@ export const getPosts = async () => {
 
 export const getPost = async (id) => {
   const posts = JSON.parse(localStorage.getItem("posts") || "[]");
-  return posts.find((p) => p.id === id);
+  return posts.find((p) => String(p.id) === String(id));
 };
 
 export const createPost = async (postData) => {

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import styled from "styled-components";
+import FriendsList from "./FriendsList";
 
 // 이미지 임포트
 import logoImg from "../assets/logo.png";
@@ -13,6 +14,7 @@ import messageImg from "../assets/message.png";
 import profileImg from "../assets/profile.png";
 import darkImg from "../assets/dark.png";
 import logoutImg from "../assets/logout.png";
+import loginImg from "../assets/login.png";
 
 const SidebarStyles = styled.div`
   width: 70px;
@@ -143,7 +145,7 @@ const SidebarStyles = styled.div`
       border-radius: 50%;
       transition: transform 0.3s ease;
       transform: ${(props) =>
-        props.isDark ? "translateX(18px)" : "translateX(0)"};
+        props.$isDark ? "translateX(18px)" : "translateX(0)"};
     }
   }
 
@@ -161,10 +163,14 @@ const SidebarStyles = styled.div`
     padding-left: 0;
     justify-content: center;
     color: white;
+    gap: 0;
 
     .label {
       color: white;
       margin-left: 0;
+      width: 0;
+      overflow: hidden;
+      opacity: 0;
     }
 
     &:hover {
@@ -175,9 +181,11 @@ const SidebarStyles = styled.div`
 
   &:hover .logout-btn {
     justify-content: flex-start;
-    padding-left: 20px;
+    padding-left: 25px;
+    gap: 20px;
     .label {
-      margin-left: 14px;
+      width: auto;
+      opacity: 1;
     }
   }
 
@@ -218,8 +226,17 @@ const Sidebar = () => {
     setIsDark((prev) => !prev);
   };
 
+  const handleProtectedNav = (path) => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
+    navigate(path);
+  };
+
   return (
-    <SidebarStyles isDark={isDark}>
+    <SidebarStyles $isDark={isDark}>
       <div className="top">
         <Link to="/" className="item-wrap logo">
           <img src={logoImg} alt="LOGO" />
@@ -229,22 +246,22 @@ const Sidebar = () => {
           <img src={homeImg} alt="home" />
           <span className="label">대시보드</span>
         </Link>
-        <Link to="/write" className="item-wrap">
+        <div className="item-wrap" onClick={() => handleProtectedNav("/write")}>
           <img src={postImg} alt="post" />
           <span className="label">게시글쓰기</span>
-        </Link>
-        <Link to="/" className="item-wrap">
+        </div>
+        <div className="item-wrap" onClick={() => handleProtectedNav("/")}>
           <img src={dashboardImg} alt="group" />
           <span className="label">그룹</span>
-        </Link>
-        <Link to="/" className="item-wrap">
+        </div>
+        <div className="item-wrap" onClick={() => handleProtectedNav("/")}>
           <img src={messageImg} alt="message" />
           <span className="label">메세지</span>
-        </Link>
-        <Link to="/user" className="item-wrap">
+        </div>
+        <div className="item-wrap" onClick={() => handleProtectedNav("/user")}>
           <img src={profileImg} alt="mypage" />
           <span className="label">마이페이지</span>
-        </Link>
+        </div>
       </div>
 
       <div className="bottom">
@@ -265,10 +282,13 @@ const Sidebar = () => {
           </button>
         ) : (
           <Link to="/login" className="item-wrap logout-btn">
+            <img src={loginImg} alt="dark" />
             <span className="label">로그인</span>
           </Link>
         )}
       </div>
+
+      <FriendsList />
     </SidebarStyles>
   );
 };

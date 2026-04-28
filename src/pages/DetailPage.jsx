@@ -1,18 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
+import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import {
   getTimeAgo,
   countComments,
   formatDateTime,
-  STATUS_LIST,
   STATUS_EMOJI,
   STATUS_CLASS,
 } from "../api/homeConstants";
 import { getPost, deletePost, updatePost } from "../api/posts";
-import CategorySelector from "../components/CategorySelector";
-import ImageDropZone from "../components/ImageDropZone";
 
 // ── Animations ────────────────────────────────────────────
 const fadeIn = keyframes`
@@ -259,17 +257,19 @@ const DetailStyles = styled.div`
     justify-content: center;
     gap: 8px;
     padding: 14px;
-    border: 1.5px solid var(--color-border);
+    border: 2px solid var(--color-border);
     border-radius: 14px;
-    background: white;
+    background: var(--color-input-bg);
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
     color: var(--color-text);
     transition: all 0.15s;
   }
-  .action-btn-lg:hover {
-    border-color: #aaa;
+  .action-btn-lg:hover:not(:disabled) {
+    border-color: var(--color-active);
+    background: var(--color-input-focus-bg);
+    color: var(--color-active);
   }
   .action-btn-lg.liked {
     border-color: #ff4757;
@@ -282,8 +282,11 @@ const DetailStyles = styled.div`
     color: white;
   }
   .action-btn-lg:disabled {
-    opacity: 0.5;
+    opacity: 0.8;
     cursor: not-allowed;
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    border-color: var(--color-border);
   }
 
   /* ── Comment Section ── */
@@ -353,6 +356,7 @@ const DetailStyles = styled.div`
   .comment-author {
     font-weight: 800;
     font-size: 14px;
+    color: var(--color-text);
   }
   .comment-time {
     font-size: 12px;
@@ -364,6 +368,7 @@ const DetailStyles = styled.div`
     line-height: 1.6;
     color: var(--color-text);
     margin-bottom: 8px;
+    white-space: pre-wrap;
   }
 
   .comment-actions {
@@ -387,6 +392,51 @@ const DetailStyles = styled.div`
   }
   .cmt-act-btn.danger:hover {
     color: #ff4757;
+  }
+
+  /* ── Inline Edit (Memo style) ── */
+  .edit-memo-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 5px;
+  }
+  .edit-memo-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 1.5px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-sidebar);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    resize: vertical;
+  }
+  .edit-memo-textarea:focus {
+    border-color: var(--color-active);
+  }
+  .edit-memo-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .edit-memo-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+  }
+  .edit-memo-btn.cancel {
+    background: #eee;
+    color: #888;
+  }
+  .edit-memo-btn.save {
+    background: var(--color-active);
+    color: white;
   }
 
   /* ── Replies ── */
@@ -430,6 +480,7 @@ const DetailStyles = styled.div`
     border-radius: 12px;
     border: 1.5px solid var(--color-border);
     background: var(--color-input-bg);
+    color: var(--color-text);
     outline: none;
   }
   .comment-input:focus {
@@ -448,338 +499,19 @@ const DetailStyles = styled.div`
   .comment-submit:hover {
     opacity: 0.9;
   }
-
-  /* ── Modal ── */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: ${fadeIn} 0.15s ease;
-  }
-
-  .modal {
-    background: white;
-    border-radius: 20px;
-    padding: 30px;
-    width: 500px;
-    max-width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    animation: ${modalIn} 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .modal-title {
-    font-size: 20px;
-    font-weight: 800;
-    margin-bottom: 5px;
-  }
-
-  .modal-btns {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-  }
-
-  .modal-btn {
-    flex: 1;
-    height: 45px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    font-weight: 700;
-  }
-  .modal-btn.cancel {
-    background: #eee;
-  }
-  .modal-btn.save {
-    background: var(--color-active);
-    color: white;
-    font-weight: 800;
-  }
-
-  /* ── Form ── */
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .form-label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--color-text);
-    opacity: 0.8;
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid var(--color-border);
-    border-radius: 12px;
-    font-size: 14px;
-    background: var(--color-input-bg);
-    outline: none;
-  }
-  .form-input:focus {
-    border-color: var(--color-active);
-  }
-
-  .form-textarea {
-    width: 100%;
-    padding: 14px 16px;
-    border: 1.5px solid var(--color-border);
-    border-radius: 12px;
-    font-size: 14px;
-    background: var(--color-input-bg);
-    min-height: 100px;
-    outline: none;
-    resize: vertical;
-  }
-  .form-textarea:focus {
-    border-color: var(--color-active);
-  }
-
-  /* ── Capacity ── */
-  .capacity-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .cap-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 1.5px solid var(--color-border);
-    background: white;
-    font-size: 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .cap-btn:hover {
-    border-color: var(--color-active);
-    color: var(--color-active);
-  }
-
-  /* ── Status Select ── */
-  .status-select-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .status-select-btn {
-    padding: 7px 14px;
-    border: 1.5px solid var(--color-border);
-    border-radius: 20px;
-    background: var(--color-sidebar);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    color: var(--color-text);
-    transition: all 0.15s;
-  }
-  .status-select-btn:hover {
-    border-color: #aaa;
-  }
-  .status-select-btn.active {
-    background: var(--color-active);
-    color: white;
-    border-color: var(--color-active);
-  }
 `;
 
 // ── Sub Components ────────────────────────────────────────
-function CommentEditModal({ text, onSave, onClose }) {
-  const [val, setVal] = useState(text);
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-title">댓글 수정</div>
-        <textarea
-          className="form-textarea"
-          value={val}
-          onChange={(e) => setVal(e.target.value)}
-          autoFocus
-        />
-        <div className="modal-btns">
-          <button className="modal-btn cancel" onClick={onClose}>
-            취소
-          </button>
-          <button
-            className="modal-btn save"
-            onClick={() => {
-              if (!val.trim()) return;
-              onSave(val.trim());
-            }}
-          >
-            저장
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PostEditModal({ post, onSave, onClose }) {
-  const [title, setTitle] = useState(post.title);
-  const [content, setContent] = useState(post.content);
-  const [date, setDate] = useState(post.date || "");
-  const [time, setTime] = useState(post.time || "");
-  const [place, setPlace] = useState(post.place || "");
-  const [capacity, setCapacity] = useState(post.capacity || 4);
-  const [status, setStatus] = useState(post.status || "모집중");
-  const [categories, setCategories] = useState({ ...(post.categories || {}) });
-  const [image, setImage] = useState(post.image || "");
+function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editVal, setEditVal] = useState(reply.text);
 
   const handleSave = () => {
-    if (!title.trim() || !content.trim()) {
-      alert("제목과 내용을 입력해주세요!");
-      return;
-    }
-    onSave({
-      title: title.trim(),
-      content: content.trim(),
-      date,
-      time,
-      place: place.trim(),
-      capacity,
-      status,
-      categories: { ...categories },
-      image,
-    });
+    if (!editVal.trim()) return;
+    onUpdate(commentIdx, null, null, replyIdx, editVal.trim());
+    setIsEditing(false);
   };
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-title">게시글 수정</div>
-
-        <div className="form-group">
-          <label className="form-label">제목</label>
-          <input
-            className="form-input"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label className="form-label">내용</label>
-          <textarea
-            className="form-textarea"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-        </div>
-
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}
-        >
-          <div className="form-group">
-            <label className="form-label">📅 날짜</label>
-            <input
-              className="form-input"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">⏰ 시간</label>
-            <input
-              className="form-input"
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">📍 장소</label>
-          <input
-            className="form-input"
-            value={place}
-            onChange={(e) => setPlace(e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">👥 모집 인원</label>
-          <div className="capacity-row">
-            <button
-              className="cap-btn"
-              onClick={() => setCapacity((c) => Math.max(1, c - 1))}
-            >
-              −
-            </button>
-            <span
-              style={{
-                fontSize: 16,
-                fontWeight: 700,
-                minWidth: 40,
-                textAlign: "center",
-              }}
-            >
-              {capacity}명
-            </span>
-            <button
-              className="cap-btn"
-              onClick={() => setCapacity((c) => Math.min(99, c + 1))}
-            >
-              ＋
-            </button>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">상태</label>
-          <div className="status-select-row">
-            {STATUS_LIST.map((s) => (
-              <button
-                key={s}
-                className={`status-select-btn ${status === s ? "active" : ""}`}
-                onClick={() => setStatus(s)}
-              >
-                {STATUS_EMOJI[s]} {s}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">카테고리</label>
-          <CategorySelector selected={categories} onChange={setCategories} />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">이미지</label>
-          <ImageDropZone value={image} onChange={setImage} small />
-        </div>
-
-        <div className="modal-btns">
-          <button className="modal-btn cancel" onClick={onClose}>
-            취소
-          </button>
-          <button className="modal-btn save" onClick={handleSave}>
-            저장
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ReplyItem({ reply, onEdit, onDelete }) {
   return (
     <div className="reply-item-row">
       <div className="reply-arrow">
@@ -801,15 +533,46 @@ function ReplyItem({ reply, onEdit, onDelete }) {
           {reply.edited && <span className="edited-badge sm">수정됨</span>}
           <span className="comment-time">{getTimeAgo(reply.createdAt)}</span>
         </div>
-        <div className="comment-text">{reply.text}</div>
-        <div className="comment-actions">
-          <button className="cmt-act-btn" onClick={onEdit}>
-            수정
-          </button>
-          <button className="cmt-act-btn danger" onClick={onDelete}>
-            삭제
-          </button>
-        </div>
+
+        {isEditing ? (
+          <div className="edit-memo-wrap">
+            <textarea
+              className="edit-memo-textarea"
+              value={editVal}
+              onChange={(e) => setEditVal(e.target.value)}
+              autoFocus
+            />
+            <div className="edit-memo-btns">
+              <button
+                className="edit-memo-btn cancel"
+                onClick={() => setIsEditing(false)}
+              >
+                취소
+              </button>
+              <button className="edit-memo-btn save" onClick={handleSave}>
+                저장
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="comment-text">{reply.text}</div>
+            <div className="comment-actions">
+              <button
+                className="cmt-act-btn"
+                onClick={() => setIsEditing(true)}
+              >
+                수정
+              </button>
+              <button
+                className="cmt-act-btn danger"
+                onClick={() => onDelete(commentIdx, replyIdx)}
+              >
+                삭제
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -818,7 +581,8 @@ function ReplyItem({ reply, onEdit, onDelete }) {
 function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyText, setReplyText] = useState("");
-  const [editTarget, setEditTarget] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editVal, setEditVal] = useState(comment.text);
 
   const submitReply = () => {
     if (!replyText.trim()) return;
@@ -827,13 +591,10 @@ function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
     setReplyOpen(false);
   };
 
-  const handleSaveEdit = (newText) => {
-    if (editTarget.type === "comment") {
-      onUpdate(commentIdx, null, newText);
-    } else {
-      onUpdate(commentIdx, null, null, editTarget.ri, newText);
-    }
-    setEditTarget(null);
+  const handleSaveEdit = () => {
+    if (!editVal.trim()) return;
+    onUpdate(commentIdx, null, editVal.trim());
+    setIsEditing(false);
   };
 
   return (
@@ -844,38 +605,63 @@ function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
           {comment.edited && <span className="edited-badge sm">수정됨</span>}
           <span className="comment-time">{getTimeAgo(comment.createdAt)}</span>
         </div>
-        <div className="comment-text">{comment.text}</div>
-        <div className="comment-actions">
-          <button
-            className="cmt-act-btn"
-            onClick={() => setReplyOpen(!replyOpen)}
-          >
-            <svg
-              width="11"
-              height="11"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <polyline points="9 17 4 12 9 7" />
-              <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
-            </svg>
-            답글
-          </button>
-          <button
-            className="cmt-act-btn"
-            onClick={() => setEditTarget({ type: "comment" })}
-          >
-            수정
-          </button>
-          <button
-            className="cmt-act-btn danger"
-            onClick={() => onDelete(commentIdx)}
-          >
-            삭제
-          </button>
-        </div>
+
+        {isEditing ? (
+          <div className="edit-memo-wrap">
+            <textarea
+              className="edit-memo-textarea"
+              value={editVal}
+              onChange={(e) => setEditVal(e.target.value)}
+              autoFocus
+            />
+            <div className="edit-memo-btns">
+              <button
+                className="edit-memo-btn cancel"
+                onClick={() => setIsEditing(false)}
+              >
+                취소
+              </button>
+              <button className="edit-memo-btn save" onClick={handleSaveEdit}>
+                저장
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="comment-text">{comment.text}</div>
+            <div className="comment-actions">
+              <button
+                className="cmt-act-btn"
+                onClick={() => setReplyOpen(!replyOpen)}
+              >
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="9 17 4 12 9 7" />
+                  <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                </svg>
+                답글
+              </button>
+              <button
+                className="cmt-act-btn"
+                onClick={() => setIsEditing(true)}
+              >
+                수정
+              </button>
+              <button
+                className="cmt-act-btn danger"
+                onClick={() => onDelete(commentIdx)}
+              >
+                삭제
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {(comment.replies || []).length > 0 && (
@@ -884,8 +670,10 @@ function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
             <ReplyItem
               key={ri}
               reply={r}
-              onEdit={() => setEditTarget({ type: "reply", ri })}
-              onDelete={() => onDelete(commentIdx, ri)}
+              commentIdx={commentIdx}
+              replyIdx={ri}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
             />
           ))}
         </div>
@@ -921,18 +709,6 @@ function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
           </div>
         </div>
       )}
-
-      {editTarget && (
-        <CommentEditModal
-          text={
-            editTarget.type === "comment"
-              ? comment.text
-              : (comment.replies || [])[editTarget.ri]?.text
-          }
-          onSave={handleSaveEdit}
-          onClose={() => setEditTarget(null)}
-        />
-      )}
     </div>
   );
 }
@@ -941,10 +717,9 @@ function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
 export default function DetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { name } = useAuth();
+  const { name, token } = useAuth();
   const [post, setPost] = useState(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [commentText, setCommentText] = useState("");
 
   const load = async () => {
@@ -973,6 +748,7 @@ export default function DetailPage() {
   }
 
   const userId = name || "me";
+  const isAuthor = post.author === userId;
   const liked = (post.likedBy || []).includes(userId);
   const joined = (post.joinedBy || []).includes(userId);
   const isFull = (post.participants || 0) >= (post.capacity || 4);
@@ -992,11 +768,16 @@ export default function DetailPage() {
       setPost(next);
     } catch (err) {
       console.error("Failed to sync post:", err);
-      alert("서버 저장 실패");
+      toast.error("서버 저장 실패");
     }
   };
 
   const toggleLike = () => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
     const list = [...(post.likedBy || [])];
     const i = list.indexOf(userId);
     let count = post.likes || 0;
@@ -1011,21 +792,41 @@ export default function DetailPage() {
   };
 
   const toggleJoin = () => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
     const list = [...(post.joinedBy || [])];
     const i = list.indexOf(userId);
     let count = post.participants || 0;
+    let newStatus = post.status || "모집중";
+
     if (i === -1) {
-      if (count >= (post.capacity || 4)) return alert("정원 초과!");
+      if (count >= (post.capacity || 4)) return toast.error("정원 초과!");
       list.push(userId);
       count++;
+      // 인원이 다 차면 모집완료로 변경
+      if (count >= (post.capacity || 4)) {
+        newStatus = "모집완료";
+      }
     } else {
       list.splice(i, 1);
       count = Math.max(0, count - 1);
+      // 자리가 생기면 다시 모집중으로 변경
+      if (count < (post.capacity || 4)) {
+        newStatus = "모집중";
+      }
     }
-    sync({ joinedBy: list, participants: count });
+    sync({ joinedBy: list, participants: count, status: newStatus });
   };
 
   const addComment = () => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
     if (!commentText.trim()) return;
     const newList = [
       ...(post.comments || []),
@@ -1042,14 +843,21 @@ export default function DetailPage() {
   };
 
   const deleteComment = (idx, replyIdx = null) => {
-    if (!window.confirm("삭제할까요?")) return;
     const newList = [...(post.comments || [])];
-    if (replyIdx !== null) {
-      newList[idx].replies.splice(replyIdx, 1);
-    } else {
-      newList.splice(idx, 1);
-    }
-    sync({ comments: newList });
+    toast("정말 삭제할까요?", {
+      action: {
+        label: "삭제",
+        onClick: () => {
+          if (replyIdx !== null) {
+            newList[idx].replies.splice(replyIdx, 1);
+          } else {
+            newList.splice(idx, 1);
+          }
+          sync({ comments: newList });
+          toast.success("삭제되었습니다.");
+        },
+      },
+    });
   };
 
   const updateComment = (
@@ -1081,14 +889,21 @@ export default function DetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("정말 삭제할까요?")) return;
-    try {
-      await deletePost(id);
-      navigate("/");
-    } catch (err) {
-      console.error("Failed to delete post:", err);
-      alert("삭제에 실패했습니다.");
-    }
+    toast("게시글을 정말 삭제할까요?", {
+      action: {
+        label: "삭제",
+        onClick: async () => {
+          try {
+            await deletePost(id);
+            navigate("/");
+            toast.success("게시글이 삭제되었습니다.");
+          } catch (err) {
+            console.error("Failed to delete post:", err);
+            toast.error("삭제에 실패했습니다.");
+          }
+        },
+      },
+    });
   };
 
   return (
@@ -1108,36 +923,37 @@ export default function DetailPage() {
             </svg>
           </button>
           <div className="more-menu-wrap">
-            <button
-              className="more-btn"
-              onClick={() => setShowMoreMenu(!showMoreMenu)}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <circle cx="12" cy="5" r="1.5" />
-                <circle cx="12" cy="12" r="1.5" />
-                <circle cx="12" cy="19" r="1.5" />
-              </svg>
-            </button>
-            {showMoreMenu && (
-              <div className="more-menu">
-                <div
-                  className="more-item"
-                  onClick={() => {
-                    setShowEditModal(true);
-                    setShowMoreMenu(false);
-                  }}
+            {isAuthor && (
+              <>
+                <button
+                  className="more-btn"
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
                 >
-                  수정
-                </div>
-                <div className="more-item delete" onClick={handleDelete}>
-                  삭제
-                </div>
-              </div>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <circle cx="12" cy="5" r="1.5" />
+                    <circle cx="12" cy="12" r="1.5" />
+                    <circle cx="12" cy="19" r="1.5" />
+                  </svg>
+                </button>
+                {showMoreMenu && (
+                  <div className="more-menu">
+                    <div
+                      className="more-item"
+                      onClick={() => navigate(`/edit/${id}`)}
+                    >
+                      수정
+                    </div>
+                    <div className="more-item delete" onClick={handleDelete}>
+                      삭제
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -1237,6 +1053,7 @@ export default function DetailPage() {
             <button
               className={`action-btn-lg ${liked ? "liked" : ""}`}
               onClick={toggleLike}
+              disabled={isAuthor || !token}
             >
               <svg
                 width="16"
@@ -1248,12 +1065,12 @@ export default function DetailPage() {
               >
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
-              좋아요 {post.likes || 0}
+              찜하기 {post.likes || 0}
             </button>
             <button
               className={`action-btn-lg ${joined ? "joined" : ""}`}
               onClick={toggleJoin}
-              disabled={isFull && !joined}
+              disabled={isAuthor || !token || (isFull && !joined)}
             >
               <svg
                 width="16"
@@ -1268,7 +1085,13 @@ export default function DetailPage() {
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              {joined ? "참여중" : isFull ? "인원 마감" : "참여하기"}
+              {isAuthor
+                ? "내 게시글"
+                : joined
+                  ? "참여중"
+                  : isFull
+                    ? "인원 마감"
+                    : "참여하기"}
             </button>
           </div>
         </div>
@@ -1306,18 +1129,6 @@ export default function DetailPage() {
             </button>
           </div>
         </div>
-
-        {showEditModal && (
-          <PostEditModal
-            post={post}
-            onSave={(fields) =>
-              sync({ ...fields, edited: true }).then(() =>
-                setShowEditModal(false),
-              )
-            }
-            onClose={() => setShowEditModal(false)}
-          />
-        )}
       </main>
     </DetailStyles>
   );

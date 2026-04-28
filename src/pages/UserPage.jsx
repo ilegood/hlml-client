@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import ProfileEditModal from "../components/ProfileEditModal";
+import AppointmentModal from "../components/AppointmentModal";
+import BlockedListModal from "../components/BlockedListModal";
+import ReportModal from "../components/ReportModal";
 
 const Userstyles = styled.div`
   display: flex;
@@ -117,9 +120,11 @@ const Userstyles = styled.div`
   }
 `;
 
-const UserPage = () => {
+export default function UserPage() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState(null); // 'appointment', 'blocked', 'report'
+
   const [userInfo, setUserInfo] = useState({
     name: localStorage.getItem("name") || "닉네임",
     email: localStorage.getItem("email") || "이메일 정보 없음",
@@ -174,16 +179,19 @@ const UserPage = () => {
         />
       )}
 
+      {/* 추가된 모달들 */}
+      {activeModal === 'appointment' && <AppointmentModal onClose={() => setActiveModal(null)} />}
+      {activeModal === 'blocked' && <BlockedListModal onClose={() => setActiveModal(null)} />}
+      {activeModal === 'report' && <ReportModal onClose={() => setActiveModal(null)} />}
+
       <div className="profile-util">
-        <button className="util">찜 목록</button>
-        <button className="util">올린 게시글</button>
-        <button className="util">내 약속 관리</button>
-        <button className="util">차단 목록</button>
-        <button className="util">신고</button>
+        <button className="util" onClick={() => navigate("/likes")}>찜 목록</button>
+        <button className="util" onClick={() => navigate("/my-posts")}>올린 게시글</button>
+        <button className="util" onClick={() => setActiveModal('appointment')}>내 약속 관리</button>
+        <button className="util" onClick={() => setActiveModal('blocked')}>차단 목록</button>
+        <button className="util" onClick={() => setActiveModal('report')}>신고 내역</button>
         <button className="util">고객센터</button>
       </div>
     </Userstyles>
   );
-};
-
-export default UserPage;
+}
