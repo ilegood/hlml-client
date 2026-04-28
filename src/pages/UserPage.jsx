@@ -189,7 +189,7 @@ export default function UserPage() {
         <button className="util" onClick={() => navigate("/my-posts")}>올린 게시글</button>
         <button className="util" onClick={() => setActiveModal('appointment')}>내 약속 관리</button>
         <button className="util" onClick={() => setActiveModal('blocked')}>차단 목록</button>
-        <button className="util" onClick={() => setActiveModal('report')}>신고 내역</button>
+        <button className="util" onClick={() => setActiveModal('report')}>신고</button>
         <button className="util">고객센터</button>
       </div>
     </Userstyles>
