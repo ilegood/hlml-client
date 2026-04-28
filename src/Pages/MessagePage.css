@@ -1,24 +1,28 @@
 .message-layout {
   display: flex;
   height: calc(100vh - 80px);
-  margin: 20px;
-  background: var(--color-sidebar);
-  border: 1.5px solid var(--color-border);
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  margin: 0 -60px 0 -70px;
+  padding: 20px;
+  background: var(--color-bg);
 }
 
 .message-sidebar {
-  width: 350px;
-  border-right: 1.5px solid var(--color-border);
+  width: 320px;
+  background: var(--color-sidebar);
+  border: 1.5px solid var(--color-border);
+  border-radius: 24px;
   display: flex;
   flex-direction: column;
-  background: var(--color-sidebar);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
-  padding: 30px 24px;
+  height: 90px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -98,13 +102,21 @@
 
 .chat-main {
   flex: 1;
+  max-width: 1200px; /* 채팅창 최대 넓이 확장 */
+  margin-left: 20px; /* 목록에 더 가깝게 배치 */
+  margin-right: auto; /* 오른쪽에 여유 공간을 둠 */
   display: flex;
   flex-direction: column;
   background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
 }
 
 .chat-header {
-  padding: 20px 30px;
+  height: 90px;
+  padding: 0 30px;
   border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
@@ -149,9 +161,9 @@
   align-self: flex-end;
   background: var(--color-active);
   color: white;
-  border-bottom-right-radius: 4px;
+  border-radius: 20px 20px 4px 20px; /* 우하단만 뾰족하게 수정 */
   border: none;
-  box-shadow: 0 4px 12px rgba(var(--color-active-rgb), 0.2);
+  box-shadow: 0 4px 12px rgba(253, 147, 25, 0.2); /* 정의되지 않은 변수 대신 직접 색상 값 적용 */
 }
 
 .message-bubble .time {
