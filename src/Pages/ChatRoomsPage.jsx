@@ -76,6 +76,8 @@ const ChatRoomsStyles = styled.div`
   }
 `;
 
+const SERVER_URL = `http://${window.location.hostname}:4000`;
+
 const ChatRoomsPage = () => {
   const [chatRooms, setChatRooms] = useState([]);
   const [newRoomName, setNewRoomName] = useState("");
@@ -83,9 +85,9 @@ const ChatRoomsPage = () => {
   // 서버에서 실제 방 목록 가져오기
   const fetchRooms = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/rooms");
+      const response = await fetch(`${SERVER_URL}/api/rooms`);
       const data = await response.json();
-      setChatRooms(data);
+      setChatRooms(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to fetch rooms:", error);
     }
@@ -102,7 +104,7 @@ const ChatRoomsPage = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/rooms", {
+      const response = await fetch(`${SERVER_URL}/api/rooms`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: newRoomName }),
@@ -114,11 +116,9 @@ const ChatRoomsPage = () => {
       } else {
         const errorData = await response.json();
         alert(`방 생성 실패: ${errorData.message || "알 수 없는 오류"}`);
-        console.error("Server Error:", errorData);
       }
     } catch (error) {
       alert("서버 연결에 실패했습니다.");
-      console.error("Failed to add room:", error);
     }
   };
 

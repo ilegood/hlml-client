@@ -1,11 +1,13 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import styled from "styled-components";
 
 const RegisterStyled = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 25px);
+  min-height: calc(100vh - 25px);
+  padding: 40px 0;
 
   .container {
     display: flex;
@@ -42,11 +44,6 @@ const RegisterStyled = styled.div`
       background-color 0.2s;
   }
 
-  input::placeholder {
-    color: #bbb;
-    font-size: 12px;
-  }
-
   input:focus {
     border-color: var(--color-active);
     background-color: #fff8f2;
@@ -55,7 +52,7 @@ const RegisterStyled = styled.div`
   .button-wrap {
     display: flex;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 20px;
   }
 
   .btn-cancel,
@@ -67,29 +64,15 @@ const RegisterStyled = styled.div`
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    transition:
-      opacity 0.2s,
-      transform 0.1s;
   }
 
   .btn-cancel {
     background-color: #f0f0f0;
     color: #888;
   }
-
   .btn-submit {
     background-color: var(--color-active);
     color: white;
-  }
-
-  .btn-cancel:hover,
-  .btn-submit:hover {
-    opacity: 0.85;
-  }
-
-  .btn-cancel:active,
-  .btn-submit:active {
-    transform: scale(0.98);
   }
 
   .back-link {
@@ -99,32 +82,68 @@ const RegisterStyled = styled.div`
     font-size: 13px;
     color: #aaa;
     text-decoration: none;
-    transition: color 0.2s;
-  }
-
-  .back-link:hover {
-    color: var(--color-active);
   }
 `;
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    password: "",
+    passwordCheck: "",
+    nickname: "",
+    email: "",
+    birthday: "",
+    gender: "남",
+    phone_number: "",
+    address: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.passwordCheck) {
+      alert("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://${window.location.hostname}:4000/api/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        },
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        alert("회원가입이 완료되었습니다!");
+        navigate("/login");
+      } else {
+        alert(data.message || "회원가입 실패");
+      }
+    } catch (err) {
+      alert("서버와 통신 중 오류가 발생했습니다.");
+    }
+  };
+
   return (
     <RegisterStyled>
-      <form>
+      <form onSubmit={handleSubmit}>
         <div className="container">
-          <label>
-            아이디
-            <input
-              type="text"
-              className="id"
-              placeholder="아이디를 입력해주세요"
-            />
-          </label>
           <label>
             비밀번호
             <input
               type="password"
-              className="pw"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
               placeholder="비밀번호를 입력해주세요"
             />
           </label>
@@ -132,49 +151,92 @@ const RegisterPage = () => {
             비밀번호 확인
             <input
               type="password"
-              className="pw_check"
+              name="passwordCheck"
+              value={formData.passwordCheck}
+              onChange={handleChange}
+              required
               placeholder="비밀번호를 다시 입력해주세요"
-            />
-          </label>
-          <label>
-            이메일 주소
-            <input
-              type="email"
-              className="email"
-              placeholder="example@email.com"
-            />
-          </label>
-          <label>
-            휴대전화
-            <input
-              type="tel"
-              className="tel"
-              placeholder="'-' 없이 숫자만 입력해주세요"
-            />
-          </label>
-          <label>
-            이름
-            <input
-              type="text"
-              className="user_name"
-              placeholder="이름을 입력해주세요"
             />
           </label>
           <label>
             닉네임
             <input
               type="text"
-              className="nickname"
-              placeholder="닉네임을 입력해주세요"
+              name="nickname"
+              value={formData.nickname}
+              onChange={handleChange}
+              required
+              placeholder="채팅에서 사용할 닉네임"
+            />
+          </label>
+          <label>
+            이메일
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              placeholder="example@email.com"
             />
           </label>
           <label>
             생년월일
-            <input type="date" className="birth" />
+            <input
+              type="date"
+              name="birthday"
+              value={formData.birthday}
+              onChange={handleChange}
+              required
+            />
+          </label>
+          <label>
+            성별
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              required
+              style={{
+                marginTop: "5px",
+                height: "40px",
+                borderRadius: "50px",
+                padding: "0 15px",
+                border: "1.5px solid #d3d3d3",
+              }}
+            >
+              <option value="남">남</option>
+              <option value="여">여</option>
+            </select>
+          </label>
+          <label>
+            전화번호
+            <input
+              type="tel"
+              name="phone_number"
+              value={formData.phone_number}
+              onChange={handleChange}
+              required
+              placeholder="010-0000-0000"
+            />
+          </label>
+          <label>
+            주소
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              placeholder="주소를 입력해주세요"
+            />
           </label>
 
           <div className="button-wrap">
-            <button type="reset" className="btn-cancel">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="btn-cancel"
+            >
               취소
             </button>
             <button type="submit" className="btn-submit">

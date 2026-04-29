@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const Userstyles = styled.div`
@@ -100,17 +102,38 @@ const Userstyles = styled.div`
 `;
 
 const UserPage = () => {
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) {
+      alert("로그인이 필요합니다!");
+      navigate("/login");
+      return;
+    }
+    setUser(JSON.parse(savedUser));
+  }, [navigate]);
+
+  if (!user) return <div>로딩 중...</div>;
+
   return (
     <Userstyles>
       <div className="profile-wrap">
-        <div className="profile"></div>
+        <div className="profile">
+          {user.profile_img && (
+            <img
+              src={user.profile_img}
+              alt="profile"
+              style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+            />
+          )}
+        </div>
         <div className="user-info">
-          <h3>닉네임 님</h3>
-          <p>이메일</p>
+          <h3>{user.nickname} 님</h3>
+          <p>{user.email}</p>
           <div className="user-stats">
-            <p>약속 성공 30번</p>
-            <p>실패 2번</p>
-            <p>게시물 32개</p>
+            <p>즐거운 모임 되세요!</p>
           </div>
         </div>
         <button className="edit">수정</button>

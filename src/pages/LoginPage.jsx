@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import styled from "styled-components";
 
 const LoginStyles = styled.div`
@@ -33,23 +34,18 @@ const LoginStyles = styled.div`
       background-color 0.2s;
   }
 
-  input::placeholder {
-    color: #bbb;
-    font-size: 12px;
-  }
-
   input:focus {
     border-color: var(--color-active);
     background-color: #fff8f2;
   }
 
   .signup-link {
+    display: block;
     font-size: 12px;
     color: #aaa;
     text-decoration: none;
-    margin-top: 4px;
+    margin-top: 10px;
     padding-left: 4px;
-    transition: color 0.2s;
   }
 
   .signup-link span {
@@ -57,12 +53,8 @@ const LoginStyles = styled.div`
     font-weight: 600;
   }
 
-  .signup-link:hover {
-    color: #888;
-  }
-
   .login-box {
-    margin-top: 5px;
+    margin-top: 20px;
     width: 100%;
     height: 50px;
     background-color: var(--color-active);
@@ -72,46 +64,70 @@ const LoginStyles = styled.div`
     font-size: 20px;
     font-weight: 600;
     cursor: pointer;
-    transition:
-      opacity 0.2s,
-      transform 0.1s;
   }
 
   .login-box:hover {
     opacity: 0.85;
   }
-
-  .login-box:active {
-    transform: scale(0.97);
-  }
 `;
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(
+        `http://${window.location.hostname}:4000/api/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        },
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        alert(`${data.user.nickname}님, 환영합니다!`);
+        navigate("/chatrooms");
+      } else {
+        alert(data.message || "로그인 실패");
+      }
+    } catch (err) {
+      alert("서버와 통신 중 오류가 발생했습니다.");
+    }
+  };
+
   return (
     <LoginStyles>
-      <form>
+      <form onSubmit={handleLogin}>
         <div className="container">
-          <div className="input-wrap">
-            <label>
-              아이디
-              <input
-                type="text"
-                className="id"
-                placeholder="아이디를 입력해주세요"
-              />
-            </label>
-            <label>
-              비밀번호
-              <input
-                type="password"
-                className="pw"
-                placeholder="비밀번호를 입력해주세요"
-              />
-            </label>
-            <Link to="/register" className="signup-link">
-              계정이 없으신가요? <span>회원가입 하러가기</span>
-            </Link>
-          </div>
+          <label>
+            이메일
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="이메일을 입력해주세요"
+            />
+          </label>
+          <label style={{ marginTop: "15px" }}>
+            비밀번호
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="비밀번호를 입력해주세요"
+            />
+          </label>
+          <Link to="/register" className="signup-link">
+            계정이 없으신가요? <span>회원가입 하러가기</span>
+          </Link>
           <button type="submit" className="login-box">
             로그인
           </button>
