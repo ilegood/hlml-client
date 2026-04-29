@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import friendsData from "../api/friendsData";
+import MapModal from "./MapModal";
 
 const FriendsListStyled = styled.div`
   .sidebar-wrapper {
@@ -53,6 +54,46 @@ const FriendsListStyled = styled.div`
 
     &.active {
       transform: translateX(0);
+    }
+  }
+
+  /* 지도 버튼 스타일 추가 */
+  .map-button-container {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .map-button {
+    width: 200px;
+    height: 200px;
+    border-radius: 12px;
+    border: 2px solid var(--color-active);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    background: #eee;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    &::after {
+      content: "전체 지도 보기";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(7, 177, 188, 0.85);
+      color: white;
+      text-align: center;
+      padding: 6px 0;
+      font-size: 11px;
+      font-weight: 700;
+      z-index: 10;
     }
   }
 
@@ -339,6 +380,7 @@ const FriendsListStyled = styled.div`
 const FriendsList = () => {
   const { token } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMapOpen, setIsMapOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [memos, setMemos] = useState({});
@@ -392,6 +434,29 @@ const FriendsList = () => {
 
   const handleCancelMemo = () => setIsEditingMemo(false);
 
+  // 사이드바가 열릴 때 지도 초기화
+  useEffect(() => {
+    if (isOpen && token && window.kakao && window.kakao.maps) {
+      // 약간의 지연을 주어 애니메이션이 끝난 후 지도가 그려지게 함
+      const timer = setTimeout(() => {
+        const container = document.getElementById("sidebar-map");
+        if (container) {
+          const options = {
+            center: new window.kakao.maps.LatLng(37.5665, 126.978), // 서울 중심
+            level: 5,
+          };
+          const map = new window.kakao.maps.Map(container, options);
+          
+          // 예시 마커 (강남역 등 주요 지점)
+          const markerPosition = new window.kakao.maps.LatLng(37.4979, 127.0276);
+          const marker = new window.kakao.maps.Marker({ position: markerPosition });
+          marker.setMap(map);
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, token]);
+
   return (
     <FriendsListStyled>
       <div className="sidebar-wrapper">
@@ -403,6 +468,17 @@ const FriendsList = () => {
             {isOpen ? "〉" : "〈"}
           </button>
           
+          {token && (
+            <div className="map-button-container">
+              <div 
+                className="map-button" 
+                onClick={() => setIsMapOpen(true)}
+              >
+                <div id="sidebar-map" style={{ width: '100%', height: '100%' }} />
+              </div>
+            </div>
+          )}
+
           <div className="search-section">
             <input
               className="search-input"
@@ -497,6 +573,7 @@ const FriendsList = () => {
           </div>
         </div>
       </div>
+      {isMapOpen && <MapModal onClose={() => setIsMapOpen(false)} />}
     </FriendsListStyled>
   );
 };

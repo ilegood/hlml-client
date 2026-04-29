@@ -11,6 +11,7 @@ import {
   STATUS_CLASS,
 } from "../api/homeConstants";
 import { getPost, deletePost, updatePost } from "../api/posts";
+import MapPreview from "../components/MapPreview";
 
 // ── Animations ────────────────────────────────────────────
 const fadeIn = keyframes`
@@ -200,6 +201,12 @@ const DetailStyles = styled.div`
   }
   .appt-row svg {
     color: var(--color-active);
+  }
+
+  .appt-map-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
   }
 
   .cap-bar {
@@ -1033,6 +1040,13 @@ export default function DetailPage() {
                 {post.participants || 0} / {post.capacity || 4}명 참여중
               </span>
             </div>
+            
+            {post.latitude && post.longitude && (
+              <div className="appt-map-wrap">
+                <MapPreview latitude={post.latitude} longitude={post.longitude} />
+              </div>
+            )}
+
             <div className="cap-bar">
               <div className="cap-fill" style={{ width: `${pct}%` }} />
             </div>

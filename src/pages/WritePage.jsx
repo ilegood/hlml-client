@@ -7,6 +7,8 @@ import { todayString } from "../api/homeConstants";
 import { createPost, getPost, updatePost } from "../api/posts";
 import CategorySelector from "../components/CategorySelector";
 import ImageDropZone from "../components/ImageDropZone";
+import MapPreview from "../components/MapPreview";
+import PlaceSearchModal from "../components/PlaceSearchModal";
 
 // ── Styled Components ─────────────────────────────────────
 const Container = styled.main`
@@ -91,6 +93,28 @@ const FormInput = styled.input`
     opacity: 0.5;
     cursor: not-allowed;
     background: var(--color-bg);
+  }
+`;
+
+const InputWithBtn = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const SearchBtn = styled.button`
+  flex-shrink: 0;
+  padding: 0 16px;
+  background: var(--color-active);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
   }
 `;
 
@@ -201,6 +225,9 @@ export default function WritePage() {
   const [date, setDate] = useState(todayString());
   const [time, setTime] = useState("");
   const [place, setPlace] = useState("");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [capacity, setCapacity] = useState(2);
   const [status, setStatus] = useState("모집중");
   const [categories, setCategories] = useState({});
@@ -218,6 +245,8 @@ export default function WritePage() {
             setDate(post.date || todayString());
             setTime(post.time || "");
             setPlace(post.place || "");
+            setLatitude(post.latitude || null);
+            setLongitude(post.longitude || null);
             setCapacity(post.capacity || 2);
             setStatus(post.status || "모집중");
             setCategories(post.categories || {});
@@ -238,6 +267,17 @@ export default function WritePage() {
     }
   }, [id, isEdit, navigate]);
 
+  const handleSearchPlace = () => {
+    setIsSearchOpen(true);
+  };
+
+  const handlePlaceSelect = (item) => {
+    setPlace(item.place_name);
+    setLatitude(item.y);
+    setLongitude(item.x);
+    setIsSearchOpen(false);
+  };
+
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
       alert("제목과 내용을 입력해주세요!");
@@ -250,6 +290,8 @@ export default function WritePage() {
       date,
       time,
       place: place.trim(),
+      latitude,
+      longitude,
       capacity,
       categories,
       image,
@@ -334,11 +376,23 @@ export default function WritePage() {
 
         <FormGroup>
           <FormLabel>📍 약속 장소</FormLabel>
-          <FormInput
-            placeholder="장소 이름 또는 주소 (선택)"
-            value={place}
-            onChange={(e) => setPlace(e.target.value)}
-          />
+          <InputWithBtn>
+            <FormInput
+              placeholder="장소 이름 또는 주소 (선택)"
+              value={place}
+              onChange={(e) => setPlace(e.target.value)}
+              readOnly
+            />
+            <SearchBtn onClick={handleSearchPlace}>지도에서 찾기</SearchBtn>
+          </InputWithBtn>
+          
+          {/* 위도, 경도 값이 있을 때만 지도 미리보기 출력 */}
+          {latitude && longitude && (
+            <div style={{ textAlign: "center", marginTop: "10px" }}>
+              <MapPreview latitude={latitude} longitude={longitude} />
+              <p style={{ fontSize: "12px", color: "#888" }}>선택된 장소의 위치입니다.</p>
+            </div>
+          )}
         </FormGroup>
 
         <FormGroup>
@@ -374,6 +428,13 @@ export default function WritePage() {
           {isEdit ? "수정 완료" : "등록하기"}
         </SubmitBtn>
       </WriteForm>
+
+      {isSearchOpen && (
+        <PlaceSearchModal 
+          onClose={() => setIsSearchOpen(false)} 
+          onSelect={handlePlaceSelect} 
+        />
+      )}
     </Container>
   );
 }
