@@ -73,10 +73,23 @@
 }
 
 /* ── Gender ── */
+.genderField {
+  border: 0;
+  padding: 0;
+  margin: 0 0 22px;
+}
+
+.genderLabel {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
 .genderWrap {
   display: flex;
   gap: 10px;
-  margin-bottom: 22px;
 }
 
 .genderOption {

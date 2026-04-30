@@ -27,9 +27,15 @@ const parseCategories = (categories) => {
   }
 };
 
+const normalizeStatus = (status) => {
+  const text = String(status || "").trim();
+  return text === "모집완료" ? "모집완료" : "모집중";
+};
+
 const normalizePost = (post) => ({
   ...post,
   id: post.post_id,
+  status: normalizeStatus(post.status),
   createdAt: post.created_at,
   image: post.image
     ? post.image.startsWith("http")
@@ -39,6 +45,7 @@ const normalizePost = (post) => ({
   categories: parseCategories(post.categories),
   likedBy: Array.isArray(post.likedBy) ? post.likedBy : [],
   joinedBy: Array.isArray(post.joinedBy) ? post.joinedBy : [],
+  joinedUserIds: Array.isArray(post.joinedUserIds) ? post.joinedUserIds : [],
   comments: Array.isArray(post.comments) ? post.comments : [],
   likes: post.likes || 0,
   participants: post.participants || 1,

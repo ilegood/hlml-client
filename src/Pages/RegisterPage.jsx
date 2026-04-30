@@ -166,20 +166,23 @@ const RegisterPage = () => {
           </label>
 
           {/* 성별 */}
-          <div className={styles.genderWrap}>
-            {["남", "여"].map((g) => (
-              <label key={g} className={styles.genderOption}>
-                <input
-                  type="radio"
-                  name="gender"
-                  value={g}
-                  checked={form.gender === g}
-                  onChange={handleChange}
-                />
-                {g}
-              </label>
-            ))}
-          </div>
+          <fieldset className={styles.genderField}>
+            <legend className={styles.genderLabel}>성별</legend>
+            <div className={styles.genderWrap}>
+              {["남", "여"].map((g) => (
+                <label key={g} className={styles.genderOption}>
+                  <input
+                    type="radio"
+                    name="gender"
+                    value={g}
+                    checked={form.gender === g}
+                    onChange={handleChange}
+                  />
+                  {g}
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
           {/* 버튼 */}
           <div className={styles.buttonWrap}>

@@ -6,7 +6,6 @@
 
 /* ── Header Controls ── */
 .headerControls {
-  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -50,16 +49,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-}
-
-.statusFilterRow {
-  display: flex;
-  gap: 6px;
+  margin-bottom: 30px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.statusFilterBtn {
+.categoryAllBtn {
   padding: 5px 12px;
   border: 1.5px solid var(--color-border);
   border-radius: 20px;
@@ -72,12 +67,12 @@
   transition: all 0.15s;
 }
 
-.statusFilterBtn:hover {
+.categoryAllBtn:hover {
   border-color: var(--color-active);
   color: var(--color-active);
 }
 
-.statusFilterBtn.active {
+.categoryAllBtn.active {
   background: var(--color-active);
   color: white;
   border-color: var(--color-active);
@@ -110,7 +105,10 @@
 }
 
 .categoryWrap {
-  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* ── Card List ── */

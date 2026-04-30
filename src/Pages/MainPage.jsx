@@ -2,18 +2,18 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth";
-import { STATUS_LIST, STATUS_EMOJI } from "../api/homeConstants";
 import { getPosts, togglePostLike } from "../api/posts";
 import CategorySelector from "../components/CategorySelector";
 import PostCard from "../components/PostCard";
 import styles from "./MainPage.module.css";
+
+const MAIN_CATEGORY_ORDER = ["인원", "성별", "나이", "흡연", "음주", "활동"];
 
 export default function MainPage() {
   const navigate = useNavigate();
   const { name, token } = useAuth();
   const [posts, setPosts] = useState([]);
   const [search, setSearch] = useState("");
-  const [selStatus, setSelStatus] = useState("");
   const [selCats, setSelCats] = useState({});
 
   const fetchPosts = async () => {
@@ -56,8 +56,7 @@ export default function MainPage() {
         if (k === "인원") return it.capacity === parseInt(v);
         return it.categories?.[k] === v;
       });
-      const matchStat = !selStatus || it.status === selStatus;
-      return matchText && matchCat && matchStat;
+      return matchText && matchCat;
     });
 
   const handleLike = async (post) => {
@@ -100,25 +99,20 @@ export default function MainPage() {
           />
         </div>
 
-        {/* 필터 + 작성 버튼 */}
+        {/* 필터 + 작성 버튼 한 줄로 */}
         <div className={styles.filterRow}>
-          <div className={styles.statusFilterRow}>
-            {["", ...STATUS_LIST].map((s) => {
-              const isAllBtn = s === "";
-              const noCatsActive = Object.values(selCats).every((v) => !v);
-              const isActive = isAllBtn
-                ? selStatus === "" && noCatsActive
-                : selStatus === s;
-              return (
-                <button
-                  key={s}
-                  className={`${styles.statusFilterBtn}${isActive ? ` ${styles.active}` : ""}`}
-                  onClick={() => { setSelStatus(s); if (isAllBtn) setSelCats({}); }}
-                >
-                  {isAllBtn ? "전체" : `${STATUS_EMOJI[s]} ${s}`}
-                </button>
-              );
-            })}
+          <div className={styles.categoryWrap}>
+            <button
+              className={`${styles.categoryAllBtn}${Object.values(selCats).every((v) => !v) ? ` ${styles.active}` : ""}`}
+              onClick={() => setSelCats({})}
+            >
+              전체
+            </button>
+            <CategorySelector
+              selected={selCats}
+              onChange={setSelCats}
+              order={MAIN_CATEGORY_ORDER}
+            />
           </div>
           <button className={styles.writeBtn} onClick={handleWriteClick}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -127,11 +121,6 @@ export default function MainPage() {
             </svg>
             게시글 작성
           </button>
-        </div>
-
-        {/* 카테고리 */}
-        <div className={styles.categoryWrap}>
-          <CategorySelector selected={selCats} onChange={setSelCats} />
         </div>
       </div>
 

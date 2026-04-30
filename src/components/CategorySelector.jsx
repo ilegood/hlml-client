@@ -95,9 +95,18 @@ const TagBtn = styled.div`
   }
 `;
 
-export default function CategorySelector({ selected, onChange }) {
+export default function CategorySelector({
+  selected,
+  onChange,
+  exclude = [],
+  order = Object.keys(CATEGORY_MAP),
+}) {
   const [open, setOpen] = useState(null);
   const ref = useRef();
+  const excluded = new Set(exclude);
+  const categories = order
+    .filter((cat) => CATEGORY_MAP[cat] && !excluded.has(cat))
+    .map((cat) => [cat, CATEGORY_MAP[cat]]);
 
   useEffect(() => {
     const fn = (e) => {
@@ -109,7 +118,7 @@ export default function CategorySelector({ selected, onChange }) {
 
   return (
     <CategoryRow ref={ref}>
-      {Object.entries(CATEGORY_MAP).map(([cat, opts]) => (
+      {categories.map(([cat, opts]) => (
         <CategoryWrapper key={cat}>
           <CategoryTitle
             className={selected[cat] ? "has-selection" : ""}

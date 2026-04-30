@@ -60,9 +60,10 @@ export default function DetailPage() {
   const tags = Object.entries(post.categories || {}).filter(([, v]) => v);
   const dateStr = formatDateTime(post.date, post.time);
   const totalComments = countComments(post.comments || []);
+  const status = post.status === "모집완료" ? "모집완료" : "모집중";
 
   const statusBadgeClass =
-    STATUS_CLASS[post.status] === "status-full"
+    STATUS_CLASS[status] === "status-full"
       ? styles.statusFull
       : styles.statusOpen;
 
@@ -256,9 +257,11 @@ export default function DetailPage() {
       <div className={styles.detailBody}>
         <div className={styles.statusRow}>
           <span className={`${styles.statusBadge} ${statusBadgeClass}`}>
-            {STATUS_EMOJI[post.status]} {post.status}
+            {STATUS_EMOJI[status]} {status}
           </span>
-          {post.edited && <span className={styles.editedBadge}>수정됨</span>}
+          {Boolean(post.edited) && (
+            <span className={styles.editedBadge}>수정됨</span>
+          )}
         </div>
 
         {tags.length > 0 && (

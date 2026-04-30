@@ -96,7 +96,7 @@
   font-family: inherit;
   background: var(--color-input-bg);
   color: var(--color-text);
-  resize: vertical;
+  resize: none;
   min-height: 150px;
   outline: none;
   line-height: 1.6;

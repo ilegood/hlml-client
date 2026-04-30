@@ -28,8 +28,9 @@ export default function PostCard({ post, variant = "main", onLike, onOpen, curre
 
   const isDisabled = isAuthor || !currentUserId || currentUserId === "me";
 
+  const status = post.status === "모집완료" ? "모집완료" : "모집중";
   const badgeClass =
-    STATUS_CLASS[post.status] === "status-full" ? styles.statusFull : styles.statusOpen;
+    STATUS_CLASS[status] === "status-full" ? styles.statusFull : styles.statusOpen;
 
   return (
     <div className={styles.card} onClick={() => onOpen?.(post.id)}>
@@ -45,9 +46,11 @@ export default function PostCard({ post, variant = "main", onLike, onOpen, curre
         <div className={styles.cardBody}>
           <div className={styles.cardHeaderRow}>
             <span className={`${styles.statusBadge} ${badgeClass}`}>
-              {STATUS_EMOJI[post.status] || ""} {post.status || "모집중"}
+              {STATUS_EMOJI[status]} {status}
             </span>
-            {post.edited && <span className={styles.editedBadge}>수정됨</span>}
+            {Boolean(post.edited) && (
+              <span className={styles.editedBadge}>수정됨</span>
+            )}
             <span className={styles.cardTime}>{getTimeAgo(post.createdAt)}</span>
           </div>
 

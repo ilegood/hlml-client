@@ -6,13 +6,27 @@ import styles from "./AppointmentModal.module.css";
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
 export default function AppointmentModal({ onClose }) {
-  const { name } = useAuth();
+  const { name, userId } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date());
 
   const today  = new Date();
-  const userId = name || "me";
+  const userName = name || "me";
+  const currentUserId = userId ? Number(userId) : null;
+
+  const toDateKey = (value) => {
+    if (!value) return "";
+    if (typeof value === "string") return value.slice(0, 10);
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+  };
+
+  const formatTime = (value) => {
+    if (!value) return "시간 미정";
+    return String(value).slice(0, 5);
+  };
 
   useEffect(() => {
     const fetchAppts = async () => {
@@ -20,8 +34,11 @@ export default function AppointmentModal({ onClose }) {
         const allPosts = await getPosts();
         const filtered = allPosts.filter(
           (p) =>
-            p.author === userId ||
-            (Array.isArray(p.joinedBy) && p.joinedBy.includes(userId))
+            p.author === userName ||
+            (Array.isArray(p.joinedBy) && p.joinedBy.includes(userName)) ||
+            (currentUserId !== null &&
+              Array.isArray(p.joinedUserIds) &&
+              p.joinedUserIds.includes(currentUserId))
         );
         setAppointments(filtered);
       } catch (err) {
@@ -29,7 +46,7 @@ export default function AppointmentModal({ onClose }) {
       }
     };
     fetchAppts();
-  }, [userId]);
+  }, [currentUserId, userName]);
 
   // ── 캘린더 계산 ────────────────────────────────────────
   const viewYear  = currentMonth.getFullYear();
@@ -57,17 +74,13 @@ export default function AppointmentModal({ onClose }) {
 
   const getDayAppts = (d) => {
     const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    return appointments.filter((a) => a.date === dateStr);
+    return appointments.filter((a) => toDateKey(a.date) === dateStr);
   };
 
   const selectedDateStr = `${selectedDay.getFullYear()}년 ${selectedDay.getMonth() + 1}월 ${selectedDay.getDate()}일`;
   const selectedDateAppts = appointments.filter((a) => {
-    const d = new Date(a.date);
-    return (
-      d.getFullYear() === selectedDay.getFullYear() &&
-      d.getMonth()    === selectedDay.getMonth()    &&
-      d.getDate()     === selectedDay.getDate()
-    );
+    return toDateKey(a.date) ===
+      `${selectedDay.getFullYear()}-${String(selectedDay.getMonth() + 1).padStart(2, "0")}-${String(selectedDay.getDate()).padStart(2, "0")}`;
   });
 
   const isPrevDisabled = viewMonth === today.getMonth() && viewYear === today.getFullYear();
@@ -141,7 +154,7 @@ export default function AppointmentModal({ onClose }) {
                 className={styles.apptItem}
                 onClick={() => (window.location.href = `/detail/${appt.id}`)}
               >
-                <div className={styles.timeTag}>{appt.time || "시간 미정"}</div>
+                <div className={styles.timeTag}>{formatTime(appt.time)}</div>
                 <div className={styles.info}>
                   <div className={styles.infoTitle}>{appt.title}</div>
                   <div className={styles.infoPlace}>{appt.place || "장소 미정"}</div>
