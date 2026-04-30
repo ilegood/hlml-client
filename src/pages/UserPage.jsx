@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import ProfileEditModal from "../components/ProfileEditModal";
-import AppointmentModal from "../components/AppointmentModal";
-import BlockedListModal from "../components/BlockedListModal";
-import ReportModal from "../components/ReportModal";
+import ProfileEditModal from "../Components/ProfileEditModal";
+import AppointmentModal from "../Components/AppointmentModal";
+import BlockedListModal from "../Components/BlockedListModal";
+import ReportModal from "../Components/ReportModal";
 
 const Userstyles = styled.div`
   display: flex;

@@ -166,7 +166,17 @@ const FriendsListStyled = styled.div`
   }
 
   .friend-detail-card {
-    position: absolute; top: 50%; left: -260px; transform: translateY(-50%); width: 250px; background-color: var(--color-sidebar); border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); overflow: hidden; z-index: 1010; border: 1px solid var(--color-border); color: var(--color-text);
+    position: absolute; 
+    left: -260px; 
+    width: 250px; 
+    background-color: var(--color-sidebar); 
+    border-radius: 12px; 
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); 
+    overflow: hidden; 
+    z-index: 1010; 
+    border: 1px solid var(--color-border); 
+    color: var(--color-text);
+    transition: top 0.3s ease-out, opacity 0.2s ease;
     &.hidden { display: none; }
   }
 
@@ -204,17 +214,26 @@ const FriendsList = () => {
   const [memos, setMemos] = useState({});
   const [isEditingMemo, setIsEditingMemo] = useState(false);
   const [tempMemo, setTempMemo] = useState("");
+  const [cardTop, setCardTop] = useState(0);
 
   const menuRef = useRef(null);
 
   const fetchAll = async () => {
     if (!token) return;
+    
+    // 개별적으로 요청하여 하나가 실패해도 다른 데이터는 표시되도록 함
     try {
-      const [fData, rData] = await Promise.all([getFriends(), getFriendRequests()]);
+      const fData = await getFriends();
       setFriends(fData);
+    } catch (err) {
+      console.error("친구 목록 로드 실패", err);
+    }
+
+    try {
+      const rData = await getFriendRequests();
       setRequests(rData);
     } catch (err) {
-      console.error("데이터 로드 실패", err);
+      console.error("친구 요청 로드 실패", err);
     }
   };
 
@@ -275,14 +294,28 @@ const FriendsList = () => {
   };
 
   const filteredFriends = friends.filter((friend) =>
-    friend.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    (friend.name || "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const handleFriendClick = (friend) => {
+  const handleFriendClick = (e, friend) => {
     if (selectedFriend?.id === friend.id) {
       setSelectedFriend(null);
       setIsEditingMemo(false);
     } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const sidebarRect = e.currentTarget.closest('.friend-sidebar').getBoundingClientRect();
+      
+      let top = rect.top - sidebarRect.top;
+      const cardHeight = 350; // 예상 높이
+
+      // 화면 하단 영역을 벗어나지 않도록 보정
+      if (top + cardHeight > sidebarRect.height) {
+        top = sidebarRect.height - cardHeight - 20;
+      }
+      // 너무 위로 붙지 않도록 보정
+      if (top < 20) top = 20;
+
+      setCardTop(top);
       setSelectedFriend(friend);
       setIsEditingMemo(false);
     }
@@ -349,7 +382,7 @@ const FriendsList = () => {
                     <tr
                       key={friend.id}
                       className={`friend-row ${selectedFriend?.id === friend.id ? "active" : ""}`}
-                      onClick={() => handleFriendClick(friend)}
+                      onClick={(e) => handleFriendClick(e, friend)}
                     >
                       <td className="avatar-cell">
                         <div className="avatar" style={{ backgroundImage: friend.profile_img ? `url(http://localhost:4000${friend.profile_img})` : 'none' }} />
@@ -367,9 +400,6 @@ const FriendsList = () => {
                           </div>
                         )}
                       </td>
-                      <td className="status-cell">
-                        <div className={`status-square ${friend.status}`} />
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -379,6 +409,7 @@ const FriendsList = () => {
 
           <div
             className={`friend-detail-card ${!selectedFriend ? "hidden" : ""}`}
+            style={{ top: `${cardTop}px` }}
           >
             <div className="detail-header">
               <div className="detail-avatar-large" style={{ backgroundImage: selectedFriend?.profile_img ? `url(http://localhost:4000${selectedFriend.profile_img})` : 'none' }} />
@@ -388,9 +419,6 @@ const FriendsList = () => {
               <p>
                 {selectedFriend?.statusMessage || "상태 메시지가 없습니다."}
               </p>
-              <div className="detail-icons">
-                <span>안녕하세요.</span>
-              </div>
 
               {memos[selectedFriend?.id] && !isEditingMemo && (
                 <div className="memo-display">

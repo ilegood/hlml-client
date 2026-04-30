@@ -30,6 +30,11 @@ export const blockUser = async (targetId) => {
   return response.data;
 };
 
+export const unblockUser = async (targetId) => {
+  const response = await instance.post("/friends/unblock", { targetId });
+  return response.data;
+};
+
 export const getBlockedUsers = async () => {
   const response = await instance.get("/friends/blocked");
   return response.data;

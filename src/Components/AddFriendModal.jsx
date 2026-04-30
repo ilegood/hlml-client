@@ -134,8 +134,8 @@ const AddFriendModal = ({ onClose }) => {
 
   const handleAdd = async (nickname) => {
     try {
-      await addFriend(nickname);
-      alert(`${nickname}님께 친구 요청을 보냈습니다.`);
+      const data = await addFriend(nickname);
+      alert(data.message || `${nickname}님께 친구 요청을 보냈습니다.`);
     } catch (err) {
       alert(err.response?.data?.message || "요청 실패");
     }
