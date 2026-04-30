@@ -1,0 +1,195 @@
+/* ── Comment Item ── */
+.commentItemWrap {
+  margin-bottom: 20px;
+}
+
+.commentItemWrap:last-child {
+  margin-bottom: 0;
+}
+
+.commentBubble {
+  background: var(--color-input-bg);
+  padding: 15px 20px;
+  border-radius: 0 16px 16px 16px;
+}
+
+.commentTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.commentAuthor {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.commentTime {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.editedBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 600;
+  color: #aaa;
+  background: var(--color-sidebar);
+  border: 1px solid var(--color-border);
+  padding: 1px 5px;
+  border-radius: 10px;
+}
+
+.commentText {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+
+.commentActions {
+  display: flex;
+  gap: 10px;
+}
+
+.cmtActBtn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-deactive);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.cmtActBtn:hover {
+  color: var(--color-active);
+}
+
+.cmtActBtn.danger:hover {
+  color: #ff4757;
+}
+
+/* ── Inline Edit ── */
+.editMemoWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.editMemoTextarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-sidebar);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.editMemoTextarea:focus {
+  border-color: var(--color-active);
+}
+
+.editMemoBtns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.editMemoBtn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+
+.editMemoBtn.cancel {
+  background: #eee;
+  color: #888;
+}
+
+.editMemoBtn.save {
+  background: var(--color-active);
+  color: white;
+}
+
+/* ── Replies ── */
+.repliesWrap {
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+.replyItemRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  border-top: 1px dashed var(--color-border);
+  padding-top: 10px;
+}
+
+.replyArrow {
+  color: #ccc;
+}
+
+.replyInputWrap {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  margin-left: 20px;
+  border-top: 1px dashed var(--color-border);
+  padding-top: 15px;
+}
+
+.replyInputInner {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+}
+
+/* ── Input ── */
+.commentInput {
+  flex: 1;
+  height: 45px;
+  padding: 0 15px;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.commentInput:focus {
+  border-color: var(--color-active);
+}
+
+.commentSubmit {
+  padding: 0 20px;
+  background: var(--color-active);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.commentSubmit:hover {
+  opacity: 0.9;
+}
