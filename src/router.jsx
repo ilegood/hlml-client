@@ -8,6 +8,7 @@ import RegisterPage from "./pages/RegisterPage";
 import UserPage from "./pages/UserPage";
 import LikesPage from "./pages/LikesPage";
 import MyPostsPage from "./pages/MyPostsPage";
+import ChatRoomsPage from "./pages/ChatRoomsPage";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
       { path: "/user", element: <UserPage /> },
       { path: "/likes", element: <LikesPage /> },
       { path: "/my-posts", element: <MyPostsPage /> },
+      { path: "/chat-rooms", element: <ChatRoomsPage /> },
     ],
   },
 ]);

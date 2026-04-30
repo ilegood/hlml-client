@@ -4,6 +4,7 @@ import ProfileEditModal from "../components/ProfileEditModal";
 import AppointmentModal from "../components/AppointmentModal";
 import BlockedListModal from "../components/BlockedListModal";
 import ReportListModal from "../components/ReportListModal";
+import QAModal from "../components/QAModal";
 import styles from "./UserPage.module.css";
 
 export default function UserPage() {
@@ -77,6 +78,9 @@ export default function UserPage() {
       {activeModal === "report" && (
         <ReportListModal onClose={() => setActiveModal(null)} />
       )}
+      {activeModal === "qa" && (
+        <QAModal onClose={() => setActiveModal(null)} />
+      )}
 
       {/* ── 유틸 버튼 그리드 ── */}
       <div className={styles.profileUtil}>
@@ -95,7 +99,9 @@ export default function UserPage() {
         <button className={styles.util} onClick={() => setActiveModal("report")}>
           신고 내역
         </button>
-        <button className={styles.util}>고객센터</button>
+        <button className={styles.util} onClick={() => setActiveModal("qa")}>
+          Q&A
+        </button>
       </div>
     </div>
   );

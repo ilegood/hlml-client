@@ -49,7 +49,8 @@ const ModalWrapper = styled.div`
     -ms-overflow-style: none;
 
     &::-webkit-scrollbar { display: none; }
-  }
+
+    .report-item {
       padding: 16px;
       background: var(--color-input-bg);
       border: 1.5px solid var(--color-border);

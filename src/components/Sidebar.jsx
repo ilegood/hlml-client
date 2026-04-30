@@ -67,7 +67,7 @@ const Sidebar = () => {
           <span className={styles.label}>게시글쓰기</span>
         </div>
 
-        <div className={styles.itemWrap} onClick={() => handleProtectedNav("/")}>
+        <div className={styles.itemWrap} onClick={() => handleProtectedNav("/chat-rooms")}>
           <img src={dashboardImg} alt="group" />
           <span className={styles.label}>그룹</span>
         </div>

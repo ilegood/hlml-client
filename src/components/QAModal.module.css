@@ -1,0 +1,139 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  backdrop-filter: blur(4px);
+}
+
+.modalContent {
+  background: var(--color-sidebar);
+  width: 500px;
+  max-width: 90%;
+  max-height: 80vh;
+  border-radius: 24px;
+  padding: 30px;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.header h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-active);
+  margin: 0;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-deactive);
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.closeBtn:hover {
+  color: var(--color-text);
+}
+
+.qaList {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.qaList::-webkit-scrollbar {
+  display: none;
+}
+
+.qaItem {
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--color-input-bg);
+  transition: all 0.2s ease;
+}
+
+.qaItem.active {
+  border-color: var(--color-active);
+  box-shadow: 0 4px 12px rgba(253, 147, 25, 0.1);
+}
+
+.question {
+  width: 100%;
+  padding: 18px 20px;
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.qText {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  gap: 10px;
+}
+
+.qBadge {
+  color: var(--color-active);
+  font-weight: 900;
+}
+
+.arrow {
+  color: var(--color-deactive);
+  transition: transform 0.3s ease;
+}
+
+.qaItem.active .arrow {
+  transform: rotate(180deg);
+  color: var(--color-active);
+}
+
+.answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, padding 0.3s ease;
+  background: var(--color-sidebar);
+}
+
+.qaItem.active .answer {
+  max-height: 200px;
+  padding: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.aText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text);
+  opacity: 0.9;
+}

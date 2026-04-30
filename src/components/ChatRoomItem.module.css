@@ -1,0 +1,73 @@
+.chatRoomItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  background-color: var(--color-sidebar);
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1.5px solid var(--color-border);
+}
+
+.chatRoomItem:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-active);
+}
+
+.roomLink {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.roomAvatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--color-deactive);
+  margin-right: 15px;
+  flex-shrink: 0;
+  background-image: linear-gradient(135deg, var(--color-active) 0%, var(--color-deactive) 100%);
+  opacity: 0.8;
+}
+
+.roomInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.roomName {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.lastMessage {
+  font-size: 13px;
+  color: #888;
+}
+
+.deleteButton {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  background-color: #fff1f2;
+  color: #eb4d4b;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.deleteButton:hover {
+  background-color: #eb4d4b;
+  color: white;
+}
