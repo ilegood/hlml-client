@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ProfileEditModal from "../components/ProfileEditModal";
 import AppointmentModal from "../components/AppointmentModal";
 import BlockedListModal from "../components/BlockedListModal";
-import ReportModal from "../components/ReportModal";
+import ReportListModal from "../components/ReportListModal";
 import styles from "./UserPage.module.css";
 
 export default function UserPage() {
@@ -75,7 +75,7 @@ export default function UserPage() {
         <BlockedListModal onClose={() => setActiveModal(null)} />
       )}
       {activeModal === "report" && (
-        <ReportModal onClose={() => setActiveModal(null)} />
+        <ReportListModal onClose={() => setActiveModal(null)} />
       )}
 
       {/* ── 유틸 버튼 그리드 ── */}
@@ -93,7 +93,7 @@ export default function UserPage() {
           차단 목록
         </button>
         <button className={styles.util} onClick={() => setActiveModal("report")}>
-          신고
+          신고 내역
         </button>
         <button className={styles.util}>고객센터</button>
       </div>
