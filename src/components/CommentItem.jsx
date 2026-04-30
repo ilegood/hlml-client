@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getTimeAgo } from "../api/homeConstants";
+import { useAuth } from "../context/auth";
 import styles from "./CommentItem.module.css";
 
 const ArrowIcon = () => (
@@ -31,6 +32,9 @@ function InlineEdit({ value, onSave, onCancel }) {
 // ── ReplyItem ──────────────────────────────────────────────
 export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
   const [isEditing, setIsEditing] = useState(false);
+  const { userId } = useAuth();
+
+  const isAuthor = String(reply.userId) === String(userId);
 
   return (
     <div className={styles.replyItemRow}>
@@ -52,8 +56,12 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
           <>
             <div className={styles.commentText}>{reply.text}</div>
             <div className={styles.commentActions}>
-              <button className={styles.cmtActBtn} onClick={() => setIsEditing(true)}>수정</button>
-              <button className={`${styles.cmtActBtn} ${styles.danger}`} onClick={() => onDelete(commentIdx, replyIdx)}>삭제</button>
+              {isAuthor && (
+                <>
+                  <button className={styles.cmtActBtn} onClick={() => setIsEditing(true)}>수정</button>
+                  <button className={`${styles.cmtActBtn} ${styles.danger}`} onClick={() => onDelete(commentIdx, replyIdx)}>삭제</button>
+                </>
+              )}
             </div>
           </>
         )}
@@ -67,6 +75,9 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const { userId } = useAuth();
+
+  const isAuthor = String(comment.userId) === String(userId);
 
   const submitReply = () => {
     if (!replyText.trim()) return;
@@ -101,8 +112,12 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
                 </svg>
                 답글
               </button>
-              <button className={styles.cmtActBtn} onClick={() => setIsEditing(true)}>수정</button>
-              <button className={`${styles.cmtActBtn} ${styles.danger}`} onClick={() => onDelete(commentIdx)}>삭제</button>
+              {isAuthor && (
+                <>
+                  <button className={styles.cmtActBtn} onClick={() => setIsEditing(true)}>수정</button>
+                  <button className={`${styles.cmtActBtn} ${styles.danger}`} onClick={() => onDelete(commentIdx)}>삭제</button>
+                </>
+              )}
             </div>
           </>
         )}

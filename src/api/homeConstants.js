@@ -33,7 +33,16 @@ export function countComments(comments = []) {
 
 export function formatDateTime(dateStr, timeStr) {
   if (!dateStr) return null;
-  const d = new Date(dateStr);
+  
+  let d;
+  if (typeof dateStr === "string" && dateStr.includes("-") && !dateStr.includes("T")) {
+    // YYYY-MM-DD format를 로컬 시간으로 파싱
+    const [y, m, day] = dateStr.split("-").map(Number);
+    d = new Date(y, m - 1, day);
+  } else {
+    d = new Date(dateStr);
+  }
+
   if (isNaN(d.getTime())) return dateStr;
 
   const dateFormatted = d.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
