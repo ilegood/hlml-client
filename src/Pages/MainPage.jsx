@@ -13,6 +13,7 @@ import {
 } from "../api/homeConstants";
 import { getPosts, updatePost } from "../api/posts";
 import CategorySelector from "../components/CategorySelector";
+import CentralMapBar from "../components/CentralMapBar";
 
 // ── Animations ────────────────────────────────────────────
 const cardIn = keyframes`
@@ -671,6 +672,8 @@ export default function MainPage() {
           <CategorySelector selected={selCats} onChange={setSelCats} />
         </div>
       </HeaderControls>
+
+      <CentralMapBar />
 
       <CardList>
         {filtered.length === 0 ? (

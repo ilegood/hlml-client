@@ -2,12 +2,8 @@ import { useEffect, useRef } from "react";
 import styled from "styled-components";
 
 const MapContainer = styled.div`
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  border: 3px solid #07b1bc;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 764px;
+  height: 260px;
   margin: 15px auto;
   background: #f9f9f9;
 `;
