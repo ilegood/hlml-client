@@ -32,3 +32,11 @@ export const updateProfile = async (profileData) => {
   });
   return data;
 };
+
+export const deleteUser = async () => {
+  const token = localStorage.getItem("token");
+  const { data } = await instance.delete("/users", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return data;
+};

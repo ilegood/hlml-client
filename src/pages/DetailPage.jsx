@@ -91,13 +91,25 @@ export default function DetailPage() {
     runPostAction(() => togglePostLike(id));
   };
 
-  const toggleJoin = () => {
+  const toggleJoin = async () => {
     if (!token) {
       toast.error("로그인이 필요한 서비스입니다.");
       navigate("/login");
       return;
     }
-    runPostAction(() => togglePostJoin(id), "참여 처리에 실패했습니다.");
+
+    try {
+      const next = await togglePostJoin(id);
+      if (next) setPost(next);
+
+      const isNowJoined = (next.joinedBy || []).includes(name);
+      if (isNowJoined) {
+        navigate(`/chat-rooms/${id}`);
+      }
+    } catch (err) {
+      console.error("Failed to sync post:", err);
+      toast.error("참여 처리에 실패했습니다.");
+    }
   };
 
   const addComment = () => {
@@ -192,6 +204,14 @@ export default function DetailPage() {
         },
       },
     });
+  };
+
+  const handleJoinBtn = () => {
+    if (joined) {
+      navigate(`/chat-rooms/${id}`);
+      return;
+    }
+    toggleJoin();
   };
 
   return (
@@ -365,7 +385,7 @@ export default function DetailPage() {
           </button>
           <button
             className={`${styles.actionBtnLg}${joined ? ` ${styles.joined}` : ""}`}
-            onClick={toggleJoin}
+            onClick={handleJoinBtn}
             disabled={isAuthor || !token || (isFull && !joined)}
           >
             <svg
