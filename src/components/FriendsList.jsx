@@ -33,7 +33,7 @@ const FriendsListStyled = styled.div`
     &:hover {
       background-color: var(--color-item-hover);
     }
-    
+
     &.locked {
       opacity: 0.7;
     }
@@ -74,7 +74,9 @@ const FriendsListStyled = styled.div`
     cursor: pointer;
     position: relative;
     background: #eee;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
 
     &:hover {
       transform: translateY(-2px);
@@ -446,10 +448,15 @@ const FriendsList = () => {
             level: 5,
           };
           const map = new window.kakao.maps.Map(container, options);
-          
+
           // 예시 마커 (강남역 등 주요 지점)
-          const markerPosition = new window.kakao.maps.LatLng(37.4979, 127.0276);
-          const marker = new window.kakao.maps.Marker({ position: markerPosition });
+          const markerPosition = new window.kakao.maps.LatLng(
+            37.4979,
+            127.0276,
+          );
+          const marker = new window.kakao.maps.Marker({
+            position: markerPosition,
+          });
           marker.setMap(map);
         }
       }, 300);
@@ -461,20 +468,20 @@ const FriendsList = () => {
     <FriendsListStyled>
       <div className="sidebar-wrapper">
         <div className={`friend-sidebar ${isOpen ? "active" : ""}`}>
-          <button 
-            className={`toggle-btn ${!token ? 'locked' : ''}`} 
+          <button
+            className={`toggle-btn ${!token ? "locked" : ""}`}
             onClick={handleToggleSidebar}
           >
             {isOpen ? "〉" : "〈"}
           </button>
-          
+
           {token && (
             <div className="map-button-container">
-              <div 
-                className="map-button" 
-                onClick={() => setIsMapOpen(true)}
-              >
-                <div id="sidebar-map" style={{ width: '100%', height: '100%' }} />
+              <div className="map-button" onClick={() => setIsMapOpen(true)}>
+                <div
+                  id="sidebar-map"
+                  style={{ width: "100%", height: "100%" }}
+                />
               </div>
             </div>
           )}
@@ -494,7 +501,11 @@ const FriendsList = () => {
             {token ? (
               [
                 { label: "온라인 ▾", friends: onlineFriends, status: "online" },
-                { label: "오프라인", friends: offlineFriends, status: "offline" },
+                {
+                  label: "오프라인",
+                  friends: offlineFriends,
+                  status: "offline",
+                },
               ].map(({ label, friends, status }) => (
                 <div className="category-section" key={status}>
                   <h3 className="category-title">{label}</h3>
@@ -520,7 +531,14 @@ const FriendsList = () => {
                 </div>
               ))
             ) : (
-              <div style={{ textAlign: 'center', padding: '50px 0', opacity: 0.5, fontSize: '13px' }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "50px 0",
+                  opacity: 0.5,
+                  fontSize: "13px",
+                }}
+              >
                 로그인 후 친구 목록을 확인하세요.
               </div>
             )}
