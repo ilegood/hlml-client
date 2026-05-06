@@ -52,7 +52,6 @@ export default function ChatRoomDetailPage() {
         socket.emit("mark_read", { messageId: msg.id, userId, roomId });
       }
 
-      // 새 메시지가 왔을 때, 내가 보낸 거거나 거의 바닥에 있다면 스크롤
       const isMine = String(msg.userId) === String(userId);
       const container = messagesRef.current;
       const isAtBottom =
@@ -72,7 +71,6 @@ export default function ChatRoomDetailPage() {
       setRoomImage(image);
     });
 
-    // 모든 리스너 등록 후 방 입장 (자신의 입장 메시지도 받기 위함)
     socket.emit("join_room", { roomId, nickname: name, userId });
 
     socket.on("load_messages", (rawMessages) => {
@@ -100,7 +98,6 @@ export default function ChatRoomDetailPage() {
           }
         });
 
-        // 초기 로딩 시 바닥으로
         setTimeout(() => {
           bottomRef.current?.scrollIntoView({ behavior: "auto" });
         }, 100);
@@ -123,7 +120,6 @@ export default function ChatRoomDetailPage() {
             : m,
         ),
       );
-      // 수정 중인 메시지가 삭제된 경우 수정 상태 해제
       setEditId((prev) => {
         if (prev === messageId) {
           setInput("");
@@ -157,8 +153,6 @@ export default function ChatRoomDetailPage() {
   const handleScroll = () => {
     const container = messagesRef.current;
     if (!container) return;
-
-    // 바닥에서 200px 이상 올라오면 버튼 표시
     const isUp =
       container.scrollHeight - container.scrollTop >
       container.clientHeight + 200;
@@ -267,6 +261,7 @@ export default function ChatRoomDetailPage() {
 
   return (
     <div className={styles.chatWrap}>
+      {/* ── 헤더: 디스코드 채널 헤더 스타일 ── */}
       <div className={styles.header}>
         <div
           className={styles.headerAvatar}
@@ -279,33 +274,45 @@ export default function ChatRoomDetailPage() {
                 }
               : {}
           }
-        ></div>
+        >
+          {!roomImage && "#"}
+        </div>
         <div className={styles.headerInfo}>
           <div className={styles.headerName}>
-            {roomTitle || `채팅방 #${roomId}`}
+            {roomTitle || `채팅방-${roomId}`}
           </div>
           <div className={styles.headerStatus}>
             <span className={styles.statusDot} />
             접속 중
           </div>
         </div>
-        <button className={styles.backBtn}>채팅 알림 설정</button>
-        <button className={styles.backBtn}>지도보기</button>
-        <button className={styles.backBtn}>멤버보기</button>
+        {/* 우측 아이콘형 버튼들 */}
+        <button className={styles.backBtn} title="채팅 알림 설정">
+          🔔
+        </button>
+        <button className={styles.backBtn} title="지도보기">
+          🗺️
+        </button>
+        <button className={styles.backBtn} title="멤버보기">
+          👥
+        </button>
         <button
           className={styles.backBtn}
+          title="나가기"
           onClick={() => navigate("/chat-rooms")}
         >
-          나가기
+          ✕
         </button>
       </div>
 
+      {/* ── 메시지 목록 ── */}
       <div
         className={styles.messages}
         ref={messagesRef}
         onScroll={handleScroll}
       >
         {messages.map((msg, idx) => {
+          /* 시스템 메시지: divider 스타일 */
           if (msg.isSystem) {
             return (
               <div key={msg.id || idx} className={styles.systemMsg}>
@@ -326,57 +333,70 @@ export default function ChatRoomDetailPage() {
               id={`msg-${msg.id}`}
               className={`${styles.msgRow} ${isMine ? styles.msgRowMine : ""}`}
             >
-              {!isMine && (
-                <div
-                  className={styles.msgAvatar}
-                  style={
-                    avatarUrl
-                      ? {
-                          backgroundImage: `url(${avatarUrl})`,
-                          backgroundSize: "cover",
-                          backgroundPosition: "center",
-                          backgroundColor: "transparent",
-                        }
-                      : {}
-                  }
-                >
-                  {!avatarUrl && msg.nickname?.slice(0, 2)}
-                </div>
-              )}
+              {/* 아바타: 내 메시지도 항상 표시 (디스코드 스타일) */}
+              <div
+                className={styles.msgAvatar}
+                style={
+                  avatarUrl
+                    ? {
+                        backgroundImage: `url(${avatarUrl})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        backgroundColor: "transparent",
+                      }
+                    : {}
+                }
+              >
+                {!avatarUrl && msg.nickname?.slice(0, 2)}
+              </div>
 
+              {/* 메시지 블록 */}
               <div
                 className={`${styles.msgBlock} ${isMine ? styles.msgBlockMine : ""}`}
                 onMouseEnter={() => setHoveredMsgId(msg.id)}
-                onMouseLeave={() => {
-                  setHoveredMsgId(null);
-                }}
+                onMouseLeave={() => setHoveredMsgId(null)}
               >
-                {!isMine && (
+                {/* 닉네임 + 시간 헤더 (디스코드: 항상 표시) */}
+                <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "2px" }}>
                   <span className={styles.msgNickname}>{msg.nickname}</span>
-                )}
+                  <span className={styles.msgTime}>{formatTime(msg.time)}</span>
+                  {isMine && msg.readCount > 0 && (
+                    <span className={styles.readCount}>{msg.readCount} 읽음</span>
+                  )}
+                </div>
 
+                {/* 답장 미리보기 */}
                 {parentMsg && (
                   <div
                     className={styles.replyPreviewInMsg}
                     onClick={() => scrollToMessage(parentMsg.id)}
                   >
                     <span className={styles.replyName}>
-                      @{parentMsg.nickname}에게 답장
+                      @{parentMsg.nickname}
                     </span>
-                    <div className={styles.replyContent}>
-                      {parentMsg.isDeleted
-                        ? "삭제된 메시지"
-                        : parentMsg.content}
-                    </div>
+                    <span className={styles.replyContent}>
+                      {parentMsg.isDeleted ? "삭제된 메시지" : parentMsg.content}
+                    </span>
                   </div>
                 )}
 
+                {/* 버블(텍스트) + 액션 버튼 */}
                 <div className={styles.bubbleArea}>
+                  <div
+                    className={`${styles.msgBubble} ${isMine ? styles.msgBubbleMine : styles.msgBubbleOther} ${msg.isDeleted ? styles.deleted : ""}`}
+                  >
+                    {msg.content}
+                    {msg.isEdited && !msg.isDeleted && (
+                      <span className={styles.editedTag}>(수정됨)</span>
+                    )}
+                  </div>
+
+                  {/* 호버 시 액션 버튼 */}
                   {hoveredMsgId === msg.id && !msg.isDeleted && (
                     <div
                       className={`${styles.msgActions} ${isMine ? styles.msgActionsMine : styles.msgActionsOther}`}
                     >
-                      {/* 빠른 반응 (디스코드 스타일) */}
+                      {/* 빠른 반응 */}
                       <div className={styles.quickReactions}>
                         {["👍", "❤️", "😂"].map((emoji) => (
                           <button
@@ -439,6 +459,7 @@ export default function ChatRoomDetailPage() {
                         </>
                       )}
 
+                      {/* 이모지 피커 */}
                       {showEmojiPicker === msg.id && (
                         <div
                           className={styles.emojiPicker}
@@ -456,17 +477,9 @@ export default function ChatRoomDetailPage() {
                       )}
                     </div>
                   )}
-
-                  <div
-                    className={`${styles.msgBubble} ${isMine ? styles.msgBubbleMine : styles.msgBubbleOther} ${msg.isDeleted ? styles.deleted : ""}`}
-                  >
-                    {msg.content}
-                    {msg.isEdited && !msg.isDeleted && (
-                      <span className={styles.editedTag}>(수정됨)</span>
-                    )}
-                  </div>
                 </div>
 
+                {/* 리액션 배지 */}
                 {msg.reactions?.length > 0 && (
                   <div className={styles.reactionsArea}>
                     {Object.entries(
@@ -493,14 +506,7 @@ export default function ChatRoomDetailPage() {
                   </div>
                 )}
 
-                <div className={styles.msgMeta}>
-                  <span className={styles.msgTime}>{formatTime(msg.time)}</span>
-                  {isMine && msg.readCount > 0 && (
-                    <span className={styles.readCount}>
-                      {msg.readCount} 읽음
-                    </span>
-                  )}
-                </div>
+                {/* msgMeta는 헤더로 올렸으므로 제거 */}
               </div>
             </div>
           );
@@ -508,11 +514,12 @@ export default function ChatRoomDetailPage() {
         <div ref={bottomRef} />
       </div>
 
+      {/* 스크롤 하단 버튼 */}
       {showScrollBtn && (
         <button className={styles.scrollToBottom} onClick={scrollToBottom}>
           <svg
-            width="16"
-            height="16"
+            width="14"
+            height="14"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -524,6 +531,7 @@ export default function ChatRoomDetailPage() {
         </button>
       )}
 
+      {/* 답장 / 수정 컨텍스트 바 */}
       {(replyTo || editId) && (
         <div className={styles.inputContext}>
           <div className={styles.contextInfo}>
@@ -562,6 +570,7 @@ export default function ChatRoomDetailPage() {
         </div>
       )}
 
+      {/* ── 입력창: 디스코드 스타일 ── */}
       <div className={styles.inputArea}>
         <input
           ref={inputRef}
@@ -569,7 +578,11 @@ export default function ChatRoomDetailPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder={editId ? "메시지 수정..." : "메시지를 입력하세요..."}
+          placeholder={
+            editId
+              ? "메시지 수정..."
+              : `#${roomTitle || roomId}에 메시지 보내기`
+          }
         />
         <button
           type="button"
@@ -578,11 +591,11 @@ export default function ChatRoomDetailPage() {
         >
           <svg
             style={{ pointerEvents: "none" }}
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="white"
+            stroke="currentColor"
             strokeWidth="2.5"
           >
             <line x1="22" y1="2" x2="11" y2="13" />
