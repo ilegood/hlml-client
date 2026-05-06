@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const storedToken = localStorage.getItem("token");
   const [token, setToken] = useState(storedToken);
   const [name, setName] = useState(localStorage.getItem("name"));
+  const [profileImg, setProfileImg] = useState(localStorage.getItem("profile_img"));
   const [userId, setUserId] = useState(
     localStorage.getItem("user_id") || getUserIdFromToken(storedToken),
   );
@@ -31,6 +32,7 @@ export const AuthProvider = ({ children }) => {
     setToken(data.token);
     setUserId(data.user_id ? String(data.user_id) : "");
     setName(data.nickname);
+    setProfileImg(data.profile_img || "");
   };
 
   const logout = () => {
@@ -44,10 +46,11 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUserId(null);
     setName(null);
+    setProfileImg(null);
   };
 
   return (
-    <AuthContext.Provider value={{ login, logout, token, name, userId }}>
+    <AuthContext.Provider value={{ login, logout, token, name, userId, profileImg }}>
       {children}
     </AuthContext.Provider>
   );

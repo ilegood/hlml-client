@@ -122,11 +122,17 @@ export default function WritePage() {
       if (isEdit) {
         await updatePost(id, formData);
         toast.success("게시글이 수정되었습니다.");
+        navigate(`/detail/${id}`);
       } else {
-        await createPost(formData);
+        const result = await createPost(formData);
         toast.success("게시글이 등록되었습니다.");
+        // 게시글 생성 시 반환된 id를 이용해 채팅방으로 바로 이동
+        if (result && result.id) {
+          navigate(`/chat-rooms/${result.id}`);
+        } else {
+          navigate("/");
+        }
       }
-      navigate(isEdit ? `/detail/${id}` : "/");
     } catch (err) {
       console.error("Failed to save post:", err);
       toast.error("저장에 실패했습니다.");

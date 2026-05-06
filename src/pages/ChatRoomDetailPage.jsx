@@ -2,25 +2,29 @@ import { useEffect, useRef, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { AuthContext } from "../context/auth";
+import { BASE_URL } from "../api/instance";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 
 export default function ChatRoomDetailPage() {
   const { roomId } = useParams();
-  const { name, userId } = useContext(AuthContext);
+  const { name, userId, profileImg } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [roomTitle, setRoomTitle] = useState("");
+  const [roomImage, setRoomImage] = useState("");
 
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
   const [hoveredMsgId, setHoveredMsgId] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
+  const messagesRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -30,10 +34,49 @@ export default function ChatRoomDetailPage() {
       return;
     }
 
-    socketRef.current = io("http://localhost:4000");
+    socketRef.current = io(BASE_URL, {
+      extraHeaders: {
+        "ngrok-skip-browser-warning": "true"
+      }
+    });
     const socket = socketRef.current;
 
-    socket.emit("join_room", roomId);
+    socket.on("receive_message", (msg) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          ...msg,
+          isEdited: msg.is_edited === 1,
+          isDeleted: msg.is_deleted === 1,
+          time: msg.created_at || new Date().toISOString(),
+        },
+      ]);
+
+      if (!msg.isSystem && String(msg.userId) !== String(userId)) {
+        socket.emit("mark_read", { messageId: msg.id, userId, roomId });
+      }
+
+      // 새 메시지가 왔을 때, 내가 보낸 거거나 거의 바닥에 있다면 스크롤
+      const isMine = String(msg.userId) === String(userId);
+      const container = messagesRef.current;
+      const isAtBottom =
+        container &&
+        container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+
+      if (isMine || isAtBottom) {
+        setTimeout(() => {
+          bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 50);
+      }
+    });
+
+    socket.on("room_info", ({ title, image }) => {
+      setRoomTitle(title);
+      setRoomImage(image);
+    });
+
+    // 모든 리스너 등록 후 방 입장 (자신의 입장 메시지도 받기 위함)
+    socket.emit("join_room", { roomId, nickname: name, userId });
 
     socket.on("load_messages", (rawMessages) => {
       const formatted = rawMessages.map((msg) => ({
@@ -41,6 +84,7 @@ export default function ChatRoomDetailPage() {
         roomId: msg.room_id,
         userId: msg.user_id,
         nickname: msg.nickname,
+        profileImg: msg.profileImg,
         content: msg.content,
         isSystem: msg.is_system === 1,
         isEdited: msg.is_edited === 1,
@@ -58,22 +102,11 @@ export default function ChatRoomDetailPage() {
             socket.emit("mark_read", { messageId: m.id, userId, roomId });
           }
         });
-      }
-    });
 
-    socket.on("receive_message", (msg) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...msg,
-          isEdited: msg.is_edited === 1,
-          isDeleted: msg.is_deleted === 1,
-          time: msg.created_at || new Date().toISOString(),
-        },
-      ]);
-
-      if (!msg.isSystem && String(msg.userId) !== String(userId)) {
-        socket.emit("mark_read", { messageId: msg.id, userId, roomId });
+        // 초기 로딩 시 바닥으로
+        setTimeout(() => {
+          bottomRef.current?.scrollIntoView({ behavior: "auto" });
+        }, 100);
       }
     });
 
@@ -124,9 +157,19 @@ export default function ChatRoomDetailPage() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  useEffect(() => {
+  const handleScroll = () => {
+    const container = messagesRef.current;
+    if (!container) return;
+
+    // 바닥에서 200px 이상 올라오면 버튼 표시
+    const isUp =
+      container.scrollHeight - container.scrollTop > container.clientHeight + 200;
+    setShowScrollBtn(isUp);
+  };
+
+  const scrollToBottom = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  };
 
   const formatTime = (isoString) => {
     if (!isoString) return "";
@@ -153,6 +196,7 @@ export default function ChatRoomDetailPage() {
         roomId,
         userId,
         nickname: name,
+        profileImg: profileImg,
         content: input,
         isSystem: false,
         parentId: replyTo?.id || null,
@@ -179,14 +223,18 @@ export default function ChatRoomDetailPage() {
   };
 
   const handleDelete = (msgId) => {
-    if (window.confirm("메시지를 삭제하시겠습니까?")) {
-      socketRef.current.emit("delete_message", { messageId: msgId, roomId });
-      // 현재 수정 중인 메시지를 삭제하는 경우 수정 상태 해제
-      if (editId === msgId) {
-        setEditId(null);
-        setInput("");
-      }
-    }
+    toast("메시지를 삭제하시겠습니까?", {
+      action: {
+        label: "삭제",
+        onClick: () => {
+          socketRef.current.emit("delete_message", { messageId: msgId, roomId });
+          if (editId === msgId) {
+            setEditId(null);
+            setInput("");
+          }
+        },
+      },
+    });
   };
 
   const toggleReaction = (msgId, emoji) => {
@@ -219,9 +267,12 @@ export default function ChatRoomDetailPage() {
   return (
     <div className={styles.chatWrap}>
       <div className={styles.header}>
-        <div className={styles.headerAvatar}></div>
+        <div 
+          className={styles.headerAvatar}
+          style={roomImage ? { backgroundImage: `url(${BASE_URL}${roomImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+        ></div>
         <div className={styles.headerInfo}>
-          <div className={styles.headerName}>채팅방 #{roomId}</div>
+          <div className={styles.headerName}>{roomTitle || `채팅방 #${roomId}`}</div>
           <div className={styles.headerStatus}>
             <span className={styles.statusDot} />
             접속 중
@@ -238,7 +289,7 @@ export default function ChatRoomDetailPage() {
         </button>
       </div>
 
-      <div className={styles.messages}>
+      <div className={styles.messages} ref={messagesRef} onScroll={handleScroll}>
         {messages.map((msg, idx) => {
           if (msg.isSystem) {
             return (
@@ -250,6 +301,7 @@ export default function ChatRoomDetailPage() {
 
           const isMine = String(msg.userId) === String(userId);
           const parentMsg = msg.parentId ? getParentMsg(msg.parentId) : null;
+          const avatarUrl = msg.profileImg ? `${BASE_URL}${msg.profileImg}` : null;
 
           return (
             <div
@@ -258,8 +310,11 @@ export default function ChatRoomDetailPage() {
               className={`${styles.msgRow} ${isMine ? styles.msgRowMine : ""}`}
             >
               {!isMine && (
-                <div className={styles.msgAvatar}>
-                  {msg.nickname?.slice(0, 2)}
+                <div 
+                  className={styles.msgAvatar}
+                  style={avatarUrl ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: 'transparent' } : {}}
+                >
+                  {!avatarUrl && msg.nickname?.slice(0, 2)}
                 </div>
               )}
 
@@ -426,6 +481,15 @@ export default function ChatRoomDetailPage() {
         })}
         <div ref={bottomRef} />
       </div>
+
+      {showScrollBtn && (
+        <button className={styles.scrollToBottom} onClick={scrollToBottom}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
+          </svg>
+          최신 메시지 보기
+        </button>
+      )}
 
       {(replyTo || editId) && (
         <div className={styles.inputContext}>
