@@ -24,7 +24,9 @@ const SidebarStyles = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-
+  transition:
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.3s ease;
   left: 0;
   position: fixed;
   top: 25px;
@@ -175,7 +177,7 @@ const SidebarStyles = styled.div`
 
   &:hover .logout-btn {
     justify-content: flex-start;
-    padding-left: 15px;
+    padding-left: 25px;
     gap: 20px;
     .label {
       width: auto;
