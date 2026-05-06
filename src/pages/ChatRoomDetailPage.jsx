@@ -34,11 +34,7 @@ export default function ChatRoomDetailPage() {
       return;
     }
 
-    socketRef.current = io(BASE_URL, {
-      extraHeaders: {
-        "ngrok-skip-browser-warning": "true"
-      }
-    });
+    socketRef.current = io(BASE_URL);
     const socket = socketRef.current;
 
     socket.on("receive_message", (msg) => {
@@ -61,7 +57,8 @@ export default function ChatRoomDetailPage() {
       const container = messagesRef.current;
       const isAtBottom =
         container &&
-        container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+        container.scrollHeight - container.scrollTop <=
+          container.clientHeight + 100;
 
       if (isMine || isAtBottom) {
         setTimeout(() => {
@@ -163,7 +160,8 @@ export default function ChatRoomDetailPage() {
 
     // 바닥에서 200px 이상 올라오면 버튼 표시
     const isUp =
-      container.scrollHeight - container.scrollTop > container.clientHeight + 200;
+      container.scrollHeight - container.scrollTop >
+      container.clientHeight + 200;
     setShowScrollBtn(isUp);
   };
 
@@ -227,7 +225,10 @@ export default function ChatRoomDetailPage() {
       action: {
         label: "삭제",
         onClick: () => {
-          socketRef.current.emit("delete_message", { messageId: msgId, roomId });
+          socketRef.current.emit("delete_message", {
+            messageId: msgId,
+            roomId,
+          });
           if (editId === msgId) {
             setEditId(null);
             setInput("");
@@ -267,12 +268,22 @@ export default function ChatRoomDetailPage() {
   return (
     <div className={styles.chatWrap}>
       <div className={styles.header}>
-        <div 
+        <div
           className={styles.headerAvatar}
-          style={roomImage ? { backgroundImage: `url(${BASE_URL}${roomImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+          style={
+            roomImage
+              ? {
+                  backgroundImage: `url(${BASE_URL}${roomImage})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }
+              : {}
+          }
         ></div>
         <div className={styles.headerInfo}>
-          <div className={styles.headerName}>{roomTitle || `채팅방 #${roomId}`}</div>
+          <div className={styles.headerName}>
+            {roomTitle || `채팅방 #${roomId}`}
+          </div>
           <div className={styles.headerStatus}>
             <span className={styles.statusDot} />
             접속 중
@@ -289,7 +300,11 @@ export default function ChatRoomDetailPage() {
         </button>
       </div>
 
-      <div className={styles.messages} ref={messagesRef} onScroll={handleScroll}>
+      <div
+        className={styles.messages}
+        ref={messagesRef}
+        onScroll={handleScroll}
+      >
         {messages.map((msg, idx) => {
           if (msg.isSystem) {
             return (
@@ -301,7 +316,9 @@ export default function ChatRoomDetailPage() {
 
           const isMine = String(msg.userId) === String(userId);
           const parentMsg = msg.parentId ? getParentMsg(msg.parentId) : null;
-          const avatarUrl = msg.profileImg ? `${BASE_URL}${msg.profileImg}` : null;
+          const avatarUrl = msg.profileImg
+            ? `${BASE_URL}${msg.profileImg}`
+            : null;
 
           return (
             <div
@@ -310,9 +327,18 @@ export default function ChatRoomDetailPage() {
               className={`${styles.msgRow} ${isMine ? styles.msgRowMine : ""}`}
             >
               {!isMine && (
-                <div 
+                <div
                   className={styles.msgAvatar}
-                  style={avatarUrl ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: 'transparent' } : {}}
+                  style={
+                    avatarUrl
+                      ? {
+                          backgroundImage: `url(${avatarUrl})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                          backgroundColor: "transparent",
+                        }
+                      : {}
+                  }
                 >
                   {!avatarUrl && msg.nickname?.slice(0, 2)}
                 </div>
@@ -484,7 +510,14 @@ export default function ChatRoomDetailPage() {
 
       {showScrollBtn && (
         <button className={styles.scrollToBottom} onClick={scrollToBottom}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+          >
             <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
           </svg>
           최신 메시지 보기
