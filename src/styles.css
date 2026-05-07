@@ -1,9 +1,11 @@
+/* 리셋.css */
 * {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
 }
 
+/* 기본 색상 함수 : 라이트모드 */
 :root {
   --color-active: #fd9319;
   --color-deactive: #07b1bc;
@@ -11,41 +13,20 @@
   --color-text: #121212;
   --color-sidebar: white;
   --color-border: #e0e0e0;
-  --color-input-bg: #f9f9f9;
-  --color-input-focus-bg: #fff8f2;
-  --color-item-bg: white;
-  --color-item-hover: #f5f5f5;
 }
 
+/* 기본 색상 함수 : 다크모드 */
 [data-theme="dark"] {
   --color-bg: #1e1e24;
   --color-text: #e0e0e0;
   --color-sidebar: #121212;
   --color-border: #333;
-  --color-input-bg: #2a2a32;
-  --color-input-focus-bg: #352b20;
-  --color-item-bg: #25252d;
-  --color-item-hover: #32323d;
 }
 
+/* 페이지 기본 설정 */
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  transition:
-    background-color 0.3s,
-    color 0.3s;
-}
-
-.page {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-.page-wrap {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
 }
 
 main {
@@ -57,6 +38,18 @@ main {
   transition: padding 0.3s ease;
 }
 
+/* 헤더 고정 */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.page-wrap {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
 @media (max-width: 768px) {
   main {
     padding-left: 0;
@@ -145,12 +138,8 @@ main {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-active);
+  background: rgb(47, 47, 48);
   border-radius: 10px;
   background-clip: padding-box; /* 배경색이 보더 영역을 침범하지 않게 함 */
   border: 2px solid transparent; /* 투명 보더로 간격(Gap) 효과 생성 */
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: #e68212;
 }
