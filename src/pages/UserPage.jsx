@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getImageUrl } from "../api/instance";
 import ProfileEditModal from "../components/ProfileEditModal";
 import AppointmentModal from "../components/AppointmentModal";
 import BlockedListModal from "../components/BlockedListModal";
@@ -40,7 +41,7 @@ export default function UserPage() {
         <div className={styles.profileImg}>
           {userInfo.profile_img && (
             <img
-              src={`http://localhost:4000${userInfo.profile_img}`}
+              src={getImageUrl(userInfo.profile_img)}
               alt="profile"
             />
           )}

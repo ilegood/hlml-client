@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { updateProfile } from "../api/users";
+import { getImageUrl } from "../api/instance";
 import styles from "./ProfileEditModal.module.css";
 
 const ProfileEditModal = ({ onClose, onSave }) => {
@@ -14,9 +15,7 @@ const ProfileEditModal = ({ onClose, onSave }) => {
   });
   const [profileImg, setProfileImg] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(
-    localStorage.getItem("profile_img")
-      ? `http://localhost:4000${localStorage.getItem("profile_img")}`
-      : ""
+    getImageUrl(localStorage.getItem("profile_img")) || ""
   );
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 

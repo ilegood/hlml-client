@@ -1,10 +1,73 @@
-import { useEffect, useRef, useState, useContext } from "react";
+import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { AuthContext } from "../context/auth";
-import { BASE_URL } from "../api/instance";
+import { BASE_URL, getImageUrl } from "../api/instance";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
+
+// ── 헬퍼 ──────────────────────────────────────────────────────────────────────
+
+const formatTime = (isoString) => {
+  if (!isoString) return "";
+  return new Date(isoString).toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatDate = (isoString) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  if (d.toDateString() === today.toDateString()) return "오늘";
+  if (d.toDateString() === yesterday.toDateString()) return "어제";
+  return d.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+const isSameDay = (a, b) => {
+  if (!a || !b) return false;
+  const da = new Date(a),
+    db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+};
+
+// 같은 유저가 2분 이내에 연속 작성한 경우 compact 처리
+const isCompact = (prev, curr) => {
+  if (!prev || prev.isSystem || curr.isSystem) return false;
+  if (prev.userId !== curr.userId) return false;
+  const diff = new Date(curr.time) - new Date(prev.time);
+  return diff < 2 * 60 * 1000;
+};
+
+// ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
+
+function Avatar({ profileImg, nickname, size = 40 }) {
+  const url = getImageUrl(profileImg);
+  return (
+    <div
+      className={styles.msgAvatar}
+      style={{ width: size, height: size, fontSize: size * 0.3 }}
+    >
+      {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
+    </div>
+  );
+}
+
+// ── Main Component ─────────────────────────────────────────────────────────────
 
 export default function ChatRoomDetailPage() {
   const { roomId } = useParams();
@@ -20,12 +83,15 @@ export default function ChatRoomDetailPage() {
   const [editId, setEditId] = useState(null);
   const [hoveredMsgId, setHoveredMsgId] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(null);
+  const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
+
+  // ── Socket setup ────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!userId || !name) {
@@ -60,9 +126,10 @@ export default function ChatRoomDetailPage() {
           container.clientHeight + 100;
 
       if (isMine || isAtBottom) {
-        setTimeout(() => {
-          bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-        }, 50);
+        setTimeout(
+          () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+          50,
+        );
       }
     });
 
@@ -97,10 +164,10 @@ export default function ChatRoomDetailPage() {
             socket.emit("mark_read", { messageId: m.id, userId, roomId });
           }
         });
-
-        setTimeout(() => {
-          bottomRef.current?.scrollIntoView({ behavior: "auto" });
-        }, 100);
+        setTimeout(
+          () => bottomRef.current?.scrollIntoView({ behavior: "auto" }),
+          100,
+        );
       }
     });
 
@@ -145,10 +212,33 @@ export default function ChatRoomDetailPage() {
   }, [roomId, userId, name, navigate]);
 
   useEffect(() => {
-    const handleClickOutside = () => setShowEmojiPicker(null);
+    const handleClickOutside = () => {
+      setShowEmojiPicker(null);
+      setShowMainEmojiPicker(false);
+    };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
+
+  const handleEmojiSelect = (emoji) => {
+    const start = inputRef.current.selectionStart;
+    const end = inputRef.current.selectionEnd;
+    const text = input;
+    const before = text.substring(0, start);
+    const after = text.substring(end, text.length);
+    setInput(before + emoji.native + after);
+
+    // 포커스 유지 및 커서 이동을 위한 처리
+    setTimeout(() => {
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(
+        start + emoji.native.length,
+        start + emoji.native.length,
+      );
+    }, 0);
+  };
+
+  // ── Scroll ──────────────────────────────────────────────────────────────────
 
   const handleScroll = () => {
     const container = messagesRef.current;
@@ -159,46 +249,41 @@ export default function ChatRoomDetailPage() {
     setShowScrollBtn(isUp);
   };
 
-  const scrollToBottom = () => {
+  const scrollToBottom = () =>
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
-  const formatTime = (isoString) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    return date.toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  // ── Actions ─────────────────────────────────────────────────────────────────
 
-  const handleSend = (e) => {
-    if (e) e.preventDefault();
-    if (!input.trim() || !socketRef.current) return;
+  const handleSend = useCallback(
+    (e) => {
+      if (e) e.preventDefault();
+      if (!input.trim() || !socketRef.current) return;
 
-    if (editId) {
-      socketRef.current.emit("edit_message", {
-        messageId: editId,
-        content: input,
-        roomId,
-      });
-      setEditId(null);
-    } else {
-      socketRef.current.emit("send_message", {
-        roomId,
-        userId,
-        nickname: name,
-        profileImg: profileImg,
-        content: input,
-        isSystem: false,
-        parentId: replyTo?.id || null,
-        time: new Date().toISOString(),
-      });
-      setReplyTo(null);
-    }
-    setInput("");
-    inputRef.current?.focus();
-  };
+      if (editId) {
+        socketRef.current.emit("edit_message", {
+          messageId: editId,
+          content: input,
+          roomId,
+        });
+        setEditId(null);
+      } else {
+        socketRef.current.emit("send_message", {
+          roomId,
+          userId,
+          nickname: name,
+          profileImg,
+          content: input,
+          isSystem: false,
+          parentId: replyTo?.id || null,
+          time: new Date().toISOString(),
+        });
+        setReplyTo(null);
+      }
+      setInput("");
+      inputRef.current?.focus();
+    },
+    [input, editId, replyTo, roomId, userId, name, profileImg],
+  );
 
   const startEdit = (msg) => {
     setEditId(msg.id);
@@ -242,148 +327,178 @@ export default function ChatRoomDetailPage() {
     setShowEmojiPicker(null);
   };
 
-  const getParentMsg = (parentId) => {
-    return messages.find((m) => m.id === parentId);
-  };
+  const getParentMsg = (parentId) => messages.find((m) => m.id === parentId);
 
   const scrollToMessage = (msgId) => {
-    const element = document.getElementById(`msg-${msgId}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-      element.classList.add(styles.highlight);
-      setTimeout(() => {
-        element.classList.remove(styles.highlight);
-      }, 2000);
+    const el = document.getElementById(`msg-${msgId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add(styles.highlight);
+      setTimeout(() => el.classList.remove(styles.highlight), 2000);
     } else {
       toast.error("원본 메시지를 찾을 수 없습니다.");
     }
   };
 
+  const cancelContext = () => {
+    setReplyTo(null);
+    setEditId(null);
+    setInput("");
+  };
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+
   return (
     <div className={styles.chatWrap}>
-      {/* ── 헤더: 디스코드 채널 헤더 스타일 ── */}
+      {/* ── Header ── */}
       <div className={styles.header}>
-        <div
-          className={styles.headerAvatar}
-          style={
-            roomImage
-              ? {
-                  backgroundImage: `url(${BASE_URL}${roomImage})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }
-              : {}
-          }
-        >
-          {!roomImage && "#"}
+        <div className={styles.headerThumb}>
+          {roomImage ? (
+            <img src={getImageUrl(roomImage)} alt="room" />
+          ) : (
+            <span className={styles.headerHashIcon}>#</span>
+          )}
         </div>
-        <div className={styles.headerInfo}>
-          <div className={styles.headerName}>
-            {roomTitle || `채팅방-${roomId}`}
-          </div>
-          <div className={styles.headerStatus}>
-            <span className={styles.statusDot} />
-            접속 중
-          </div>
+        <span className={styles.headerName}>
+          {roomTitle || `채팅방 ${roomId}`}
+        </span>
+        <div className={styles.headerDivider} />
+        <span className={styles.headerDesc}>
+          {roomTitle ? `${roomTitle} 채팅방입니다.` : ""}
+        </span>
+        <div className={styles.headerActions}>
+          <button className={styles.headerIconBtn} title="채팅 알림 설정">
+            🔔
+          </button>
+          <button className={styles.headerIconBtn} title="지도보기">
+            🗺️
+          </button>
+          <button className={styles.headerIconBtn} title="멤버보기">
+            👥
+          </button>
+          <button
+            className={styles.headerIconBtn}
+            title="나가기"
+            onClick={() => navigate("/chat-rooms")}
+          >
+            🚪
+          </button>
         </div>
-        {/* 우측 아이콘형 버튼들 */}
-        <button className={styles.backBtn} title="채팅 알림 설정">
-          🔔
-        </button>
-        <button className={styles.backBtn} title="지도보기">
-          🗺️
-        </button>
-        <button className={styles.backBtn} title="멤버보기">
-          👥
-        </button>
-        <button
-          className={styles.backBtn}
-          title="나가기"
-          onClick={() => navigate("/chat-rooms")}
-        >
-          ✕
-        </button>
       </div>
 
-      {/* ── 메시지 목록 ── */}
+      {/* ── Message list ── */}
       <div
         className={styles.messages}
         ref={messagesRef}
         onScroll={handleScroll}
       >
         {messages.map((msg, idx) => {
-          /* 시스템 메시지: divider 스타일 */
+          const prevMsg = idx > 0 ? messages[idx - 1] : null;
+          const showDateDivider = !isSameDay(prevMsg?.time, msg.time);
+          const compact = !showDateDivider && isCompact(prevMsg, msg);
+          const isMine = String(msg.userId) === String(userId);
+          const parentMsg = msg.parentId ? getParentMsg(msg.parentId) : null;
+
+          // 리액션 집계
+          const reactionMap = (msg.reactions || []).reduce((acc, r) => {
+            if (!acc[r.emoji]) acc[r.emoji] = { count: 0, mine: false };
+            acc[r.emoji].count++;
+            if (String(r.userId || r.user_id) === String(userId))
+              acc[r.emoji].mine = true;
+            return acc;
+          }, {});
+
           if (msg.isSystem) {
             return (
-              <div key={msg.id || idx} className={styles.systemMsg}>
-                {msg.content}
+              <div key={msg.id || idx}>
+                {showDateDivider && (
+                  <div className={styles.dateDivider}>
+                    <span className={styles.dateDividerText}>
+                      {formatDate(msg.time)}
+                    </span>
+                  </div>
+                )}
+                <div className={styles.systemMsg}>{msg.content}</div>
               </div>
             );
           }
 
-          const isMine = String(msg.userId) === String(userId);
-          const parentMsg = msg.parentId ? getParentMsg(msg.parentId) : null;
-          const avatarUrl = msg.profileImg
-            ? `${BASE_URL}${msg.profileImg}`
-            : null;
-
           return (
-            <div
-              key={msg.id || idx}
-              id={`msg-${msg.id}`}
-              className={`${styles.msgRow} ${isMine ? styles.msgRowMine : ""}`}
-            >
-              {/* 아바타: 내 메시지도 항상 표시 (디스코드 스타일) */}
-              <div
-                className={styles.msgAvatar}
-                style={
-                  avatarUrl
-                    ? {
-                        backgroundImage: `url(${avatarUrl})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        backgroundColor: "transparent",
-                      }
-                    : {}
-                }
-              >
-                {!avatarUrl && msg.nickname?.slice(0, 2)}
-              </div>
+            <div key={msg.id || idx}>
+              {showDateDivider && (
+                <div className={styles.dateDivider}>
+                  <span className={styles.dateDividerText}>
+                    {formatDate(msg.time)}
+                  </span>
+                </div>
+              )}
 
-              {/* 메시지 블록 */}
               <div
-                className={`${styles.msgBlock} ${isMine ? styles.msgBlockMine : ""}`}
+                id={`msg-${msg.id}`}
+                className={`${styles.msgRow} ${compact ? styles.compact : styles.msgGroupStart}`}
                 onMouseEnter={() => setHoveredMsgId(msg.id)}
                 onMouseLeave={() => setHoveredMsgId(null)}
               >
-                {/* 닉네임 + 시간 헤더 (디스코드: 항상 표시) */}
-                <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "2px" }}>
-                  <span className={styles.msgNickname}>{msg.nickname}</span>
-                  <span className={styles.msgTime}>{formatTime(msg.time)}</span>
-                  {isMine && msg.readCount > 0 && (
-                    <span className={styles.readCount}>{msg.readCount} 읽음</span>
+                {/* ── Avatar column ── */}
+                <div className={styles.msgAvatarWrap}>
+                  {compact ? (
+                    <span className={styles.compactTime}>
+                      {formatTime(msg.time)}
+                    </span>
+                  ) : (
+                    <Avatar
+                      profileImg={msg.profileImg}
+                      nickname={msg.nickname}
+                    />
                   )}
                 </div>
 
-                {/* 답장 미리보기 */}
-                {parentMsg && (
-                  <div
-                    className={styles.replyPreviewInMsg}
-                    onClick={() => scrollToMessage(parentMsg.id)}
-                  >
-                    <span className={styles.replyName}>
-                      @{parentMsg.nickname}
-                    </span>
-                    <span className={styles.replyContent}>
-                      {parentMsg.isDeleted ? "삭제된 메시지" : parentMsg.content}
-                    </span>
-                  </div>
-                )}
+                {/* ── Content column ── */}
+                <div className={styles.msgContent}>
+                  {/* 닉네임 + 시각 (첫 메시지만) */}
+                  {!compact && (
+                    <div className={styles.msgHeader}>
+                      <span
+                        className={`${styles.msgNickname} ${isMine ? styles.msgNicknameMine : ""}`}
+                      >
+                        {msg.nickname}
+                      </span>
+                      <span className={styles.msgTimestamp}>
+                        {formatTime(msg.time)}
+                      </span>
+                    </div>
+                  )}
 
-                {/* 버블(텍스트) + 액션 버튼 */}
-                <div className={styles.bubbleArea}>
+                  {/* 답장 미리보기 */}
+                  {parentMsg && (
+                    <div
+                      className={styles.replyPreviewInMsg}
+                      onClick={() => scrollToMessage(parentMsg.id)}
+                    >
+                      <div className={styles.replyAvatar}>
+                        {parentMsg.profileImg ? (
+                          <img
+                            src={getImageUrl(parentMsg.profileImg)}
+                            alt={parentMsg.nickname}
+                          />
+                        ) : (
+                          parentMsg.nickname?.slice(0, 1)
+                        )}
+                      </div>
+                      <span className={styles.replyName}>
+                        {parentMsg.nickname}
+                      </span>
+                      <span className={styles.replyContent}>
+                        {parentMsg.isDeleted
+                          ? "삭제된 메시지"
+                          : parentMsg.content}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 메시지 본문 */}
                   <div
-                    className={`${styles.msgBubble} ${isMine ? styles.msgBubbleMine : styles.msgBubbleOther} ${msg.isDeleted ? styles.deleted : ""}`}
+                    className={`${styles.msgBubble} ${msg.isDeleted ? styles.deleted : ""}`}
                   >
                     {msg.content}
                     {msg.isEdited && !msg.isDeleted && (
@@ -391,122 +506,153 @@ export default function ChatRoomDetailPage() {
                     )}
                   </div>
 
-                  {/* 호버 시 액션 버튼 */}
-                  {hoveredMsgId === msg.id && !msg.isDeleted && (
-                    <div
-                      className={`${styles.msgActions} ${isMine ? styles.msgActionsMine : styles.msgActionsOther}`}
-                    >
-                      {/* 빠른 반응 */}
-                      <div className={styles.quickReactions}>
-                        {["👍", "❤️", "😂"].map((emoji) => (
-                          <button
+                  {/* 읽음 수 */}
+                  {isMine && msg.readCount > 0 && (
+                    <div className={styles.readCount}>
+                      {msg.readCount}명 읽음
+                    </div>
+                  )}
+
+                  {/* 리액션 배지 */}
+                  {Object.keys(reactionMap).length > 0 && (
+                    <div className={styles.reactionsArea}>
+                      {Object.entries(reactionMap).map(
+                        ([emoji, { count, mine }]) => (
+                          <div
                             key={emoji}
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleReaction(msg.id, emoji);
-                            }}
+                            className={`${styles.reactionBadge} ${mine ? styles.activeReaction : ""}`}
+                            onClick={() => toggleReaction(msg.id, emoji)}
                           >
                             {emoji}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className={styles.actionDivider} />
-
-                      <button
-                        type="button"
-                        title="반응 추가"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowEmojiPicker(msg.id);
-                        }}
-                      >
-                        ➕
-                      </button>
-                      <button
-                        type="button"
-                        title="답장"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startReply(msg);
-                        }}
-                      >
-                        ↩️
-                      </button>
-                      {isMine && (
-                        <>
-                          <button
-                            type="button"
-                            title="수정"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startEdit(msg);
-                            }}
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            type="button"
-                            title="삭제"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(msg.id);
-                            }}
-                          >
-                            🗑️
-                          </button>
-                        </>
-                      )}
-
-                      {/* 이모지 피커 */}
-                      {showEmojiPicker === msg.id && (
-                        <div
-                          className={styles.emojiPicker}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {["👍", "❤️", "😂", "😮", "😢", "🔥"].map((emoji) => (
-                            <span
-                              key={emoji}
-                              onClick={() => toggleReaction(msg.id, emoji)}
-                            >
-                              {emoji}
+                            <span className={styles.reactionCount}>
+                              {count}
                             </span>
-                          ))}
-                        </div>
+                          </div>
+                        ),
                       )}
                     </div>
                   )}
                 </div>
 
-                {/* 리액션 배지 */}
-                {msg.reactions?.length > 0 && (
-                  <div className={styles.reactionsArea}>
-                    {Object.entries(
-                      msg.reactions.reduce((acc, curr) => {
-                        acc[curr.emoji] = (acc[curr.emoji] || 0) + 1;
-                        return acc;
-                      }, {}),
-                    ).map(([emoji, count]) => {
-                      const isMyReaction = msg.reactions.some(
-                        (r) =>
-                          r.emoji === emoji &&
-                          String(r.user_id) === String(userId),
-                      );
-                      return (
-                        <div
+                {/* ── Action toolbar (항상 오른쪽 끝) ── */}
+                {hoveredMsgId === msg.id && !msg.isDeleted && (
+                  <div
+                    className={styles.msgActions}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* 빠른 반응 */}
+                    <div className={styles.quickReactions}>
+                      {["👍", "❤️", "😂"].map((emoji) => (
+                        <button
                           key={emoji}
-                          className={`${styles.reactionBadge} ${isMyReaction ? styles.activeReaction : ""}`}
+                          type="button"
+                          title={emoji}
                           onClick={() => toggleReaction(msg.id, emoji)}
                         >
-                          {emoji} {count}
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className={styles.actionDivider} />
+
+                    {/* 반응 더 추가 */}
+                    <button
+                      type="button"
+                      title="반응 추가"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowEmojiPicker(msg.id);
+                      }}
+                      style={{ position: "relative" }}
+                    >
+                      😊
+                      {showEmojiPicker === msg.id && (
+                        <div
+                          className={styles.emojiPickerPopup}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Picker
+                            data={data}
+                            onEmojiSelect={(emoji) =>
+                              toggleReaction(msg.id, emoji.native)
+                            }
+                            theme="dark"
+                            locale="ko"
+                          />
                         </div>
-                      );
-                    })}
+                      )}
+                    </button>
+
+                    {/* 답장 */}
+                    <button
+                      type="button"
+                      title="답장"
+                      onClick={() => startReply(msg)}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="9 17 4 12 9 7" />
+                        <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                      </svg>
+                    </button>
+
+                    {isMine && (
+                      <>
+                        {/* 수정 */}
+                        <button
+                          type="button"
+                          title="수정"
+                          onClick={() => startEdit(msg)}
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                        {/* 삭제 */}
+                        <button
+                          type="button"
+                          title="삭제"
+                          onClick={() => handleDelete(msg.id)}
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                          </svg>
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
-
-                {/* msgMeta는 헤더로 올렸으므로 제거 */}
               </div>
             </div>
           );
@@ -514,54 +660,81 @@ export default function ChatRoomDetailPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* 스크롤 하단 버튼 */}
+      {/* ── Scroll to bottom button ── */}
       {showScrollBtn && (
-        <button className={styles.scrollToBottom} onClick={scrollToBottom}>
+        <button
+          className={styles.scrollToBottom}
+          onClick={scrollToBottom}
+          title="최신 메시지 보기"
+        >
           <svg
-            width="14"
-            height="14"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="3"
+            strokeWidth="2.5"
           >
-            <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
+            <polyline points="6 9 12 15 18 9" />
           </svg>
-          최신 메시지 보기
         </button>
       )}
 
-      {/* 답장 / 수정 컨텍스트 바 */}
+      {/* ── Reply / Edit context bar ── */}
       {(replyTo || editId) && (
         <div className={styles.inputContext}>
-          <div className={styles.contextInfo}>
-            {replyTo ? (
-              <>
-                <span>@{replyTo.nickname}님에게 답장 중</span>
-                <p>{replyTo.content}</p>
-              </>
-            ) : (
-              <>
-                <span>메시지 수정 중</span>
-                <p>{messages.find((m) => m.id === editId)?.content}</p>
-              </>
-            )}
+          <div>
+            <div className={styles.contextLabel}>
+              {replyTo ? (
+                <>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <polyline points="9 17 4 12 9 7" />
+                    <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                  </svg>
+                  {replyTo.nickname}님에게 답장 중
+                </>
+              ) : (
+                <>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  메시지 수정 중
+                </>
+              )}
+            </div>
+            <div className={styles.contextText}>
+              {replyTo
+                ? replyTo.content
+                : messages.find((m) => m.id === editId)?.content}
+            </div>
           </div>
           <button
             type="button"
-            onClick={() => {
-              setReplyTo(null);
-              setEditId(null);
-              setInput("");
-            }}
+            className={styles.closeBtn}
+            onClick={cancelContext}
           >
             <svg
-              width="14"
-              height="14"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="3"
+              strokeWidth="2.5"
             >
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -570,38 +743,73 @@ export default function ChatRoomDetailPage() {
         </div>
       )}
 
-      {/* ── 입력창: 디스코드 스타일 ── */}
+      {/* ── Input area ── */}
       <div className={styles.inputArea}>
-        <input
-          ref={inputRef}
-          className={styles.input}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder={
-            editId
-              ? "메시지 수정..."
-              : `#${roomTitle || roomId}에 메시지 보내기`
-          }
-        />
-        <button
-          type="button"
-          className={styles.sendBtn}
-          onClick={(e) => handleSend(e)}
-        >
-          <svg
-            style={{ pointerEvents: "none" }}
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          >
-            <line x1="22" y1="2" x2="11" y2="13" />
-            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-          </svg>
-        </button>
+        <div className={styles.inputBox}>
+          <input
+            ref={inputRef}
+            className={styles.input}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder={
+              editId
+                ? "메시지 수정..."
+                : replyTo
+                  ? `@${replyTo.nickname}님에게 답장...`
+                  : `#${roomTitle || roomId}에 메시지 보내기`
+            }
+          />
+          <div className={styles.inputActions}>
+            <button
+              className={styles.inputIconBtn}
+              title="이모티콘"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMainEmojiPicker(!showMainEmojiPicker);
+              }}
+            >
+              😊
+            </button>
+            {showMainEmojiPicker && (
+              <div
+                className={styles.mainEmojiPicker}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Picker
+                  data={data}
+                  onEmojiSelect={handleEmojiSelect}
+                  theme="dark"
+                  locale="ko"
+                />
+              </div>
+            )}
+            <button
+              type="button"
+              className={styles.sendBtn}
+              onClick={handleSend}
+              title="전송"
+            >
+              <svg
+                style={{ pointerEvents: "none" }}
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2.5"
+              >
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
