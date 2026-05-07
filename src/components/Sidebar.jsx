@@ -57,16 +57,12 @@ const SidebarStyles = styled.div`
 
   /* 로고는 약간 더 큼 (30px) */
   .logo {
-    padding-left: 20px;
+    padding-left: 15px;
     margin-bottom: 25px;
     img {
-      width: 30px;
-      height: 30px;
+      width: 40px;
+      height: 40px;
     }
-  }
-
-  &:hover .item-wrap {
-    padding-left: 25px; /* 확장 시 왼쪽으로 살짝 이동하며 자리 잡음 */
   }
 
   .item-wrap:hover {
@@ -180,7 +176,7 @@ const SidebarStyles = styled.div`
 
   &:hover .logout-btn {
     justify-content: flex-start;
-    padding-left: 25px;
+    padding-left: 15px;
     gap: 20px;
     .label {
       width: auto;
