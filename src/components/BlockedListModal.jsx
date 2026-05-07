@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { getBlockedUsers, unblockUser } from "../api/friends";
 
 const ModalWrapper = styled.div`
   position: fixed;
@@ -36,7 +38,10 @@ const ModalWrapper = styled.div`
 
       .user-info {
         display: flex; align-items: center; gap: 10px;
-        .img { width: 32px; height: 32px; border-radius: 50%; background: #ddd; }
+        .img { 
+          width: 32px; height: 32px; border-radius: 50%; background: #ddd; 
+          background-size: cover; background-position: center;
+        }
         .name { font-size: 14px; font-weight: 600; }
       }
 
@@ -59,7 +64,33 @@ const ModalWrapper = styled.div`
 `;
 
 export default function BlockedListModal({ onClose }) {
-  const blockedUsers = [];
+  const [blockedUsers, setBlockedUsers] = useState([]);
+
+  const fetchBlocked = async () => {
+    try {
+      const data = await getBlockedUsers();
+      console.log("차단 목록 데이터:", data);
+      setBlockedUsers(data);
+    } catch (err) {
+      console.error("차단 목록 로드 실패", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBlocked();
+  }, []);
+
+  const handleUnblock = async (id) => {
+    if (window.confirm("차단을 해제하시겠습니까? (차단 해제 시 친구 목록에서 삭제됩니다.)")) {
+      try {
+        await unblockUser(id); 
+        alert("차단이 해제되었습니다.");
+        fetchBlocked();
+      } catch (err) {
+        alert(err.response?.data?.message || "차단 해제 실패");
+      }
+    }
+  };
 
   return (
     <ModalWrapper onClick={onClose}>
@@ -79,10 +110,13 @@ export default function BlockedListModal({ onClose }) {
             blockedUsers.map(user => (
               <div key={user.id} className="item">
                 <div className="user-info">
-                  <div className="img"></div>
-                  <div className="name">{user.name}</div>
+                  <div 
+                    className="img" 
+                    style={{ backgroundImage: user.profile_img ? `url(http://localhost:4000${user.profile_img})` : 'none' }}
+                  />
+                  <div className="name">{user.nickname}</div>
                 </div>
-                <button className="unblock-btn">차단 해제</button>
+                <button className="unblock-btn" onClick={() => handleUnblock(user.id)}>차단 해제</button>
               </div>
             ))
           ) : (

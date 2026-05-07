@@ -799,11 +799,12 @@ export default function DetailPage() {
   };
 
   const toggleJoin = () => {
-    if (!token) {
-      toast.error("로그인이 필요한 서비스입니다.");
-      navigate("/login");
+    // 작성자는 참여를 취소할 수 없음
+    if (post.author === userId) {
+      alert("게시글 작성자는 참여를 취소할 수 없습니다.");
       return;
     }
+
     const list = [...(post.joinedBy || [])];
     const i = list.indexOf(userId);
     let count = post.participants || 0;
@@ -1040,10 +1041,13 @@ export default function DetailPage() {
                 {post.participants || 0} / {post.capacity || 4}명 참여중
               </span>
             </div>
-            
+
             {post.latitude && post.longitude && (
               <div className="appt-map-wrap">
-                <MapPreview latitude={post.latitude} longitude={post.longitude} />
+                <MapPreview
+                  latitude={post.latitude}
+                  longitude={post.longitude}
+                />
               </div>
             )}
 

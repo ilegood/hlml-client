@@ -3,11 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import { useAuth } from "../context/AuthContext";
 import { getPosts, updatePost } from "../api/posts";
-import {
-  STATUS_EMOJI,
-  STATUS_CLASS,
-  getTimeAgo,
-} from "../api/homeConstants";
+import { STATUS_EMOJI, STATUS_CLASS, getTimeAgo } from "../api/homeConstants";
 
 const cardIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -20,9 +16,20 @@ const PageWrapper = styled.div`
   padding: 40px 20px;
 
   .header {
-    display: flex; align-items: center; gap: 15px; margin-bottom: 30px;
-    .back-btn { background: none; border: none; cursor: pointer; color: var(--color-text); }
-    h2 { font-size: 24px; font-weight: 800; }
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    .back-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--color-text);
+    }
+    h2 {
+      font-size: 24px;
+      font-weight: 800;
+    }
   }
 
   .grid {
@@ -32,8 +39,13 @@ const PageWrapper = styled.div`
   }
 
   .empty {
-    text-align: center; padding: 100px 0; color: var(--color-deactive);
-    .icon { font-size: 48px; margin-bottom: 10px; }
+    text-align: center;
+    padding: 100px 0;
+    color: var(--color-deactive);
+    .icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
   }
 `;
 
@@ -151,7 +163,13 @@ function MyPostCard({ post, onClick }) {
           {post.image ? (
             <CardImg src={post.image} alt="" />
           ) : (
-            <div style={{ background: "#f0f0f0", height: "100%", borderRadius: "10px" }} />
+            <div
+              style={{
+                background: "#f0f0f0",
+                height: "100%",
+                borderRadius: "10px",
+              }}
+            />
           )}
         </CardImgWrap>
         <CardBody>
@@ -166,14 +184,30 @@ function MyPostCard({ post, onClick }) {
         </CardBody>
       </CardInner>
       <CardFooter>
-        <div style={{ fontSize: '11px', color: '#aaa' }}>
+        <div style={{ fontSize: "11px", color: "#aaa" }}>
           {post.participants || 0} / {post.capacity || 4}명 참여중
         </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center', fontSize: '12px', color: '#aaa' }}>
-           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-            {post.likes || 0}
+        <div
+          style={{
+            marginLeft: "auto",
+            display: "flex",
+            gap: "8px",
+            alignItems: "center",
+            fontSize: "12px",
+            color: "#aaa",
+          }}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          {post.likes || 0}
         </div>
       </CardFooter>
     </Card>
@@ -189,7 +223,7 @@ export default function MyPostsPage() {
     try {
       const allPosts = await getPosts();
       const userId = name || "me";
-      const filtered = allPosts.filter(p => p.author === userId);
+      const filtered = allPosts.filter((p) => p.author === userId);
       setMyPosts(filtered);
     } catch (err) {
       console.error("Failed to fetch my posts:", err);
@@ -204,7 +238,14 @@ export default function MyPostsPage() {
     <PageWrapper>
       <div className="header">
         <button className="back-btn" onClick={() => navigate(-1)}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
@@ -213,10 +254,10 @@ export default function MyPostsPage() {
 
       {myPosts.length > 0 ? (
         <div className="grid">
-          {myPosts.map(post => (
-            <MyPostCard 
-              key={post.id} 
-              post={post} 
+          {myPosts.map((post) => (
+            <MyPostCard
+              key={post.id}
+              post={post}
               onClick={() => navigate(`/detail/${post.id}`)}
             />
           ))}

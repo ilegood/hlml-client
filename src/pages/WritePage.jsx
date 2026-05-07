@@ -217,7 +217,7 @@ export default function WritePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { name } = useAuth();
-  
+
   const isEdit = !!id;
 
   const [title, setTitle] = useState("");
@@ -298,6 +298,10 @@ export default function WritePage() {
       status,
       author: name || "익명",
     };
+    if (capacity < 2 || capacity > 10) {
+      alert("모집 인원은 2명에서 10명 사이여야 합니다.");
+      return;
+    }
 
     try {
       if (isEdit) {
@@ -314,7 +318,12 @@ export default function WritePage() {
     }
   };
 
-  if (isLoading) return <Container><PageTitle>불러오는 중...</PageTitle></Container>;
+  if (isLoading)
+    return (
+      <Container>
+        <PageTitle>불러오는 중...</PageTitle>
+      </Container>
+    );
 
   return (
     <Container>
@@ -385,12 +394,14 @@ export default function WritePage() {
             />
             <SearchBtn onClick={handleSearchPlace}>지도에서 찾기</SearchBtn>
           </InputWithBtn>
-          
+
           {/* 위도, 경도 값이 있을 때만 지도 미리보기 출력 */}
           {latitude && longitude && (
             <div style={{ textAlign: "center", marginTop: "10px" }}>
               <MapPreview latitude={latitude} longitude={longitude} />
-              <p style={{ fontSize: "12px", color: "#888" }}>선택된 장소의 위치입니다.</p>
+              <p style={{ fontSize: "12px", color: "#888" }}>
+                선택된 장소의 위치입니다.
+              </p>
             </div>
           )}
         </FormGroup>
@@ -398,14 +409,14 @@ export default function WritePage() {
         <FormGroup>
           <FormLabel>👥 모집 인원 (2~10명) {isEdit && "(수정 불가)"}</FormLabel>
           <CapacityRow>
-            <CapBtn 
+            <CapBtn
               onClick={() => setCapacity((c) => Math.max(2, c - 1))}
               disabled={isEdit || capacity <= 2}
             >
               −
             </CapBtn>
             <CapDisplay>{capacity}명</CapDisplay>
-            <CapBtn 
+            <CapBtn
               onClick={() => setCapacity((c) => Math.min(10, c + 1))}
               disabled={isEdit || capacity >= 10}
             >
@@ -430,9 +441,9 @@ export default function WritePage() {
       </WriteForm>
 
       {isSearchOpen && (
-        <PlaceSearchModal 
-          onClose={() => setIsSearchOpen(false)} 
-          onSelect={handlePlaceSelect} 
+        <PlaceSearchModal
+          onClose={() => setIsSearchOpen(false)}
+          onSelect={handlePlaceSelect}
         />
       )}
     </Container>

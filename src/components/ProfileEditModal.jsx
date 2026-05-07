@@ -134,11 +134,15 @@ const ProfileEditModal = ({ onClose, onSave }) => {
     newPasswordConfirm: "",
   });
   const [profileImg, setProfileImg] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(
-    localStorage.getItem("profile_img") 
-      ? `http://localhost:4000${localStorage.getItem("profile_img")}` 
-      : ""
-  );
+  
+  const getInitialPreview = () => {
+    const img = localStorage.getItem("profile_img");
+    if (!img) return "";
+    if (img.startsWith("data:")) return img;
+    return `http://localhost:4000${img}`;
+  };
+
+  const [previewUrl, setPreviewUrl] = useState(getInitialPreview());
 
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
@@ -158,19 +162,25 @@ const ProfileEditModal = ({ onClose, onSave }) => {
   const handleSave = async () => {
     if (!form.nickname) return toast.error("닉네임을 입력해주세요.");
     
-    if (isChangingPassword) {
-      if (!form.currentPassword) return toast.error("현재 비밀번호를 입력해주세요.");
-      if (form.newPassword !== form.newPasswordConfirm) return toast.error("새 비밀번호가 일치하지 않습니다.");
-      if (form.newPassword.length < 4) return toast.error("비밀번호는 4자 이상이어야 합니다.");
+    let base64Image = previewUrl; // 기본적으로 현재 미리보기 URL(또는 기존 이미지)
+
+    // 새로운 이미지가 선택된 경우 Base64로 변환
+    if (profileImg) {
+      const reader = new FileReader();
+      base64Image = await new Promise((resolve) => {
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(profileImg);
+      });
     }
 
     try {
       const data = await updateProfile({
         nickname: form.nickname,
         bio: form.bio,
+        email: localStorage.getItem("email"),
+        profile_img: base64Image, // Base64 문자열 전달
         currentPassword: isChangingPassword ? form.currentPassword : null,
         newPassword: isChangingPassword ? form.newPassword : null,
-        profile_img: profileImg
       });
 
       localStorage.setItem("name", data.nickname);
