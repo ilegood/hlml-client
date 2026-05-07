@@ -90,18 +90,22 @@ const CentralMapBar = () => {
             if (!isNaN(lat) && !isNaN(lng)) {
               const position = new window.kakao.maps.LatLng(lat, lng);
               const isAuthor = post.author === currentUserId;
-              
+
               let markerImage = null;
               if (isAuthor) {
-                const imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+                const imageSrc =
+                  "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
                 const imageSize = new window.kakao.maps.Size(20, 30);
-                markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize);
+                markerImage = new window.kakao.maps.MarkerImage(
+                  imageSrc,
+                  imageSize,
+                );
               }
 
               new window.kakao.maps.Marker({
                 position: position,
                 map: map,
-                image: markerImage
+                image: markerImage,
               });
               bounds.extend(position);
               hasPoints = true;

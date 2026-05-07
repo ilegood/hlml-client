@@ -1,6 +1,3 @@
-import { toast } from "sonner";
-import { useAuth } from "../context/AuthContext";
-import friendsData from "../api/friendsData";
 import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import {
@@ -9,6 +6,7 @@ import {
   acceptFriend,
   rejectFriend,
   blockUser,
+  updateFriendMemo,
 } from "../api/friends";
 import { useAuth } from "../context/AuthContext";
 import AddFriendModal from "./AddFriendModal";
@@ -27,7 +25,7 @@ const FriendsListStyled = styled.div`
 
   .toggle-btn {
     position: absolute;
-    left: -45px;
+    left: -40px;
     top: 20px;
     padding: 10px 15px;
     background-color: var(--color-sidebar);
@@ -37,15 +35,6 @@ const FriendsListStyled = styled.div`
     cursor: pointer;
     box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 1001;
-    transition: all 0.2s;
-
-    &:hover {
-      background-color: var(--color-item-hover);
-    }
-
-    &.locked {
-      opacity: 0.7;
-    }
   }
 
   .friend-sidebar {
@@ -455,6 +444,13 @@ const FriendsList = () => {
     try {
       const fData = await getFriends();
       setFriends(fData);
+
+      // DB에서 가져온 메모로 상태 초기화
+      const initialMemos = {};
+      fData.forEach((friend) => {
+        if (friend.memo) initialMemos[friend.id] = friend.memo;
+      });
+      setMemos(initialMemos);
     } catch (err) {
       console.error("친구 목록 로드 실패", err);
     }
@@ -562,10 +558,6 @@ const FriendsList = () => {
   };
 
   const handleToggleSidebar = () => {
-    if (!token) {
-      toast.error("로그인이 필요한 서비스입니다.");
-      return;
-    }
     setIsOpen(!isOpen);
     if (isOpen) setSelectedFriend(null);
   };
@@ -575,9 +567,14 @@ const FriendsList = () => {
     setIsEditingMemo(true);
   };
 
-  const handleSaveMemo = () => {
-    setMemos({ ...memos, [selectedFriend.id]: tempMemo });
-    setIsEditingMemo(false);
+  const handleSaveMemo = async () => {
+    try {
+      await updateFriendMemo(selectedFriend.id, tempMemo);
+      setMemos({ ...memos, [selectedFriend.id]: tempMemo });
+      setIsEditingMemo(false);
+    } catch (err) {
+      alert("메모 저장 실패");
+    }
   };
 
   const handleCancelMemo = () => setIsEditingMemo(false);
@@ -586,10 +583,7 @@ const FriendsList = () => {
     <FriendsListStyled>
       <div className="sidebar-wrapper">
         <div className={`friend-sidebar ${isOpen ? "active" : ""}`}>
-          <button
-            className={`toggle-btn ${!token ? "locked" : ""}`}
-            onClick={handleToggleSidebar}
-          >
+          <button className="toggle-btn" onClick={handleToggleSidebar}>
             {isOpen ? "〉" : "〈"}
           </button>
 
@@ -597,10 +591,9 @@ const FriendsList = () => {
             <input
               className="search-input"
               type="text"
-              placeholder={token ? "친구 검색" : "로그인 후 이용 가능"}
+              placeholder="친구 검색"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              disabled={!token}
             />
             <button
               className="add-plus-btn"
