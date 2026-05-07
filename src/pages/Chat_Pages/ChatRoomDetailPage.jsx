@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { AuthContext } from "../context/auth";
-import { BASE_URL, getImageUrl } from "../api/instance";
+import { AuthContext } from "../../context/auth";
+import { BASE_URL, getImageUrl } from "../../api/instance";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
@@ -100,19 +100,32 @@ export default function ChatRoomDetailPage() {
       return;
     }
 
-    socketRef.current = io(BASE_URL);
+    socketRef.current = io(BASE_URL, {
+      transports: ["websocket"],
+      reconnectionAttempts: 5,
+    });
     const socket = socketRef.current;
 
+    socket.on("connect", () => {
+      console.log("Socket connected:", socket.id);
+      socket.emit("join_room", { roomId, nickname: name, userId });
+    });
+
     socket.on("receive_message", (msg) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...msg,
-          isEdited: msg.is_edited === 1,
-          isDeleted: msg.is_deleted === 1,
-          time: msg.created_at || new Date().toISOString(),
-        },
-      ]);
+      setMessages((prev) => {
+        // 중복 방지 (이미 목록에 있는 메시지면 무시)
+        if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+
+        return [
+          ...prev,
+          {
+            ...msg,
+            isEdited: msg.is_edited === 1 || msg.isEdited,
+            isDeleted: msg.is_deleted === 1 || msg.isDeleted,
+            time: msg.created_at || msg.time || new Date().toISOString(),
+          },
+        ];
+      });
 
       if (!msg.isSystem && String(msg.userId) !== String(userId)) {
         socket.emit("mark_read", { messageId: msg.id, userId, roomId });
@@ -123,7 +136,7 @@ export default function ChatRoomDetailPage() {
       const isAtBottom =
         container &&
         container.scrollHeight - container.scrollTop <=
-          container.clientHeight + 100;
+          container.clientHeight + 150;
 
       if (isMine || isAtBottom) {
         setTimeout(
@@ -137,8 +150,6 @@ export default function ChatRoomDetailPage() {
       setRoomTitle(title);
       setRoomImage(image);
     });
-
-    socket.emit("join_room", { roomId, nickname: name, userId });
 
     socket.on("load_messages", (rawMessages) => {
       const formatted = rawMessages.map((msg) => ({

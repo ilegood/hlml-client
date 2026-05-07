@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getImageUrl } from "../api/instance";
-import ProfileEditModal from "../components/ProfileEditModal";
-import AppointmentModal from "../components/AppointmentModal";
-import BlockedListModal from "../components/BlockedListModal";
-import ReportListModal from "../components/ReportListModal";
-import QAModal from "../components/QAModal";
+import { getImageUrl } from "../../api/instance";
+import ProfileEditModal from "../../components/Modals/ProfileEditModal";
+import AppointmentModal from "../../components/Modals/AppointmentModal";
+import BlockedListModal from "../../components/Modals/BlockedListModal";
+import ReportListModal from "../../components/Modals/ReportListModal";
+import QAModal from "../../components/Modals/QAModal";
 import styles from "./UserPage.module.css";
 
 export default function UserPage() {
@@ -40,10 +40,7 @@ export default function UserPage() {
       <div className={styles.profileWrap}>
         <div className={styles.profileImg}>
           {userInfo.profile_img && (
-            <img
-              src={getImageUrl(userInfo.profile_img)}
-              alt="profile"
-            />
+            <img src={getImageUrl(userInfo.profile_img)} alt="profile" />
           )}
         </div>
 
@@ -79,9 +76,7 @@ export default function UserPage() {
       {activeModal === "report" && (
         <ReportListModal onClose={() => setActiveModal(null)} />
       )}
-      {activeModal === "qa" && (
-        <QAModal onClose={() => setActiveModal(null)} />
-      )}
+      {activeModal === "qa" && <QAModal onClose={() => setActiveModal(null)} />}
 
       {/* ── 유틸 버튼 그리드 ── */}
       <div className={styles.profileUtil}>
@@ -91,13 +86,22 @@ export default function UserPage() {
         <button className={styles.util} onClick={() => navigate("/my-posts")}>
           올린 게시글
         </button>
-        <button className={styles.util} onClick={() => setActiveModal("appointment")}>
+        <button
+          className={styles.util}
+          onClick={() => setActiveModal("appointment")}
+        >
           내 약속 관리
         </button>
-        <button className={styles.util} onClick={() => setActiveModal("blocked")}>
+        <button
+          className={styles.util}
+          onClick={() => setActiveModal("blocked")}
+        >
           차단 목록
         </button>
-        <button className={styles.util} onClick={() => setActiveModal("report")}>
+        <button
+          className={styles.util}
+          onClick={() => setActiveModal("report")}
+        >
           신고 내역
         </button>
         <button className={styles.util} onClick={() => setActiveModal("qa")}>

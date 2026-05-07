@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "../context/auth";
+import { useAuth } from "../../context/auth";
 import {
   countComments,
   formatDateTime,
   STATUS_EMOJI,
   STATUS_CLASS,
-} from "../api/homeConstants";
+} from "../../api/homeConstants";
 import {
   getPost,
   deletePost,
@@ -16,8 +16,8 @@ import {
   createComment,
   updateComment as updatePostComment,
   deleteComment as deletePostComment,
-} from "../api/posts";
-import { CommentItem } from "../components/CommentItem";
+} from "../../api/posts";
+import { CommentItem } from "../../components/Post_Components/CommentItem";
 import styles from "./DetailPage.module.css";
 
 export default function DetailPage() {

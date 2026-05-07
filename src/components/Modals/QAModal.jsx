@@ -1,7 +1,5 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import styles from "./QAModal.module.css";
-import { deleteUser } from "../api/users";
-import { AuthContext } from "../context/auth";
 
 const QA_DATA = [
   {
@@ -36,40 +34,16 @@ const QA_DATA = [
   },
   {
     id: 6,
-    question: "회원 탈퇴를 하고 싶어요.",
-    answer:
-      "회원 탈퇴 시 모든 활동 내역과 개인정보가 삭제되며 복구할 수 없습니다. 탈퇴를 원하시면 아래 버튼을 눌러주세요.",
-    isWithdrawal: true
+    question: "회원탈퇴는 어디에서 진행할 수 있을까요?",
+    answer: "회원탈퇴는 ",
   },
 ];
 
 export default function QAModal({ onClose }) {
-  const { logout } = useContext(AuthContext);
   const [activeIndex, setActiveId] = useState(null);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
 
   const toggleItem = (id) => {
     setActiveId(activeIndex === id ? null : id);
-  };
-
-  const handleWithdrawalClick = () => {
-    setShowConfirm(true);
-    setConfirmText(""); // Reset text when opening
-  };
-
-  const handleWithdrawalSubmit = async () => {
-    if (confirmText === "회원탈퇴") {
-      try {
-        await deleteUser();
-        alert("회원 탈퇴가 완료되었습니다.");
-        logout();
-        window.location.href = "/";
-      } catch (error) {
-        console.error(error);
-        alert("회원 탈퇴 처리 중 오류가 발생했습니다.");
-      }
-    }
   };
 
   return (
@@ -120,51 +94,12 @@ export default function QAModal({ onClose }) {
                 </div>
               </button>
               <div className={styles.answer}>
-                <div className={styles.aText}>
-                  {item.answer}
-                  {item.isWithdrawal && (
-                    <div className={styles.withdrawalBox}>
-                      <button 
-                        className={styles.withdrawalBtn}
-                        onClick={handleWithdrawalClick}
-                      >
-                        회원 탈퇴하기
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <div className={styles.aText}>{item.answer}</div>
               </div>
             </div>
           ))}
         </div>
       </div>
-
-      {showConfirm && (
-        <div className={styles.confirmOverlay} onClick={() => setShowConfirm(false)}>
-          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
-            <h3>정말 탈퇴하시겠습니까?</h3>
-            <p>탈퇴를 원하시면 아래에 <strong>'회원탈퇴'</strong>를 입력해주세요.</p>
-            <input 
-              type="text" 
-              placeholder="회원탈퇴" 
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              className={styles.confirmInput}
-              autoFocus
-            />
-            <div className={styles.confirmBtns}>
-              <button className={styles.cancelBtn} onClick={() => setShowConfirm(false)}>취소</button>
-              <button 
-                className={styles.submitBtn} 
-                onClick={handleWithdrawalSubmit}
-                disabled={confirmText !== "회원탈퇴"}
-              >
-                탈퇴 확인
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

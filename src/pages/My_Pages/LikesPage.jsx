@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/auth";
-import { getPosts, togglePostLike } from "../api/posts";
-import PostCard from "../components/PostCard";
+import { useAuth } from "../../context/auth";
+import { getPosts, togglePostLike } from "../../api/posts";
+import PostCard from "../../components/Post_Components/PostCard";
 import styles from "./LikesPage.module.css";
 
 export default function LikesPage() {
@@ -16,7 +16,7 @@ export default function LikesPage() {
         const allPosts = await getPosts();
         const userId = name || "me";
         const filtered = allPosts.filter(
-          (p) => Array.isArray(p.likedBy) && p.likedBy.includes(userId)
+          (p) => Array.isArray(p.likedBy) && p.likedBy.includes(userId),
         );
         setLikedPosts(filtered);
       } catch (err) {
@@ -32,7 +32,9 @@ export default function LikesPage() {
     try {
       const updated = await togglePostLike(post.id);
       setLikedPosts((prev) =>
-        prev.filter((p) => p.id !== post.id || updated.likedBy.includes(userId))
+        prev.filter(
+          (p) => p.id !== post.id || updated.likedBy.includes(userId),
+        ),
       );
     } catch (err) {
       console.error("Failed to update like:", err);
@@ -43,7 +45,14 @@ export default function LikesPage() {
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
         <button className={styles.backBtn} onClick={() => navigate(-1)}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>

@@ -1,10 +1,17 @@
 import { useState } from "react";
-import { getTimeAgo } from "../api/homeConstants";
-import { useAuth } from "../context/auth";
+import { getTimeAgo } from "../../api/homeConstants";
+import { useAuth } from "../../context/auth";
 import styles from "./CommentItem.module.css";
 
 const ArrowIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
     <polyline points="9 17 4 12 9 7" />
     <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
   </svg>
@@ -22,8 +29,20 @@ function InlineEdit({ value, onSave, onCancel }) {
         autoFocus
       />
       <div className={styles.editMemoBtns}>
-        <button className={`${styles.editMemoBtn} ${styles.cancel}`} onClick={onCancel}>취소</button>
-        <button className={`${styles.editMemoBtn} ${styles.save}`} onClick={() => { if (val.trim()) onSave(val.trim()); }}>저장</button>
+        <button
+          className={`${styles.editMemoBtn} ${styles.cancel}`}
+          onClick={onCancel}
+        >
+          취소
+        </button>
+        <button
+          className={`${styles.editMemoBtn} ${styles.save}`}
+          onClick={() => {
+            if (val.trim()) onSave(val.trim());
+          }}
+        >
+          저장
+        </button>
       </div>
     </div>
   );
@@ -38,18 +57,25 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
 
   return (
     <div className={styles.replyItemRow}>
-      <div className={styles.replyArrow}><ArrowIcon /></div>
+      <div className={styles.replyArrow}>
+        <ArrowIcon />
+      </div>
       <div className={styles.commentBubble} style={{ flex: 1 }}>
         <div className={styles.commentTop}>
           <span className={styles.commentAuthor}>{reply.author || "익명"}</span>
           {reply.edited && <span className={styles.editedBadge}>수정됨</span>}
-          <span className={styles.commentTime}>{getTimeAgo(reply.createdAt)}</span>
+          <span className={styles.commentTime}>
+            {getTimeAgo(reply.createdAt)}
+          </span>
         </div>
 
         {isEditing ? (
           <InlineEdit
             value={reply.text}
-            onSave={(text) => { onUpdate(commentIdx, null, null, replyIdx, text); setIsEditing(false); }}
+            onSave={(text) => {
+              onUpdate(commentIdx, null, null, replyIdx, text);
+              setIsEditing(false);
+            }}
             onCancel={() => setIsEditing(false)}
           />
         ) : (
@@ -58,8 +84,18 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
             <div className={styles.commentActions}>
               {isAuthor && (
                 <>
-                  <button className={styles.cmtActBtn} onClick={() => setIsEditing(true)}>수정</button>
-                  <button className={`${styles.cmtActBtn} ${styles.danger}`} onClick={() => onDelete(commentIdx, replyIdx)}>삭제</button>
+                  <button
+                    className={styles.cmtActBtn}
+                    onClick={() => setIsEditing(true)}
+                  >
+                    수정
+                  </button>
+                  <button
+                    className={`${styles.cmtActBtn} ${styles.danger}`}
+                    onClick={() => onDelete(commentIdx, replyIdx)}
+                  >
+                    삭제
+                  </button>
                 </>
               )}
             </div>
@@ -90,23 +126,40 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
     <div className={styles.commentItemWrap}>
       <div className={styles.commentBubble}>
         <div className={styles.commentTop}>
-          <span className={styles.commentAuthor}>{comment.author || "익명"}</span>
+          <span className={styles.commentAuthor}>
+            {comment.author || "익명"}
+          </span>
           {comment.edited && <span className={styles.editedBadge}>수정됨</span>}
-          <span className={styles.commentTime}>{getTimeAgo(comment.createdAt)}</span>
+          <span className={styles.commentTime}>
+            {getTimeAgo(comment.createdAt)}
+          </span>
         </div>
 
         {isEditing ? (
           <InlineEdit
             value={comment.text}
-            onSave={(text) => { onUpdate(commentIdx, null, text); setIsEditing(false); }}
+            onSave={(text) => {
+              onUpdate(commentIdx, null, text);
+              setIsEditing(false);
+            }}
             onCancel={() => setIsEditing(false)}
           />
         ) : (
           <>
             <div className={styles.commentText}>{comment.text}</div>
             <div className={styles.commentActions}>
-              <button className={styles.cmtActBtn} onClick={() => setReplyOpen(!replyOpen)}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <button
+                className={styles.cmtActBtn}
+                onClick={() => setReplyOpen(!replyOpen)}
+              >
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <polyline points="9 17 4 12 9 7" />
                   <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
                 </svg>
@@ -114,8 +167,18 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
               </button>
               {isAuthor && (
                 <>
-                  <button className={styles.cmtActBtn} onClick={() => setIsEditing(true)}>수정</button>
-                  <button className={`${styles.cmtActBtn} ${styles.danger}`} onClick={() => onDelete(commentIdx)}>삭제</button>
+                  <button
+                    className={styles.cmtActBtn}
+                    onClick={() => setIsEditing(true)}
+                  >
+                    수정
+                  </button>
+                  <button
+                    className={`${styles.cmtActBtn} ${styles.danger}`}
+                    onClick={() => onDelete(commentIdx)}
+                  >
+                    삭제
+                  </button>
                 </>
               )}
             </div>
@@ -140,7 +203,9 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
 
       {replyOpen && (
         <div className={styles.replyInputWrap}>
-          <div className={styles.replyArrow}><ArrowIcon /></div>
+          <div className={styles.replyArrow}>
+            <ArrowIcon />
+          </div>
           <div className={styles.replyInputInner}>
             <input
               className={styles.commentInput}
@@ -150,7 +215,9 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
               onKeyDown={(e) => e.key === "Enter" && submitReply()}
               autoFocus
             />
-            <button className={styles.commentSubmit} onClick={submitReply}>등록</button>
+            <button className={styles.commentSubmit} onClick={submitReply}>
+              등록
+            </button>
           </div>
         </div>
       )}

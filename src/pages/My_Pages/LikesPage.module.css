@@ -45,8 +45,14 @@
 
 /* ── Card ── */
 @keyframes cardIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .card {
@@ -54,7 +60,10 @@
   border-radius: 14px;
   border: 1.5px solid var(--color-border);
   overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    border-color 0.2s;
   animation: cardIn 0.3s ease both;
   display: flex;
   flex-direction: column;

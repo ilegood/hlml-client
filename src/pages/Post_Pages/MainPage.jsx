@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "../context/auth";
-import { getPosts, togglePostLike } from "../api/posts";
-import CategorySelector from "../components/CategorySelector";
-import PostCard from "../components/PostCard";
+import { useAuth } from "../../context/auth";
+import { getPosts, togglePostLike } from "../../api/posts";
+import CategorySelector from "../../components/Post_Components/CategorySelector";
+import PostCard from "../../components/Post_Components/PostCard";
 import styles from "./MainPage.module.css";
 
 const MAIN_CATEGORY_ORDER = ["인원", "성별", "나이", "흡연", "음주", "활동"];

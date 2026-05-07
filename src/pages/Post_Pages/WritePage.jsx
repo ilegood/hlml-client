@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "../context/auth";
-import { currentTimeString, todayString } from "../api/homeConstants";
-import { createPost, getPost, updatePost } from "../api/posts";
-import CategorySelector from "../components/CategorySelector";
-import ImageDropZone from "../components/ImageDropZone";
+import { useAuth } from "../../context/auth";
+import { currentTimeString, todayString } from "../../api/homeConstants";
+import { createPost, getPost, updatePost } from "../../api/posts";
+import CategorySelector from "../../components/Post_Components/CategorySelector";
+import ImageDropZone from "../../components/Post_Components/ImageDropZone";
 import styles from "./WritePage.module.css";
 
 const WRITE_CATEGORY_EXCLUDES = ["인원"];

@@ -50,6 +50,7 @@ main {
   flex: 1;
   overflow: hidden;
 }
+
 @media (max-width: 768px) {
   main {
     padding-left: 0;
@@ -123,7 +124,7 @@ main {
 
 /* ── 전역 커스텀 스크롤바 ── */
 ::-webkit-scrollbar {
-  width: 10px; /* 전체 너비를 약간 키움 */
+  width: 10px;
   height: 10px;
 }
 
@@ -140,6 +141,6 @@ main {
 ::-webkit-scrollbar-thumb {
   background: rgb(47, 47, 48);
   border-radius: 10px;
-  background-clip: padding-box; /* 배경색이 보더 영역을 침범하지 않게 함 */
-  border: 2px solid transparent; /* 투명 보더로 간격(Gap) 효과 생성 */
+  background-clip: padding-box;
+  border: 2px solid transparent;
 }

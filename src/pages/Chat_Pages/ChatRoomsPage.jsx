@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/auth";
-import { getPosts } from "../api/posts";
-import ChatRoomItem from "../components/ChatRoomItem";
+import { useAuth } from "../../context/auth";
+import { getPosts } from "../../api/posts";
+import ChatRoomItem from "../../components/Chat_Components/ChatRoomItem";
 import styles from "./ChatRoomsPage.module.css";
 
 const ChatRoomsPage = () => {
@@ -17,7 +17,9 @@ const ChatRoomsPage = () => {
         const myRooms = allPosts.filter((post) => {
           const isAuthor = post.author === name;
           // Number() 처리로 타입 불일치 방지
-          const isParticipant = (post.joinedUserIds || []).map(id => Number(id)).includes(Number(userId));
+          const isParticipant = (post.joinedUserIds || [])
+            .map((id) => Number(id))
+            .includes(Number(userId));
           return isAuthor || isParticipant;
         });
 
@@ -25,10 +27,10 @@ const ChatRoomsPage = () => {
         myRooms.sort((a, b) => {
           if (!a.date) return 1;
           if (!b.date) return -1;
-          
-          const dateA = new Date(`${a.date} ${a.time || '00:00:00'}`);
-          const dateB = new Date(`${b.date} ${b.time || '00:00:00'}`);
-          
+
+          const dateA = new Date(`${a.date} ${a.time || "00:00:00"}`);
+          const dateB = new Date(`${b.date} ${b.time || "00:00:00"}`);
+
           return dateA - dateB;
         });
 
@@ -58,15 +60,13 @@ const ChatRoomsPage = () => {
           <div className={styles.empty}>채팅방을 불러오는 중...</div>
         ) : chatRooms.length > 0 ? (
           chatRooms.map((room) => (
-            <ChatRoomItem 
-              key={room.id} 
-              room={room} 
-              currentUserName={name}
-            />
+            <ChatRoomItem key={room.id} room={room} currentUserName={name} />
           ))
         ) : (
           <div className={styles.empty}>
-            {userId ? "참여 중인 채팅방이 없습니다." : "로그인 후 채팅방 목록을 확인하세요."}
+            {userId
+              ? "참여 중인 채팅방이 없습니다."
+              : "로그인 후 채팅방 목록을 확인하세요."}
           </div>
         )}
       </div>

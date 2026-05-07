@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "../context/auth";
-import friendsData from "../api/friendsData";
+import { useAuth } from "../../context/auth";
+import friendsData from "../../api/friendsData";
 import styles from "./FriendsList.module.css";
 
 const CATEGORIES = [
-  { label: "온라인 ▾", status: "online"  },
-  { label: "오프라인",  status: "offline" },
+  { label: "온라인 ▾", status: "online" },
+  { label: "오프라인", status: "offline" },
 ];
 
 const FriendsList = () => {
@@ -21,7 +21,7 @@ const FriendsList = () => {
   const activeFriend = token ? selectedFriend : null;
 
   const filteredFriends = friendsData.filter((f) =>
-    f.name.toLowerCase().includes(searchQuery.toLowerCase())
+    f.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleFriendClick = (friend) => {
@@ -57,8 +57,9 @@ const FriendsList = () => {
 
   return (
     <div className={styles.sidebarWrapper}>
-      <div className={`${styles.friendSidebar}${sidebarOpen ? ` ${styles.active}` : ""}`}>
-
+      <div
+        className={`${styles.friendSidebar}${sidebarOpen ? ` ${styles.active}` : ""}`}
+      >
         {/* ── Toggle Button ── */}
         <button
           className={`${styles.toggleBtn}${!token ? ` ${styles.locked}` : ""}`}
@@ -83,7 +84,9 @@ const FriendsList = () => {
         <div className={styles.scrollContainer}>
           {token ? (
             CATEGORIES.map(({ label, status }) => {
-              const friends = filteredFriends.filter((f) => f.status === status);
+              const friends = filteredFriends.filter(
+                (f) => f.status === status,
+              );
               return (
                 <div className={styles.categorySection} key={status}>
                   <h3 className={styles.categoryTitle}>{label}</h3>
@@ -100,7 +103,9 @@ const FriendsList = () => {
                           </td>
                           <td className={styles.nameCell}>{friend.name}</td>
                           <td className={styles.statusCell}>
-                            <div className={`${styles.statusSquare} ${styles[status]}`} />
+                            <div
+                              className={`${styles.statusSquare} ${styles[status]}`}
+                            />
                           </td>
                         </tr>
                       ))}
@@ -117,7 +122,9 @@ const FriendsList = () => {
         </div>
 
         {/* ── Friend Detail Card ── */}
-        <div className={`${styles.friendDetailCard}${!activeFriend ? ` ${styles.hidden}` : ""}`}>
+        <div
+          className={`${styles.friendDetailCard}${!activeFriend ? ` ${styles.hidden}` : ""}`}
+        >
           <div className={styles.detailHeader}>
             <div className={styles.detailAvatarLarge} />
           </div>
@@ -135,7 +142,10 @@ const FriendsList = () => {
             )}
 
             {!isEditingMemo ? (
-              <button className={styles.detailActionBtn} onClick={handleMemoEdit}>
+              <button
+                className={styles.detailActionBtn}
+                onClick={handleMemoEdit}
+              >
                 {memos[activeFriend?.id] ? "메모 수정" : "메모 추가"}
               </button>
             ) : (
@@ -147,14 +157,20 @@ const FriendsList = () => {
                   placeholder="이 친구에 대한 메모를 남겨보세요..."
                 />
                 <div className={styles.memoActions}>
-                  <button className={styles.btnSave} onClick={handleSaveMemo}>저장</button>
-                  <button className={styles.btnCancel} onClick={() => setIsEditingMemo(false)}>취소</button>
+                  <button className={styles.btnSave} onClick={handleSaveMemo}>
+                    저장
+                  </button>
+                  <button
+                    className={styles.btnCancel}
+                    onClick={() => setIsEditingMemo(false)}
+                  >
+                    취소
+                  </button>
                 </div>
               </div>
             )}
           </div>
         </div>
-
       </div>
     </div>
   );
