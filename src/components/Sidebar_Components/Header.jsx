@@ -30,11 +30,7 @@ const Header = () => {
     }
   };
 
-  return (
-    <HeaderStyles>
-      {getTitle()}
-    </HeaderStyles>
-  );
+  return <HeaderStyles>{getTitle()}</HeaderStyles>;
 };
 
 export default Header;

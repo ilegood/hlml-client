@@ -1,20 +1,19 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useAuth } from "../../context/auth";
-import FriendsList from "./FriendsList";
+import { useAuth } from "../context/auth";
 import styles from "./Sidebar.module.css";
 
 // ── 이미지 임포트 ──────────────────────────────────────────
-import logoImg from "../../assets/logo.png";
-import dashboardImg from "../../assets/dashboard.png";
-import homeImg from "../../assets/home.png";
-import postImg from "../../assets/post.png";
-import messageImg from "../../assets/message.png";
-import profileImg from "../../assets/profile.png";
-import darkImg from "../../assets/dark.png";
-import logoutImg from "../../assets/logout.png";
-import loginImg from "../../assets/login.png";
+import logoImg from "../assets/logo.png";
+import dashboardImg from "../assets/dashboard.png";
+import homeImg from "../assets/home.png";
+import postImg from "../assets/post.png";
+import messageImg from "../assets/message.png";
+import profileImg from "../assets/profile.png";
+import darkImg from "../assets/dark.png";
+import logoutImg from "../assets/logout.png";
+import loginImg from "../assets/login.png";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -135,8 +134,6 @@ const Sidebar = () => {
           </Link>
         )}
       </div>
-
-      <FriendsList />
     </div>
   );
 };
