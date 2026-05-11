@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+<<<<<<< HEAD:src/pages/Chat_Pages/ChatRoomDetailPage.jsx
 import { AuthContext } from "../../context/auth";
 import { BASE_URL, getImageUrl } from "../../api/instance";
+=======
+import { AuthContext } from "../context/auth";
+import { BASE_URL, getImageUrl } from "../api/instance";
+import { leavePost } from "../api/posts";
+>>>>>>> dog2:src/pages/ChatRoomDetailPage.jsx
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+import RoomSettingsModal from "../Components/RoomSettingsModal";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
@@ -78,7 +85,9 @@ export default function ChatRoomDetailPage() {
   const [input, setInput] = useState("");
   const [roomTitle, setRoomTitle] = useState("");
   const [roomImage, setRoomImage] = useState("");
+  const [roomAuthor, setRoomAuthor] = useState("");
 
+  const [showSettings, setShowSettings] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
   const [hoveredMsgId, setHoveredMsgId] = useState(null);
@@ -146,9 +155,10 @@ export default function ChatRoomDetailPage() {
       }
     });
 
-    socket.on("room_info", ({ title, image }) => {
+    socket.on("room_info", ({ title, image, author }) => {
       setRoomTitle(title);
       setRoomImage(image);
+      setRoomAuthor(author);
     });
 
     socket.on("load_messages", (rawMessages) => {
@@ -357,6 +367,29 @@ export default function ChatRoomDetailPage() {
     setInput("");
   };
 
+  const handleLeave = async () => {
+    if (!window.confirm("정말로 이 채팅방에서 나가시겠습니까?")) return;
+
+    try {
+      // 소켓으로 퇴장 알림 (실시간 반영용)
+      socketRef.current?.emit("leave_room", { 
+        roomId, 
+        nickname: name, 
+        userId 
+      });
+
+      // API로 DB 정보 업데이트 (인원 감소, 방장 위임, 퇴장 메시지 저장)
+      await leavePost(roomId);
+
+      toast.success("채팅방에서 나갔습니다.");
+      navigate("/chat-rooms");
+    } catch (err) {
+      console.error("Failed to leave room:", err);
+      toast.error("방 나가기에 실패했습니다.");
+    }
+  };
+
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -378,6 +411,15 @@ export default function ChatRoomDetailPage() {
           {roomTitle ? `${roomTitle} 채팅방입니다.` : ""}
         </span>
         <div className={styles.headerActions}>
+          {name === roomAuthor && (
+            <button 
+              className={styles.headerIconBtn} 
+              title="방 설정 변경"
+              onClick={() => setShowSettings(true)}
+            >
+              ⚙️
+            </button>
+          )}
           <button className={styles.headerIconBtn} title="채팅 알림 설정">
             🔔
           </button>
@@ -390,7 +432,7 @@ export default function ChatRoomDetailPage() {
           <button
             className={styles.headerIconBtn}
             title="나가기"
-            onClick={() => navigate("/chat-rooms")}
+            onClick={handleLeave}
           >
             🚪
           </button>
@@ -822,6 +864,20 @@ export default function ChatRoomDetailPage() {
           </div>
         </div>
       </div>
+
+      {showSettings && (
+        <RoomSettingsModal
+          roomId={roomId}
+          onClose={() => setShowSettings(false)}
+          onUpdate={() => {
+            socketRef.current?.emit("join_room", { 
+              roomId, 
+              nickname: name, 
+              userId 
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
