@@ -5,6 +5,7 @@ import { useAuth } from "../../context/auth";
 import { getPosts, togglePostLike } from "../../api/posts";
 import CategorySelector from "../../components/Post_Components/CategorySelector";
 import PostCard from "../../components/Post_Components/PostCard";
+import CentralMapBar from "../../components/Post_Components/CentralMapBar";
 import styles from "./MainPage.module.css";
 
 const MAIN_CATEGORY_ORDER = ["인원", "성별", "나이", "흡연", "음주", "활동"];
@@ -137,6 +138,8 @@ export default function MainPage() {
           </button>
         </div>
       </div>
+
+      <CentralMapBar />
 
       {/* 카드 목록 */}
       <div className={styles.cardList}>

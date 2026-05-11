@@ -18,6 +18,7 @@ import {
   deleteComment as deletePostComment,
 } from "../../api/posts";
 import { CommentItem } from "../../components/Post_Components/CommentItem";
+import MapPreview from "../../components/Post_Components/MapPreview";
 import styles from "./DetailPage.module.css";
 
 export default function DetailPage() {
@@ -331,6 +332,13 @@ export default function DetailPage() {
               <span>{post.place}</span>
             </div>
           )}
+
+          {post.latitude && post.longitude && (
+            <div className={styles.apptMapWrap}>
+              <MapPreview latitude={post.latitude} longitude={post.longitude} />
+            </div>
+          )}
+
           <div className={styles.apptRow}>
             <svg
               width="14"

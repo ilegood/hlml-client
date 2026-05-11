@@ -6,7 +6,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+  transition:
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.3s ease;
   left: 0;
   position: fixed;
   top: 25px;
@@ -28,9 +30,10 @@
   cursor: pointer;
   border: none;
   background: none;
-  /* (70px - 24px) / 2 = 23px */
   padding-left: 23px;
-  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+  transition:
+    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s ease;
   gap: 20px;
   color: var(--color-deactive);
 }
@@ -40,19 +43,15 @@
   color: var(--color-active);
 }
 
-.sidebar:hover .itemWrap {
-  padding-left: 25px;
-}
-
 /* ── Logo ── */
 .logo {
-  padding-left: 20px;
+  padding-left: 15px;
   margin-bottom: 25px;
 }
 
 .logo img {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
 }
 
 /* ── Icon ── */
@@ -125,7 +124,6 @@
   flex-shrink: 0;
 }
 
-/* slider 내부 circle은 인라인 style로 transform 처리 */
 .slider::before {
   content: "";
   position: absolute;
@@ -158,6 +156,7 @@
 
 .logoutBtn .label {
   color: white;
+  margin-left: 0;
   width: 0;
   overflow: hidden;
   opacity: 0;
@@ -170,7 +169,7 @@
 
 .sidebar:hover .logoutBtn {
   justify-content: flex-start;
-  padding-left: 25px;
+  padding-left: 15px;
   gap: 20px;
 }
 
