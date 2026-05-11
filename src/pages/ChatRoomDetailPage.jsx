@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+import RoomSettingsModal from "../Components/RoomSettingsModal";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
@@ -78,7 +79,9 @@ export default function ChatRoomDetailPage() {
   const [input, setInput] = useState("");
   const [roomTitle, setRoomTitle] = useState("");
   const [roomImage, setRoomImage] = useState("");
+  const [roomAuthor, setRoomAuthor] = useState("");
 
+  const [showSettings, setShowSettings] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
   const [hoveredMsgId, setHoveredMsgId] = useState(null);
@@ -133,9 +136,10 @@ export default function ChatRoomDetailPage() {
       }
     });
 
-    socket.on("room_info", ({ title, image }) => {
+    socket.on("room_info", ({ title, image, author }) => {
       setRoomTitle(title);
       setRoomImage(image);
+      setRoomAuthor(author);
     });
 
     socket.emit("join_room", { roomId, nickname: name, userId });
@@ -367,6 +371,15 @@ export default function ChatRoomDetailPage() {
           {roomTitle ? `${roomTitle} 채팅방입니다.` : ""}
         </span>
         <div className={styles.headerActions}>
+          {name === roomAuthor && (
+            <button
+              className={styles.headerIconBtn}
+              title="방 설정 변경"
+              onClick={() => setShowSettings(true)}
+            >
+              ⚙️
+            </button>
+          )}
           <button className={styles.headerIconBtn} title="채팅 알림 설정">
             🔔
           </button>
@@ -811,6 +824,20 @@ export default function ChatRoomDetailPage() {
           </div>
         </div>
       </div>
+
+      {showSettings && (
+        <RoomSettingsModal
+          roomId={roomId}
+          onClose={() => setShowSettings(false)}
+          onUpdate={() => {
+            socketRef.current?.emit("join_room", {
+              roomId,
+              nickname: name,
+              userId,
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
