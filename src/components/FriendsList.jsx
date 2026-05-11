@@ -9,6 +9,7 @@ import {
   updateFriendMemo,
 } from "../api/friends";
 import { useAuth } from "../context/auth";
+import { getImageUrl } from "../api/instance";
 import AddFriendModal from "./AddFriendModal";
 import ReportModal from "./ReportModal";
 
@@ -206,7 +207,7 @@ const FriendsList = () => {
                     className={styles.avatar}
                     style={{
                       backgroundImage: req.profile_img
-                        ? `url(http://localhost:4000${req.profile_img})`
+                        ? `url(${getImageUrl(req.profile_img)})`
                         : "none",
                     }}
                   />
@@ -247,7 +248,7 @@ const FriendsList = () => {
                         className={styles.avatar}
                         style={{
                           backgroundImage: friend.profile_img
-                            ? `url(http://localhost:4000${friend.profile_img})`
+                            ? `url(${getImageUrl(friend.profile_img)})`
                             : "none",
                         }}
                       />
@@ -300,7 +301,7 @@ const FriendsList = () => {
               className={styles.detailAvatarLarge}
               style={{
                 backgroundImage: selectedFriend?.profile_img
-                  ? `url(http://localhost:4000${selectedFriend.profile_img})`
+                  ? `url(${getImageUrl(selectedFriend.profile_img)})`
                   : "none",
               }}
             />

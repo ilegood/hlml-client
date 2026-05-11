@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { searchUsers, addFriend } from "../api/friends";
+import { getImageUrl } from "../api/instance";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -161,7 +162,7 @@ const AddFriendModal = ({ onClose }) => {
               <div key={user.id} className="user-item">
                 <div 
                   className="avatar" 
-                  style={{ backgroundImage: user.profile_img ? `url(http://localhost:4000${user.profile_img})` : 'none' }} 
+                  style={{ backgroundImage: user.profile_img ? `url(${getImageUrl(user.profile_img)})` : 'none' }} 
                 />
                 <span className="nickname">{user.nickname}</span>
                 <button onClick={() => handleAdd(user.nickname)}>추가</button>

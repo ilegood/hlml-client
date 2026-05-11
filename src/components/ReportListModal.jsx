@@ -3,6 +3,7 @@ import styled from "styled-components";
 import axios from "axios";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth";
+import { BASE_URL, getImageUrl } from "../api/instance";
 
 const ModalWrapper = styled.div`
   position: fixed;
@@ -183,7 +184,7 @@ export default function ReportListModal({ onClose }) {
 
       setIsSearching(true);
       try {
-        const res = await axios.get(`http://localhost:4000/users/search?q=${targetUser}`, {
+        const res = await axios.get(`${BASE_URL}/users/search?q=${targetUser}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSearchResults(res.data);
@@ -318,7 +319,7 @@ export default function ReportListModal({ onClose }) {
                     <div key={user.user_id} className="result-item" onClick={() => selectUser(user)}>
                       <div className="avatar">
                         {user.profile_img ? (
-                          <img src={`http://localhost:4000${user.profile_img}`} alt="" />
+                          <img src={getImageUrl(user.profile_img)} alt="" />
                         ) : null}
                       </div>
                       <span>{user.nickname}</span>
