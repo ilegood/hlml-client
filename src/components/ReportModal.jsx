@@ -7,6 +7,7 @@ const ModalWrapper = styled.div`
   display: flex; justify-content: center; align-items: center;
   z-index: 3000;
   backdrop-filter: blur(4px);
+  pointer-events: auto;
 
   .modal-content {
     background: var(--color-sidebar);

@@ -3,14 +3,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { AuthContext } from "../context/auth";
 import { BASE_URL, getImageUrl } from "../api/instance";
-import { leavePost } from "../api/posts";
+import { leavePost, getPost } from "../api/posts";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import RoomSettingsModal from "../Components/RoomSettingsModal";
+import ChatMembersModal from "../Components/ChatMembersModal";
+import borderImg from "../assets/border.png";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
+// ... (omitted for brevity, will use full content in actual tool call)
 
 const formatTime = (isoString) => {
   if (!isoString) return "";
@@ -57,14 +60,19 @@ const isCompact = (prev, curr) => {
 
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
-function Avatar({ profileImg, nickname, size = 40 }) {
+function Avatar({ profileImg, nickname, isHost, size = 40 }) {
   const url = getImageUrl(profileImg);
   return (
-    <div
-      className={styles.msgAvatar}
-      style={{ width: size, height: size, fontSize: size * 0.3 }}
-    >
-      {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
+    <div className={styles.avatarWrapSmall}>
+      {isHost && (
+        <img src={borderImg} className={styles.avatarBorderSmall} alt="host-border" />
+      )}
+      <div
+        className={styles.msgAvatar}
+        style={{ width: size, height: size, fontSize: size * 0.3 }}
+      >
+        {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
+      </div>
     </div>
   );
 }
@@ -83,6 +91,8 @@ export default function ChatRoomDetailPage() {
   const [roomAuthor, setRoomAuthor] = useState("");
 
   const [showSettings, setShowSettings] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
+  const [roomMembers, setRoomMembers] = useState([]);
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
   const [hoveredMsgId, setHoveredMsgId] = useState(null);
@@ -345,6 +355,27 @@ export default function ChatRoomDetailPage() {
     }
   };
 
+  const toggleMembers = async () => {
+    if (!showMembers) {
+      try {
+        const post = await getPost(roomId);
+        // 방장 포함 멤버 리스트 만들기
+        const members = [];
+        if (post.authorDetails) {
+          members.push(post.authorDetails);
+        }
+        if (post.participantDetails) {
+          members.push(...post.participantDetails);
+        }
+        setRoomMembers(members);
+      } catch (err) {
+        console.error("Failed to fetch members:", err);
+        toast.error("멤버 정보를 불러오는 데 실패했습니다.");
+      }
+    }
+    setShowMembers(!showMembers);
+  };
+
   const cancelContext = () => {
     setReplyTo(null);
     setEditId(null);
@@ -409,7 +440,11 @@ export default function ChatRoomDetailPage() {
           <button className={styles.headerIconBtn} title="지도보기">
             🗺️
           </button>
-          <button className={styles.headerIconBtn} title="멤버보기">
+          <button 
+            className={styles.headerIconBtn} 
+            title="멤버보기"
+            onClick={toggleMembers}
+          >
             👥
           </button>
           <button
@@ -485,6 +520,7 @@ export default function ChatRoomDetailPage() {
                     <Avatar
                       profileImg={msg.profileImg}
                       nickname={msg.nickname}
+                      isHost={msg.nickname === roomAuthor}
                     />
                   )}
                 </div>
@@ -861,6 +897,13 @@ export default function ChatRoomDetailPage() {
           }}
         />
       )}
+
+      <ChatMembersModal
+        isOpen={showMembers}
+        onClose={() => setShowMembers(false)}
+        members={roomMembers}
+        authorNickname={roomAuthor}
+      />
     </div>
   );
 }
