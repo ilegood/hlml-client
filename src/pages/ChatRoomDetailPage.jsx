@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { AuthContext } from "../context/auth";
 import { BASE_URL, getImageUrl } from "../api/instance";
+import { leavePost } from "../api/posts";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
@@ -350,6 +351,29 @@ export default function ChatRoomDetailPage() {
     setInput("");
   };
 
+  const handleLeave = async () => {
+    if (!window.confirm("정말로 이 채팅방에서 나가시겠습니까?")) return;
+
+    try {
+      // 소켓으로 퇴장 알림 (실시간 반영용)
+      socketRef.current?.emit("leave_room", { 
+        roomId, 
+        nickname: name, 
+        userId 
+      });
+
+      // API로 DB 정보 업데이트 (인원 감소, 방장 위임, 퇴장 메시지 저장)
+      await leavePost(roomId);
+
+      toast.success("채팅방에서 나갔습니다.");
+      navigate("/chat-rooms");
+    } catch (err) {
+      console.error("Failed to leave room:", err);
+      toast.error("방 나가기에 실패했습니다.");
+    }
+  };
+
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -372,8 +396,8 @@ export default function ChatRoomDetailPage() {
         </span>
         <div className={styles.headerActions}>
           {name === roomAuthor && (
-            <button
-              className={styles.headerIconBtn}
+            <button 
+              className={styles.headerIconBtn} 
               title="방 설정 변경"
               onClick={() => setShowSettings(true)}
             >
@@ -392,7 +416,7 @@ export default function ChatRoomDetailPage() {
           <button
             className={styles.headerIconBtn}
             title="나가기"
-            onClick={() => navigate("/chat-rooms")}
+            onClick={handleLeave}
           >
             🚪
           </button>
@@ -830,10 +854,10 @@ export default function ChatRoomDetailPage() {
           roomId={roomId}
           onClose={() => setShowSettings(false)}
           onUpdate={() => {
-            socketRef.current?.emit("join_room", {
-              roomId,
-              nickname: name,
-              userId,
+            socketRef.current?.emit("join_room", { 
+              roomId, 
+              nickname: name, 
+              userId 
             });
           }}
         />
