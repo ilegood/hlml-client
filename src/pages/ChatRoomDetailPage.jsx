@@ -356,10 +356,10 @@ export default function ChatRoomDetailPage() {
 
     try {
       // 소켓으로 퇴장 알림 (실시간 반영용)
-      socketRef.current?.emit("leave_room", { 
-        roomId, 
-        nickname: name, 
-        userId 
+      socketRef.current?.emit("leave_room", {
+        roomId,
+        nickname: name,
+        userId,
       });
 
       // API로 DB 정보 업데이트 (인원 감소, 방장 위임, 퇴장 메시지 저장)
@@ -372,7 +372,6 @@ export default function ChatRoomDetailPage() {
       toast.error("방 나가기에 실패했습니다.");
     }
   };
-
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -396,8 +395,8 @@ export default function ChatRoomDetailPage() {
         </span>
         <div className={styles.headerActions}>
           {name === roomAuthor && (
-            <button 
-              className={styles.headerIconBtn} 
+            <button
+              className={styles.headerIconBtn}
               title="방 설정 변경"
               onClick={() => setShowSettings(true)}
             >
@@ -854,10 +853,10 @@ export default function ChatRoomDetailPage() {
           roomId={roomId}
           onClose={() => setShowSettings(false)}
           onUpdate={() => {
-            socketRef.current?.emit("join_room", { 
-              roomId, 
-              nickname: name, 
-              userId 
+            socketRef.current?.emit("join_room", {
+              roomId,
+              nickname: name,
+              userId,
             });
           }}
         />
