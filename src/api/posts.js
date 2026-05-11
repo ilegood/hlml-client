@@ -139,6 +139,11 @@ export const togglePostJoin = async (id) => {
   return normalizePost(res.data);
 };
 
+export const leavePost = async (id) => {
+  const res = await instance.post(`${API_URL}/${id}/leave`);
+  return res.data;
+};
+
 export const createComment = async (postId, data) => {
   const res = await instance.post(`${API_URL}/${postId}/comments`, data);
   return normalizePost(res.data);
