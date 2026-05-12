@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "../api/instance";
-import ProfileEditModal from "../components/ProfileEditModal";
-import AppointmentModal from "../components/AppointmentModal";
-import BlockedListModal from "../components/BlockedListModal";
-import ReportListModal from "../components/ReportListModal";
-import QAModal from "../components/QAModal";
+import ProfileEditModal from "../Components/ProfileEditModal";
+import AppointmentModal from "../Components/AppointmentModal";
+import BlockedListModal from "../Components/BlockedListModal";
+import ReportListModal from "../Components/ReportListModal";
+import QAModal from "../Components/QAModal";
 import styles from "./UserPage.module.css";
 
 export default function UserPage() {

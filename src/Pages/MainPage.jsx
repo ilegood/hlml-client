@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth";
 import { getPosts, togglePostLike } from "../api/posts";
-import CategorySelector from "../components/CategorySelector";
-import PostCard from "../components/PostCard";
+import CategorySelector from "../Components/CategorySelector";
+import PostCard from "../Components/PostCard";
 import styles from "./MainPage.module.css";
 
 const MAIN_CATEGORY_ORDER = ["인원", "성별", "나이", "흡연", "음주", "활동"];

@@ -17,7 +17,7 @@ import {
   updateComment as updatePostComment,
   deleteComment as deletePostComment,
 } from "../api/posts";
-import { CommentItem } from "../components/CommentItem";
+import { CommentItem } from "../Components/CommentItem";
 import styles from "./DetailPage.module.css";
 
 export default function DetailPage() {

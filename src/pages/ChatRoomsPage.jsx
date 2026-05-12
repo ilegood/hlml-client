@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/auth";
 import { getPosts } from "../api/posts";
-import ChatRoomItem from "../components/ChatRoomItem";
+import ChatRoomItem from "../Components/ChatRoomItem";
 import styles from "./ChatRoomsPage.module.css";
 
 const ChatRoomsPage = () => {

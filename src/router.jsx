@@ -1,15 +1,15 @@
 import { createBrowserRouter } from "react-router-dom";
-import Layout from "./components/Layout";
-import MainPage from "./pages/MainPage";
-import DetailPage from "./pages/DetailPage";
-import WritePage from "./pages/WritePage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import UserPage from "./pages/UserPage";
-import LikesPage from "./pages/LikesPage";
-import MyPostsPage from "./pages/MyPostsPage";
-import ChatRoomDetailPage from "./pages/ChatRoomDetailPage";
-import ChatRoomsPage from "./pages/ChatRoomsPage";
+import Layout from "./Components/Layout";
+import MainPage from "./Pages/MainPage";
+import DetailPage from "./Pages/DetailPage";
+import WritePage from "./Pages/WritePage";
+import LoginPage from "./Pages/LoginPage";
+import RegisterPage from "./Pages/RegisterPage";
+import UserPage from "./Pages/UserPage";
+import LikesPage from "./Pages/LikesPage";
+import MyPostsPage from "./Pages/MyPostsPage";
+import ChatRoomDetailPage from "./Pages/ChatRoomDetailPage";
+import ChatRoomsPage from "./Pages/ChatRoomsPage";
 
 const router = createBrowserRouter([
   {
