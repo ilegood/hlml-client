@@ -6,14 +6,13 @@ import styles from "./AppointmentModal.module.css";
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
 export default function AppointmentModal({ onClose }) {
-  const { name, userId } = useAuth();
+  const { userId } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date());
 
   const today = new Date();
-  const userName = name || "me";
-  const currentUserId = userId ? Number(userId) : null;
+  const currentUserId = userId ? String(userId) : null;
 
   const toDateKey = (value) => {
     if (!value) return "";
@@ -34,8 +33,8 @@ export default function AppointmentModal({ onClose }) {
         const allPosts = await getPosts();
         const filtered = allPosts.filter(
           (p) =>
-            p.author === userName ||
-            (Array.isArray(p.joinedBy) && p.joinedBy.includes(userName)) ||
+            (currentUserId !== null &&
+              String(p.user_id) === currentUserId) ||
             (currentUserId !== null &&
               Array.isArray(p.joinedUserIds) &&
               p.joinedUserIds.includes(currentUserId)),
@@ -46,7 +45,7 @@ export default function AppointmentModal({ onClose }) {
       }
     };
     fetchAppts();
-  }, [currentUserId, userName]);
+  }, [currentUserId]);
 
   // ── 캘린더 계산 ────────────────────────────────────────
   const viewYear = currentMonth.getFullYear();

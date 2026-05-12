@@ -26,9 +26,9 @@ export default function PostCard({
   if (!post) return null;
 
   const liked = Array.isArray(post.likedBy)
-    ? post.likedBy.includes(currentUserId || "me")
+    ? post.likedBy.includes(String(currentUserId || "me"))
     : false;
-  const isAuthor = post.author === currentUserId;
+  const isAuthor = String(post.user_id) === String(currentUserId);
   const participants = post.participants || 0;
   const capacity = post.capacity || 4;
   const pct = Math.min(100, Math.round((participants / capacity) * 100));
@@ -40,7 +40,7 @@ export default function PostCard({
     : [];
   const ds = formatDateTime(post.date, post.time);
 
-  const isDisabled = isAuthor || !currentUserId || currentUserId === "me";
+  const isDisabled = isAuthor || !currentUserId || currentUserId === "me" || !post.user_id;
 
   const status = post.status === "모집완료" ? "모집완료" : "모집중";
   const badgeClass =

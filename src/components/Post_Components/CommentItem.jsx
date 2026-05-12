@@ -62,7 +62,7 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
       </div>
       <div className={styles.commentBubble} style={{ flex: 1 }}>
         <div className={styles.commentTop}>
-          <span className={styles.commentAuthor}>{reply.author || "익명"}</span>
+          <span className={styles.commentAuthor}>{reply.authorNickname || "익명"}</span>
           {reply.edited && <span className={styles.editedBadge}>수정됨</span>}
           <span className={styles.commentTime}>
             {getTimeAgo(reply.createdAt)}
@@ -127,7 +127,7 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
       <div className={styles.commentBubble}>
         <div className={styles.commentTop}>
           <span className={styles.commentAuthor}>
-            {comment.author || "익명"}
+            {comment.authorNickname || "익명"}
           </span>
           {comment.edited && <span className={styles.editedBadge}>수정됨</span>}
           <span className={styles.commentTime}>

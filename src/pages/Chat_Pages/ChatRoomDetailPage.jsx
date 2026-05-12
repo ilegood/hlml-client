@@ -101,7 +101,6 @@ export default function ChatRoomDetailPage() {
     }
 
     socketRef.current = io(BASE_URL, {
-      transports: ["websocket"],
       reconnectionAttempts: 5,
     });
     const socket = socketRef.current;
@@ -109,6 +108,11 @@ export default function ChatRoomDetailPage() {
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
       socket.emit("join_room", { roomId, nickname: name, userId });
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("Socket connection failed:", err);
+      toast.error("채팅 서버 연결에 실패했습니다.");
     });
 
     socket.on("receive_message", (msg) => {
@@ -219,7 +223,14 @@ export default function ChatRoomDetailPage() {
       );
     });
 
-    return () => socket.disconnect();
+    return () => {
+      socket
+        .timeout(1000)
+        .emit("leave_room", { roomId, nickname: name, userId }, () => {
+          socket.disconnect();
+          if (socketRef.current === socket) socketRef.current = null;
+        });
+    };
   }, [roomId, userId, name, navigate]);
 
   useEffect(() => {
@@ -269,6 +280,10 @@ export default function ChatRoomDetailPage() {
     (e) => {
       if (e) e.preventDefault();
       if (!input.trim() || !socketRef.current) return;
+      if (!socketRef.current.connected) {
+        toast.error("채팅 서버에 연결되지 않았습니다.");
+        return;
+      }
 
       if (editId) {
         socketRef.current.emit("edit_message", {
@@ -278,16 +293,22 @@ export default function ChatRoomDetailPage() {
         });
         setEditId(null);
       } else {
-        socketRef.current.emit("send_message", {
-          roomId,
-          userId,
-          nickname: name,
-          profileImg,
-          content: input,
-          isSystem: false,
-          parentId: replyTo?.id || null,
-          time: new Date().toISOString(),
-        });
+        socketRef.current.emit(
+          "send_message",
+          {
+            roomId,
+            userId,
+            nickname: name,
+            profileImg,
+            content: input.trim(),
+            isSystem: false,
+            parentId: replyTo?.id || null,
+            time: new Date().toISOString(),
+          },
+          (res) => {
+            if (!res?.ok) toast.error("메시지 전송에 실패했습니다.");
+          },
+        );
         setReplyTo(null);
       }
       setInput("");

@@ -42,10 +42,14 @@ const normalizePost = (post) => ({
       ? post.image
       : `${BASE_URL}${post.image}`
     : null,
+  latitude: post.latitude ? Number(post.latitude) : null,
+  longitude: post.longitude ? Number(post.longitude) : null,
   categories: parseCategories(post.categories),
-  likedBy: Array.isArray(post.likedBy) ? post.likedBy : [],
-  joinedBy: Array.isArray(post.joinedBy) ? post.joinedBy : [],
-  joinedUserIds: Array.isArray(post.joinedUserIds) ? post.joinedUserIds : [],
+  likedBy: Array.isArray(post.likedBy) ? post.likedBy.map(String) : [],
+  joinedBy: Array.isArray(post.joinedBy) ? post.joinedBy.map(String) : [],
+  joinedUserIds: Array.isArray(post.joinedUserIds)
+    ? post.joinedUserIds.map(String)
+    : [],
   comments: Array.isArray(post.comments) ? post.comments : [],
   likes: post.likes || 0,
   participants: post.participants || 1,
@@ -61,9 +65,11 @@ const toPostFormData = (data) => {
     "date",
     "time",
     "place",
+    "latitude",
+    "longitude",
     "capacity",
     "status",
-    "author",
+    "user_id",
   ];
 
   fields.forEach((field) => {
@@ -80,10 +86,7 @@ const toPostFormData = (data) => {
     formData.append(field, data?.[field] ?? "");
   });
 
-  formData.append(
-    "categories",
-    JSON.stringify(data?.categories ?? {}),
-  );
+  formData.append("categories", JSON.stringify(data?.categories ?? {}));
 
   const image = data?.image?.startsWith(BASE_URL)
     ? data.image.slice(BASE_URL.length)

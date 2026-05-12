@@ -17,14 +17,14 @@ import {
   updateComment as updatePostComment,
   deleteComment as deletePostComment,
 } from "../../api/posts";
-import { CommentItem } from "../../components/Post_Components/CommentItem";
-import MapPreview from "../../components/Post_Components/MapPreview";
+import { CommentItem } from "../../components/post_components/CommentItem";
+import MapPreview from "../../components/post_components/MapPreview";
 import styles from "./DetailPage.module.css";
 
 export default function DetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { name, token } = useAuth();
+  const { userId, token } = useAuth();
   const [post, setPost] = useState(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -49,10 +49,10 @@ export default function DetailPage() {
     );
   }
 
-  const userId = name || "me";
-  const isAuthor = post.author === userId;
-  const liked = (post.likedBy || []).includes(userId);
-  const joined = (post.joinedBy || []).includes(userId);
+  const currentUserId = userId || "me";
+  const isAuthor = String(post.user_id) === String(currentUserId);
+  const liked = (post.likedBy || []).includes(String(currentUserId));
+  const joined = (post.joinedUserIds || []).includes(String(currentUserId));
   const isFull = (post.participants || 0) >= (post.capacity || 4);
   const pct = Math.min(
     100,
@@ -103,7 +103,9 @@ export default function DetailPage() {
       const next = await togglePostJoin(id);
       if (next) setPost(next);
 
-      const isNowJoined = (next.joinedBy || []).includes(name);
+      const isNowJoined = (next.joinedUserIds || []).includes(
+        String(currentUserId),
+      );
       if (isNowJoined) {
         navigate(`/chat-rooms/${id}`);
       }
@@ -366,7 +368,7 @@ export default function DetailPage() {
 
         <div className={styles.detailMetaRow}>
           <span className={styles.detailAuthor}>
-            작성자: {post.author || "익명"}
+            작성자: {post.authorNickname || "익명"}
           </span>
           <span className={styles.detailTime}>
             {new Date(post.createdAt).toLocaleString("ko-KR")}
@@ -377,7 +379,7 @@ export default function DetailPage() {
           <button
             className={`${styles.actionBtnLg}${liked ? ` ${styles.liked}` : ""}`}
             onClick={toggleLike}
-            disabled={isAuthor || !token}
+            disabled={isAuthor || !token || !post.user_id}
           >
             <svg
               width="16"
@@ -394,7 +396,7 @@ export default function DetailPage() {
           <button
             className={`${styles.actionBtnLg}${joined ? ` ${styles.joined}` : ""}`}
             onClick={handleJoinBtn}
-            disabled={isAuthor || !token || (isFull && !joined)}
+            disabled={isAuthor || !token || (isFull && !joined) || !post.user_id}
           >
             <svg
               width="16"
@@ -409,8 +411,7 @@ export default function DetailPage() {
               <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            {isAuthor
-              ? "내 게시글"
+            {isAuthor || !post.user_id              ? "내 게시글"
               : joined
                 ? "참여중"
                 : isFull

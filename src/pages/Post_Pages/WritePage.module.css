@@ -87,6 +87,39 @@
   background: var(--color-bg);
 }
 
+.inputWithBtn {
+  display: flex;
+  gap: 8px;
+}
+
+.searchBtn {
+  flex-shrink: 0;
+  padding: 0 16px;
+  background: var(--color-active);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.searchBtn:hover {
+  opacity: 0.9;
+}
+
+.mapPreviewSection {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.mapHint {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
 .formTextarea {
   width: 100%;
   padding: 14px 16px;

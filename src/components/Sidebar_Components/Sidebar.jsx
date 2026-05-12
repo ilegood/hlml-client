@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/auth";
 import styles from "./Sidebar.module.css";
 
 // 이미지 임포트
@@ -57,7 +57,7 @@ const Sidebar = () => {
           <img src={postImg} alt="post" />
           <span className={styles.label}>게시글쓰기</span>
         </Link>
-        <Link to="/" className={styles.itemWrap}>
+        <Link to="/chat-rooms" className={styles.itemWrap}>
           <img src={dashboardImg} alt="group" />
           <span className={styles.label}>그룹</span>
         </Link>

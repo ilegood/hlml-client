@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import styles from "./ChatRoomItem.module.css";
 
-const ChatRoomItem = ({ room, currentUserName }) => {
+const ChatRoomItem = ({ room }) => {
   const navigate = useNavigate();
 
   const formatDate = (dateStr) => {
@@ -30,7 +30,7 @@ const ChatRoomItem = ({ room, currentUserName }) => {
 
       <div className={styles.roomInfo}>
         <div className={styles.roomName}>{room.title}</div>
-        <div className={styles.lastMessage}>방장: {room.author}</div>
+        <div className={styles.lastMessage}>방장: {room.authorNickname}</div>
       </div>
 
       <div className={styles.appointmentInfo}>

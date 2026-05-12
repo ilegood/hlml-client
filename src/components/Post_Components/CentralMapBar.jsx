@@ -1,62 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import styled from "styled-components";
-import MapModal from "../Modals/MapModal";
+import MapModal from "../modals/MapModal";
 import { useAuth } from "../../context/auth";
 import { getPosts } from "../../api/posts";
-
-const MapBarContainer = styled.div`
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto 24px auto;
-  background: var(--color-sidebar);
-  border: 1.5px solid var(--color-border);
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s,
-    border-color 0.2s;
-  position: relative;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    border-color: var(--color-active);
-  }
-
-  &::after {
-    content: "약속 지도에서 확인하기";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(7, 177, 188, 0.9);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: 800;
-    z-index: 10;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    pointer-events: none;
-    transition: background 0.2s;
-  }
-
-  &:hover::after {
-    background: var(--color-active);
-  }
-`;
-
-const MapPreviewArea = styled.div`
-  height: 140px;
-  width: 100%;
-  background: var(--color-input-bg, #eee);
-  opacity: 0.7;
-`;
+import styles from "./CentralMapBar.module.css";
 
 const CentralMapBar = () => {
-  const { token, name: currentUserId } = useAuth();
+  const { token, userId: currentUserId } = useAuth();
   const [isMapOpen, setIsMapOpen] = useState(false);
   const mapRef = useRef(null);
 
@@ -67,9 +16,9 @@ const CentralMapBar = () => {
           const data = await getPosts();
           const filtered = data.filter((p) => {
             const hasLocation = p.latitude && p.longitude;
-            const isAuthor = p.author === currentUserId;
-            const isLiked = (p.likedBy || []).includes(currentUserId);
-            const isJoined = (p.joinedBy || []).includes(currentUserId);
+            const isAuthor = String(p.user_id) === String(currentUserId);
+            const isLiked = (p.likedBy || []).includes(String(currentUserId));
+            const isJoined = (p.joinedUserIds || []).includes(String(currentUserId));
             return hasLocation && (isAuthor || isLiked || isJoined);
           });
 
@@ -90,7 +39,7 @@ const CentralMapBar = () => {
               const lng = Number(post.longitude);
               if (!isNaN(lat) && !isNaN(lng)) {
                 const position = new window.kakao.maps.LatLng(lat, lng);
-                const isAuthor = post.author === currentUserId;
+                const isAuthor = String(post.user_id) === String(currentUserId);
 
                 let markerImage = null;
                 if (isAuthor) {
@@ -134,9 +83,9 @@ const CentralMapBar = () => {
 
   return (
     <>
-      <MapBarContainer onClick={() => setIsMapOpen(true)}>
-        <MapPreviewArea ref={mapRef} />
-      </MapBarContainer>
+      <div className={styles.mapBarContainer} onClick={() => setIsMapOpen(true)}>
+        <div ref={mapRef} className={styles.mapPreviewArea} />
+      </div>
       {isMapOpen && <MapModal onClose={() => setIsMapOpen(false)} />}
     </>
   );

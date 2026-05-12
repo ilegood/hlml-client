@@ -2,21 +2,22 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth";
 import { getPosts, togglePostLike } from "../../api/posts";
-import PostCard from "../../components/Post_Components/PostCard";
+import PostCard from "../../components/post_components/PostCard";
 import styles from "./LikesPage.module.css";
 
 export default function LikesPage() {
   const navigate = useNavigate();
-  const { name } = useAuth();
+  const { userId } = useAuth();
   const [likedPosts, setLikedPosts] = useState([]);
 
   useEffect(() => {
     const fetchLikedPosts = async () => {
       try {
         const allPosts = await getPosts();
-        const userId = name || "me";
+        const currentUserId = userId || "me";
         const filtered = allPosts.filter(
-          (p) => Array.isArray(p.likedBy) && p.likedBy.includes(userId),
+          (p) =>
+            Array.isArray(p.likedBy) && p.likedBy.includes(String(currentUserId)),
         );
         setLikedPosts(filtered);
       } catch (err) {
@@ -24,16 +25,17 @@ export default function LikesPage() {
       }
     };
     fetchLikedPosts();
-  }, [name]);
+  }, [userId]);
 
   const handleLike = async (post) => {
-    const userId = name || "me";
+    const currentUserId = userId || "me";
 
     try {
       const updated = await togglePostLike(post.id);
       setLikedPosts((prev) =>
         prev.filter(
-          (p) => p.id !== post.id || updated.likedBy.includes(userId),
+          (p) =>
+            p.id !== post.id || updated.likedBy.includes(String(currentUserId)),
         ),
       );
     } catch (err) {
@@ -68,7 +70,7 @@ export default function LikesPage() {
               variant="likes"
               onLike={handleLike}
               onOpen={(id) => navigate(`/detail/${id}`)}
-              currentUserId={name || "me"}
+              currentUserId={userId || "me"}
             />
           ))}
         </div>

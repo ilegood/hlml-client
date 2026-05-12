@@ -2,26 +2,26 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth";
 import { getPosts } from "../../api/posts";
-import PostCard from "../../components/Post_Components/PostCard";
+import PostCard from "../../components/post_components/PostCard";
 import styles from "./MyPostsPage.module.css";
 
 export default function MyPostsPage() {
   const navigate = useNavigate();
-  const { name } = useAuth();
+  const { userId } = useAuth();
   const [myPosts, setMyPosts] = useState([]);
 
   useEffect(() => {
     const fetchMyPosts = async () => {
       try {
         const allPosts = await getPosts();
-        const filtered = allPosts.filter((p) => p.author === (name || "me"));
+        const filtered = allPosts.filter((p) => String(p.user_id) === String(userId));
         setMyPosts(filtered);
       } catch (err) {
         console.error("Failed to fetch my posts:", err);
       }
     };
     fetchMyPosts();
-  }, [name]);
+  }, [userId]);
 
   return (
     <div className={styles.pageWrapper}>
@@ -49,7 +49,7 @@ export default function MyPostsPage() {
               post={post}
               variant="my-posts"
               onOpen={(id) => navigate(`/detail/${id}`)}
-              currentUserId={name || "me"}
+              currentUserId={userId || "me"}
             />
           ))}
         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/auth";
 import { getPosts } from "../../api/posts";
-import ChatRoomItem from "../../components/Chat_Components/ChatRoomItem";
+import ChatRoomItem from "../../components/chat_components/ChatRoomItem";
 import styles from "./ChatRoomsPage.module.css";
 
 const ChatRoomsPage = () => {
@@ -15,7 +15,7 @@ const ChatRoomsPage = () => {
         const allPosts = await getPosts();
         // 내가 작성했거나 참여한 게시글 필터링
         const myRooms = allPosts.filter((post) => {
-          const isAuthor = post.author === name;
+          const isAuthor = String(post.user_id) === String(userId);
           // Number() 처리로 타입 불일치 방지
           const isParticipant = (post.joinedUserIds || [])
             .map((id) => Number(id))
@@ -60,7 +60,7 @@ const ChatRoomsPage = () => {
           <div className={styles.empty}>채팅방을 불러오는 중...</div>
         ) : chatRooms.length > 0 ? (
           chatRooms.map((room) => (
-            <ChatRoomItem key={room.id} room={room} currentUserName={name} />
+            <ChatRoomItem key={room.id} room={room} />
           ))
         ) : (
           <div className={styles.empty}>

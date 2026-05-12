@@ -4,8 +4,10 @@ import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import { currentTimeString, todayString } from "../../api/homeConstants";
 import { createPost, getPost, updatePost } from "../../api/posts";
-import CategorySelector from "../../components/Post_Components/CategorySelector";
-import ImageDropZone from "../../components/Post_Components/ImageDropZone";
+import CategorySelector from "../../components/post_components/CategorySelector";
+import ImageDropZone from "../../components/post_components/ImageDropZone";
+import MapPreview from "../../components/post_components/MapPreview";
+import PlaceSearchModal from "../../components/modals/PlaceSearchModal";
 import styles from "./WritePage.module.css";
 
 const WRITE_CATEGORY_EXCLUDES = ["인원"];
@@ -14,7 +16,7 @@ const WRITE_CATEGORY_EXCLUDES = ["인원"];
 export default function WritePage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { name } = useAuth();
+  const { userId } = useAuth();
 
   const isEdit = !!id;
 
@@ -23,6 +25,9 @@ export default function WritePage() {
   const [date, setDate] = useState(todayString());
   const [time, setTime] = useState(() => currentTimeString());
   const [place, setPlace] = useState("");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [capacity, setCapacity] = useState(2);
   const [status, setStatus] = useState("모집중");
   const [categories, setCategories] = useState({});
@@ -43,6 +48,8 @@ export default function WritePage() {
           setDate(post.date ? String(post.date).slice(0, 10) : todayString());
           setTime(post.time ? String(post.time).slice(0, 5) : "");
           setPlace(post.place || "");
+          setLatitude(post.latitude || null);
+          setLongitude(post.longitude || null);
           setCapacity(post.capacity || 2);
           setStatus(post.status || "모집중");
           setCategories(post.categories || {});
@@ -67,18 +74,16 @@ export default function WritePage() {
     }
   }, [id, isEdit, navigate]);
 
-  useEffect(() => {
-    if (isEdit) return;
+  const handleSearchPlace = () => {
+    setIsSearchOpen(true);
+  };
 
-    if (date < today) {
-      setDate(today);
-      return;
-    }
-
-    if (date === today && time < currentTime) {
-      setTime(currentTime);
-    }
-  }, [currentTime, date, isEdit, time, today]);
+  const handlePlaceSelect = (item) => {
+    setPlace(item.place_name);
+    setLatitude(Number(item.y));
+    setLongitude(Number(item.x));
+    setIsSearchOpen(false);
+  };
 
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
@@ -105,9 +110,11 @@ export default function WritePage() {
     formData.append("date", date);
     formData.append("time", time);
     formData.append("place", place.trim());
+    formData.append("latitude", latitude || "");
+    formData.append("longitude", longitude || "");
     formData.append("capacity", capacity);
     formData.append("status", status);
-    formData.append("author", name || "익명");
+    formData.append("user_id", userId);
     formData.append("categories", JSON.stringify(categories));
 
     if (image?.file) {
@@ -126,7 +133,6 @@ export default function WritePage() {
       } else {
         const result = await createPost(formData);
         toast.success("게시글이 등록되었습니다.");
-        // 게시글 생성 시 반환된 id를 이용해 채팅방으로 바로 이동
         if (result && result.id) {
           navigate(`/chat-rooms/${result.id}`);
         } else {
@@ -223,12 +229,23 @@ export default function WritePage() {
         {/* 장소 */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>약속 장소</label>
-          <input
-            className={styles.formInput}
-            placeholder="장소 이름 또는 주소 (선택)"
-            value={place}
-            onChange={(e) => setPlace(e.target.value)}
-          />
+          <div className={styles.inputWithBtn}>
+            <input
+              className={styles.formInput}
+              placeholder="장소 이름 또는 주소 (선택)"
+              value={place}
+              onChange={(e) => setPlace(e.target.value)}
+              readOnly
+            />
+            <button className={styles.searchBtn} onClick={handleSearchPlace}>지도에서 찾기</button>
+          </div>
+          
+          {latitude && longitude && (
+            <div className={styles.mapPreviewSection}>
+              <MapPreview latitude={latitude} longitude={longitude} />
+              <p className={styles.mapHint}>선택된 장소의 위치입니다.</p>
+            </div>
+          )}
         </div>
 
         {/* 모집 인원 */}
@@ -287,6 +304,13 @@ export default function WritePage() {
           {isEdit ? "수정 완료" : "등록하기"}
         </button>
       </div>
+
+      {isSearchOpen && (
+        <PlaceSearchModal
+          onClose={() => setIsSearchOpen(false)}
+          onSelect={handlePlaceSelect}
+        />
+      )}
     </main>
   );
 }

@@ -3,16 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import { getPosts, togglePostLike } from "../../api/posts";
-import CategorySelector from "../../components/Post_Components/CategorySelector";
-import PostCard from "../../components/Post_Components/PostCard";
-import CentralMapBar from "../../components/Post_Components/CentralMapBar";
+import CategorySelector from "../../components/post_components/CategorySelector";
+import PostCard from "../../components/post_components/PostCard";
+import CentralMapBar from "../../components/post_components/CentralMapBar";
 import styles from "./MainPage.module.css";
 
 const MAIN_CATEGORY_ORDER = ["인원", "성별", "나이", "흡연", "음주", "활동"];
 
 export default function MainPage() {
   const navigate = useNavigate();
-  const { name, token } = useAuth();
+  const { userId, token } = useAuth();
   const [posts, setPosts] = useState([]);
   const [search, setSearch] = useState("");
   const [selCats, setSelCats] = useState({});
@@ -157,7 +157,7 @@ export default function MainPage() {
               variant="main"
               onLike={handleLike}
               onOpen={(id) => navigate("/detail/" + id)}
-              currentUserId={name || "me"}
+              currentUserId={userId || "me"}
             />
           ))
         )}
