@@ -325,13 +325,6 @@ const FriendsList = () => {
             <h4>{selectedFriend?.name}</h4>
             <p>{selectedFriend?.statusMessage || "상태 메시지가 없습니다."}</p>
 
-            <button
-              className={`${styles.detailActionBtn} ${styles.messageBtn}`}
-              onClick={handleStartDM}
-            >
-              메시지 보내기
-            </button>
-
             {memos[selectedFriend?.id] && !isEditingMemo && (
               <div className={styles.memoDisplay}>
                 <p>{memos[selectedFriend.id]}</p>
@@ -366,6 +359,14 @@ const FriendsList = () => {
                 </div>
               </div>
             )}
+
+            <button
+              className={`${styles.detailActionBtn} ${styles.messageBtn}`}
+              onClick={handleStartDM}
+              style={{ marginTop: "10px" }}
+            >
+              메시지 보내기
+            </button>
           </div>
         </div>
       </div>
