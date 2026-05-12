@@ -232,16 +232,9 @@ export default function ChatRoomDetailPage() {
       navigate("/chat-rooms");
     });
 
-    socket.on("user_kicked", ({ targetUserId, roomId: kickedRoomId }) => {
+    socket.on("user_kicked", ({ targetUserId }) => {
       if (Number(targetUserId) === Number(userId)) {
         toast.error("방장에 의해 강퇴되었습니다.");
-        // 소켓 방 나가기
-        socket.emit("leave_room", {
-          roomId: kickedRoomId,
-          nickname: name,
-          userId,
-        });
-        // 목록으로 이동
         navigate("/chat-rooms");
       }
     });

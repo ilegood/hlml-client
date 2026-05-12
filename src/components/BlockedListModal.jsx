@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import { getBlockedUsers, unblockUser } from "../api/friends";
 import { getImageUrl } from "../api/instance";
 
+// ... (ModalWrapper styled component content remains the same)
 const ModalWrapper = styled.div`
   position: fixed;
   top: 0;
@@ -103,18 +104,18 @@ const ModalWrapper = styled.div`
 export default function BlockedListModal({ onClose }) {
   const [blockedUsers, setBlockedUsers] = useState([]);
 
-  const fetchBlockedUsers = async () => {
+  const fetchBlockedUsers = useCallback(async () => {
     try {
       const data = await getBlockedUsers();
       setBlockedUsers(data);
-    } catch (err) {
-      console.error("차단 목록 조회 실패:", err);
+    } catch (_err) {
+      console.error("차단 목록 조회 실패");
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchBlockedUsers();
-  }, []);
+  }, [fetchBlockedUsers]);
 
   const handleUnblock = async (targetId) => {
     if (!window.confirm("정말 차단을 해제하시겠습니까?")) return;
@@ -122,8 +123,7 @@ export default function BlockedListModal({ onClose }) {
       await unblockUser(targetId);
       alert("차단이 해제되었습니다.");
       fetchBlockedUsers();
-    } catch (err) {
-      console.error("차단 해제 실패:", err);
+    } catch (_err) {
       alert("차단 해제에 실패했습니다.");
     }
   };

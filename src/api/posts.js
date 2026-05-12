@@ -146,6 +146,16 @@ export const leavePost = async (id) => {
   return res.data;
 };
 
+export const getKickedPosts = async () => {
+  const res = await instance.get(`${API_URL}/kicked`);
+  return res.data.map(normalizePost);
+};
+
+export const deletePostBan = async (id) => {
+  const res = await instance.delete(`${API_URL}/${id}/ban`);
+  return res.data;
+};
+
 export const createComment = async (postId, data) => {
   const res = await instance.post(`${API_URL}/${postId}/comments`, data);
   return normalizePost(res.data);
