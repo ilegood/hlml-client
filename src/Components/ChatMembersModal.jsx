@@ -15,8 +15,8 @@ export default function ChatMembersModal({
 
   // 현재 접속자가 방장인지 확인
   const isMeHost =
-    members.find((m) => m.user_id === currentUserId)?.nickname ===
-    authorNickname;
+    members.find((m) => Number(m.user_id) === Number(currentUserId))
+      ?.nickname === authorNickname;
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -32,7 +32,9 @@ export default function ChatMembersModal({
             <li key={member.user_id} className={styles.memberItem}>
               <div className={styles.info}>
                 <div className={styles.avatarWrap}>
-                  <img src={borderImg} className={styles.avatarBorder} alt="" />
+                  {member.nickname === authorNickname && (
+                    <img src={borderImg} className={styles.avatarBorder} alt="" />
+                  )}
                   <div className={styles.avatar}>
                     {member.profile_img ? (
                       <img
