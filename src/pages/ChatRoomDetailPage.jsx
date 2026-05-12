@@ -551,6 +551,9 @@ export default function ChatRoomDetailPage() {
                       >
                         {msg.nickname}
                       </span>
+                      {msg.nickname === roomAuthor && (
+                        <span className={styles.msgHostBadge}>방장</span>
+                      )}
                       <span className={styles.msgTimestamp}>
                         {formatTime(msg.time)}
                       </span>
