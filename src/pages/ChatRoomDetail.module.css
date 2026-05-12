@@ -273,6 +273,18 @@
   color: var(--color-active);
 }
 
+.msgHostBadge {
+  display: inline-block;
+  background: var(--color-active, #f39c12);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
 .msgTimestamp {
   font-size: 11px;
   color: #888;
