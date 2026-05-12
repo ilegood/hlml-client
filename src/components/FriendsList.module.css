@@ -5,7 +5,8 @@
   height: calc(100vh - 25px);
   display: flex;
   align-items: flex-start;
-  z-index: 1000;
+  z-index: 2000;
+  pointer-events: none;
 }
 
 .toggleBtn {
@@ -19,7 +20,8 @@
   border-radius: 8px 0 0 8px;
   cursor: pointer;
   box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1001;
+  z-index: 2001;
+  pointer-events: auto;
 }
 
 .friendSidebar {
@@ -34,6 +36,7 @@
   transition: transform 0.3s ease;
   transform: translateX(100%);
   box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
 }
 
 .friendSidebar.active {

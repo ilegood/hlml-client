@@ -46,6 +46,8 @@ const normalizePost = (post) => ({
   likedBy: Array.isArray(post.likedBy) ? post.likedBy : [],
   joinedBy: Array.isArray(post.joinedBy) ? post.joinedBy : [],
   joinedUserIds: Array.isArray(post.joinedUserIds) ? post.joinedUserIds : [],
+  participantDetails: Array.isArray(post.participantDetails) ? post.participantDetails : [],
+  authorDetails: post.authorDetails || null,
   comments: Array.isArray(post.comments) ? post.comments : [],
   likes: post.likes || 0,
   participants: post.participants || 1,
