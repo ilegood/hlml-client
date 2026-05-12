@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./FriendsList.module.css";
 import {
   getFriends,
@@ -10,10 +11,12 @@ import {
 } from "../api/friends";
 import { useAuth } from "../context/auth";
 import { getImageUrl } from "../api/instance";
+import instance from "../api/instance";
 import AddFriendModal from "./AddFriendModal";
 import ReportModal from "./ReportModal";
 
 const FriendsList = () => {
+  const navigate = useNavigate();
   const { token } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [friends, setFriends] = useState([]);
@@ -172,6 +175,18 @@ const FriendsList = () => {
 
   const handleCancelMemo = () => setIsEditingMemo(false);
 
+  const handleStartDM = async () => {
+    try {
+      const res = await instance.post("/chat/dm", { targetId: selectedFriend.id });
+      navigate(`/dms/${res.data.roomId}`);
+      setIsOpen(false);
+      setSelectedFriend(null);
+    } catch (err) {
+      console.error("DM 시작 실패:", err.response?.data || err.message);
+      alert("메시지 방을 열 수 없습니다. 다시 시도해주세요.");
+    }
+  };
+
   return (
     <div className={styles.sidebarWrapper}>
       <div className={`${styles.friendSidebar} ${isOpen ? styles.active : ""}`}>
@@ -309,6 +324,13 @@ const FriendsList = () => {
           <div className={styles.detailBody}>
             <h4>{selectedFriend?.name}</h4>
             <p>{selectedFriend?.statusMessage || "상태 메시지가 없습니다."}</p>
+
+            <button
+              className={`${styles.detailActionBtn} ${styles.messageBtn}`}
+              onClick={handleStartDM}
+            >
+              메시지 보내기
+            </button>
 
             {memos[selectedFriend?.id] && !isEditingMemo && (
               <div className={styles.memoDisplay}>

@@ -79,7 +79,7 @@ const Sidebar = () => {
 
         <div
           className={styles.itemWrap}
-          onClick={() => handleProtectedNav("/")}
+          onClick={() => handleProtectedNav("/dms")}
         >
           <img src={messageImg} alt="message" />
           <span className={styles.label}>메세지</span>

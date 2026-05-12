@@ -374,6 +374,18 @@
   background-color: var(--color-item-hover);
 }
 
+.messageBtn {
+  background-color: var(--color-active);
+  color: white;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.messageBtn:hover {
+  opacity: 0.9;
+  background-color: var(--color-active);
+}
+
 .memoDisplay {
   background-color: var(--color-input-bg);
   padding: 10px;

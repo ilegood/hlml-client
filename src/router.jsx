@@ -10,6 +10,8 @@ import LikesPage from "./Pages/LikesPage";
 import MyPostsPage from "./Pages/MyPostsPage";
 import ChatRoomDetailPage from "./Pages/ChatRoomDetailPage";
 import ChatRoomsPage from "./Pages/ChatRoomsPage";
+import DMsPage from "./Pages/DMsPage";
+import DMDetailPage from "./Pages/DMDetailPage";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +36,8 @@ const router = createBrowserRouter([
         path: "/chat/:roomId",
         element: <ChatRoomDetailPage />,
       },
+      { path: "/dms", element: <DMsPage /> },
+      { path: "/dms/:roomId", element: <DMDetailPage /> },
     ],
   },
 ]);
