@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import styles from "./ChatRoomItem.module.css";
 
-const ChatRoomItem = ({ room, currentUserName }) => {
+const ChatRoomItem = ({ room, onDelete }) => {
   const navigate = useNavigate();
 
   const formatDate = (dateStr) => {
@@ -15,11 +15,19 @@ const ChatRoomItem = ({ room, currentUserName }) => {
     return timeStr.slice(0, 5);
   };
 
+  const handleClick = () => {
+    if (room.isKicked) {
+      alert("강퇴당한 채팅방에는 입장할 수 없습니다.");
+      return;
+    }
+    navigate(`/chat-rooms/${room.post_id}`);
+  };
+
   return (
     <div
-      className={styles.chatRoomItem}
-      onClick={() => navigate(`/chat-rooms/${room.post_id}`)}
-      style={{ cursor: "pointer" }}
+      className={`${styles.chatRoomItem} ${room.isKicked ? styles.kicked : ""}`}
+      onClick={handleClick}
+      style={{ cursor: room.isKicked ? "default" : "pointer" }}
     >
       <div
         className={styles.roomAvatar}
@@ -29,7 +37,10 @@ const ChatRoomItem = ({ room, currentUserName }) => {
       </div>
 
       <div className={styles.roomInfo}>
-        <div className={styles.roomName}>{room.title}</div>
+        <div className={styles.roomName}>
+          {room.title}
+          {room.isKicked && <span className={styles.kickedBadge}>강퇴됨</span>}
+        </div>
         <div className={styles.lastMessage}>방장: {room.author}</div>
       </div>
 
@@ -41,6 +52,19 @@ const ChatRoomItem = ({ room, currentUserName }) => {
         </div>
         <div className={styles.place}>{room.place || ""}</div>
       </div>
+
+      {onDelete && (
+        <button 
+          className={styles.deleteBtn} 
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          title="목록에서 삭제"
+        >
+          &times;
+        </button>
+      )}
     </div>
   );
 };

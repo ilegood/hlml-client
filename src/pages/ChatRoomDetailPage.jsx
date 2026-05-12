@@ -65,7 +65,11 @@ function Avatar({ profileImg, nickname, isHost, size = 40 }) {
   return (
     <div className={styles.avatarWrapSmall}>
       {isHost && (
-        <img src={borderImg} className={styles.avatarBorderSmall} alt="host-border" />
+        <img
+          src={borderImg}
+          className={styles.avatarBorderSmall}
+          alt="host-border"
+        />
       )}
       <div
         className={styles.msgAvatar}
@@ -221,6 +225,18 @@ export default function ChatRoomDetailPage() {
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, readCount } : m)),
       );
+    });
+
+    socket.on("error_message", (msg) => {
+      toast.error(msg);
+      navigate("/chat-rooms");
+    });
+
+    socket.on("user_kicked", ({ targetUserId }) => {
+      if (Number(targetUserId) === Number(userId)) {
+        toast.error("방장에 의해 강퇴되었습니다.");
+        navigate("/chat-rooms");
+      }
     });
 
     return () => socket.disconnect();
@@ -440,8 +456,8 @@ export default function ChatRoomDetailPage() {
           <button className={styles.headerIconBtn} title="지도보기">
             🗺️
           </button>
-          <button 
-            className={styles.headerIconBtn} 
+          <button
+            className={styles.headerIconBtn}
             title="멤버보기"
             onClick={toggleMembers}
           >
@@ -903,6 +919,15 @@ export default function ChatRoomDetailPage() {
         onClose={() => setShowMembers(false)}
         members={roomMembers}
         authorNickname={roomAuthor}
+        currentUserId={userId}
+        onKick={(target) => {
+          socketRef.current?.emit("kick_user", {
+            roomId,
+            targetUserId: target.user_id,
+            targetNickname: target.nickname,
+            myUserId: userId,
+          });
+        }}
       />
     </div>
   );
