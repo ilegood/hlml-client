@@ -1,9 +1,11 @@
+/* 리셋.css */
 * {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
 }
 
+/* 기본 색상 함수 : 라이트모드 */
 :root {
   --color-active: #fd9319;
   --color-deactive: #07b1bc;
@@ -11,31 +13,32 @@
   --color-text: #121212;
   --color-sidebar: white;
   --color-border: #e0e0e0;
-  --color-input-bg: #f9f9f9;
-  --color-input-focus-bg: #fff8f2;
-  --color-item-bg: white;
-  --color-item-hover: #f5f5f5;
 }
 
+/* 기본 색상 함수 : 다크모드 */
 [data-theme="dark"] {
   --color-bg: #1e1e24;
   --color-text: #e0e0e0;
   --color-sidebar: #121212;
   --color-border: #333;
-  --color-input-bg: #2a2a32;
-  --color-input-focus-bg: #352b20;
-  --color-item-bg: #25252d;
-  --color-item-hover: #32323d;
 }
 
+/* 페이지 기본 설정 */
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  transition:
-    background-color 0.3s,
-    color 0.3s;
 }
 
+main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding-left: 70px;
+  padding-right: 60px;
+  transition: padding 0.3s ease;
+}
+
+/* 헤더 고정 */
 .page {
   display: flex;
   flex-direction: column;
@@ -46,15 +49,6 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
-}
-
-main {
-  flex: 1;
-  min-width: 0;
-  overflow-y: auto;
-  padding-left: 70px;
-  padding-right: 60px;
-  transition: padding 0.3s ease;
 }
 
 @media (max-width: 768px) {
@@ -72,52 +66,81 @@ main {
 
 /* Toast 알림 중앙 팝업 스타일 */
 [data-sonner-toaster] {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  pointer-events: none !important;
-  z-index: 9999 !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
 }
 
 [data-sonner-toaster] ol {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  width: auto !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  pointer-events: none !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
 }
 
 [data-sonner-toast] {
-  pointer-events: auto !important;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25) !important;
-  border: 1px solid var(--color-border) !important;
-  border-radius: 16px !important;
-  padding: 20px 24px !important;
-  background: var(--color-sidebar) !important;
-  color: var(--color-text) !important;
-  min-width: 300px !important;
-  max-width: 450px !important;
-  transform: scale(1) !important;
-  animation: modal-enter 0.2s ease-out !important;
+  pointer-events: auto;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  background: var(--color-sidebar);
+  color: var(--color-text);
+  min-width: 300px;
+  max-width: 450px;
+  transform: scale(1);
+  animation: modal-enter 0.2s ease-out;
 }
 
 @keyframes modal-enter {
-  from { opacity: 0; transform: scale(0.9) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* 팝업 내 버튼 스타일 조정 */
 [data-sonner-toast] button[data-button] {
-  background: var(--color-active) !important;
-  color: white !important;
-  font-weight: 800 !important;
-  border-radius: 8px !important;
-  padding: 8px 16px !important;
+  background: var(--color-active);
+  color: white;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+
+/* ── 전역 커스텀 스크롤바 ── */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(47, 47, 48);
+  border-radius: 10px;
+  background-clip: padding-box;
+  border: 2px solid transparent;
 }

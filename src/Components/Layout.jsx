@@ -1,7 +1,7 @@
 import { Outlet } from "react-router";
-import Header from "./Header";
-import FriendsList from "./FriendsList";
-import Sidebar from "./Sidebar";
+import Header from "./sidebar_components/Header";
+import FriendsList from "./sidebar_components/FriendsList";
+import Sidebar from "./sidebar_components/Sidebar";
 
 const Layout = () => {
   return (

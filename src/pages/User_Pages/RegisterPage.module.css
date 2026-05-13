@@ -1,0 +1,177 @@
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 25px);
+}
+
+/* ── Container ── */
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 480px;
+  background-color: var(--color-sidebar);
+  border-radius: 16px;
+  padding: 40px 36px 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Label & Input ── */
+.label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 22px;
+  gap: 8px;
+}
+
+.input,
+.select {
+  background-color: var(--color-input-bg);
+  border: 1.5px solid var(--color-border);
+  width: 100%;
+  height: 45px;
+  border-radius: 50px;
+  padding: 0 20px;
+  font-size: 14px;
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+  box-sizing: border-box;
+}
+
+.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  cursor: pointer;
+}
+
+.input::placeholder {
+  color: #888;
+  font-size: 12px;
+}
+
+.input:focus {
+  border-color: var(--color-active);
+  background-color: var(--color-input-focus-bg);
+}
+
+/* ── Birth ── */
+.birthWrap {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.birthWrap .select {
+  flex: 1;
+}
+
+/* ── Gender ── */
+.genderField {
+  border: 0;
+  padding: 0;
+  margin: 0 0 22px;
+}
+
+.genderLabel {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.genderWrap {
+  display: flex;
+  gap: 10px;
+}
+
+.genderOption {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 45px;
+  border: 1.5px solid var(--color-border);
+  background-color: var(--color-input-bg);
+  color: var(--color-text);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: normal;
+  cursor: pointer;
+  margin-bottom: 0;
+  transition: all 0.2s;
+}
+
+.genderOption:has(input:checked) {
+  border-color: var(--color-active);
+  background-color: var(--color-input-focus-bg);
+  color: var(--color-active);
+  font-weight: 600;
+}
+
+.genderOption input {
+  display: none;
+}
+
+/* ── Buttons ── */
+.buttonWrap {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btnCancel,
+.btnSubmit {
+  flex: 1;
+  height: 45px;
+  border-radius: 50px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.btnCancel {
+  background-color: #f0f0f0;
+  color: #888;
+}
+
+.btnSubmit {
+  background-color: var(--color-active);
+  color: white;
+}
+
+.btnCancel:hover,
+.btnSubmit:hover {
+  opacity: 0.85;
+}
+
+.btnCancel:active,
+.btnSubmit:active {
+  transform: scale(0.98);
+}
+
+/* ── Back Link ── */
+.backLink {
+  display: block;
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #aaa;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.backLink:hover {
+  color: var(--color-active);
+}
