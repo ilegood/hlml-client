@@ -45,11 +45,13 @@ const normalizePost = (post) => ({
   latitude: post.latitude ? Number(post.latitude) : null,
   longitude: post.longitude ? Number(post.longitude) : null,
   categories: parseCategories(post.categories),
-  likedBy: Array.isArray(post.likedBy) ? post.likedBy.map(String) : [],
-  joinedBy: Array.isArray(post.joinedBy) ? post.joinedBy.map(String) : [],
-  joinedUserIds: Array.isArray(post.joinedUserIds)
-    ? post.joinedUserIds.map(String)
+  likedBy: Array.isArray(post.likedBy) ? post.likedBy : [],
+  joinedBy: Array.isArray(post.joinedBy) ? post.joinedBy : [],
+  joinedUserIds: Array.isArray(post.joinedUserIds) ? post.joinedUserIds : [],
+  participantDetails: Array.isArray(post.participantDetails)
+    ? post.participantDetails
     : [],
+  authorDetails: post.authorDetails || null,
   comments: Array.isArray(post.comments) ? post.comments : [],
   likes: post.likes || 0,
   participants: post.participants || 1,
@@ -140,6 +142,21 @@ export const togglePostLike = async (id) => {
 export const togglePostJoin = async (id) => {
   const res = await instance.post(`${API_URL}/${id}/join`);
   return normalizePost(res.data);
+};
+
+export const leavePost = async (id) => {
+  const res = await instance.post(`${API_URL}/${id}/leave`);
+  return res.data;
+};
+
+export const getKickedPosts = async () => {
+  const res = await instance.get(`${API_URL}/kicked`);
+  return res.data.map(normalizePost);
+};
+
+export const deletePostBan = async (id) => {
+  const res = await instance.delete(`${API_URL}/${id}/ban`);
+  return res.data;
 };
 
 export const createComment = async (postId, data) => {

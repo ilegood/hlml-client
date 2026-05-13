@@ -14,7 +14,9 @@ export default function MyPostsPage() {
     const fetchMyPosts = async () => {
       try {
         const allPosts = await getPosts();
-        const filtered = allPosts.filter((p) => String(p.user_id) === String(userId));
+        const filtered = allPosts.filter(
+          (p) => String(p.user_id) === String(userId),
+        );
         setMyPosts(filtered);
       } catch (err) {
         console.error("Failed to fetch my posts:", err);

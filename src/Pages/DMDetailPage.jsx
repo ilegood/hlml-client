@@ -3,17 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { AuthContext } from "../context/auth";
 import { BASE_URL, getImageUrl } from "../api/instance";
-import { leavePost, getPost } from "../api/posts";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import RoomSettingsModal from "../Components/RoomSettingsModal";
-import ChatMembersModal from "../Components/ChatMembersModal";
-import borderImg from "../assets/border.png";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
-// ... (omitted for brevity, will use full content in actual tool call)
 
 const formatTime = (isoString) => {
   if (!isoString) return "";
@@ -60,43 +55,30 @@ const isCompact = (prev, curr) => {
 
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
-function Avatar({ profileImg, nickname, isHost, size = 40 }) {
+function Avatar({ profileImg, nickname, size = 40 }) {
   const url = getImageUrl(profileImg);
   return (
-    <div className={styles.avatarWrapSmall}>
-      {isHost && (
-        <img
-          src={borderImg}
-          className={styles.avatarBorderSmall}
-          alt="host-border"
-        />
-      )}
-      <div
-        className={styles.msgAvatar}
-        style={{ width: size, height: size, fontSize: size * 0.3 }}
-      >
-        {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
-      </div>
+    <div
+      className={styles.msgAvatar}
+      style={{ width: size, height: size, fontSize: size * 0.3 }}
+    >
+      {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
     </div>
   );
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-export default function ChatRoomDetailPage() {
-  const { roomId } = useParams();
+export default function DMDetailPage() {
+  const { roomId } = useParams(); // Numeric ID from dm_rooms table
   const { name, userId, profileImg } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [roomTitle, setRoomTitle] = useState("");
-  const [roomImage, setRoomImage] = useState("");
-  const [roomAuthor, setRoomAuthor] = useState("");
+  const [targetNickname, setTargetNickname] = useState("");
+  const [targetProfileImg, setTargetProfileImg] = useState("");
 
-  const [showSettings, setShowSettings] = useState(false);
-  const [showMembers, setShowMembers] = useState(false);
-  const [roomMembers, setRoomMembers] = useState([]);
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
   const [hoveredMsgId, setHoveredMsgId] = useState(null);
@@ -109,6 +91,8 @@ export default function ChatRoomDetailPage() {
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
 
+  const socketRoomId = `dm_${roomId}`;
+
   // ── Socket setup ────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -118,39 +102,22 @@ export default function ChatRoomDetailPage() {
       return;
     }
 
-    socketRef.current = io(BASE_URL, {
-      reconnectionAttempts: 5,
-    });
+    socketRef.current = io(BASE_URL);
     const socket = socketRef.current;
 
-    socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
-      socket.emit("join_room", { roomId, nickname: name, userId });
-    });
-
-    socket.on("connect_error", (err) => {
-      console.error("Socket connection failed:", err);
-      toast.error("채팅 서버 연결에 실패했습니다.");
-    });
-
     socket.on("receive_message", (msg) => {
-      setMessages((prev) => {
-        // 중복 방지 (이미 목록에 있는 메시지면 무시)
-        if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
-
-        return [
-          ...prev,
-          {
-            ...msg,
-            isEdited: msg.is_edited === 1 || msg.isEdited,
-            isDeleted: msg.is_deleted === 1 || msg.isDeleted,
-            time: msg.created_at || msg.time || new Date().toISOString(),
-          },
-        ];
-      });
+      setMessages((prev) => [
+        ...prev,
+        {
+          ...msg,
+          isEdited: msg.is_edited === 1,
+          isDeleted: msg.is_deleted === 1,
+          time: msg.created_at || new Date().toISOString(),
+        },
+      ]);
 
       if (!msg.isSystem && String(msg.userId) !== String(userId)) {
-        socket.emit("mark_read", { messageId: msg.id, userId, roomId });
+        socket.emit("mark_read", { messageId: msg.id, userId, roomId: socketRoomId });
       }
 
       const isMine = String(msg.userId) === String(userId);
@@ -158,7 +125,7 @@ export default function ChatRoomDetailPage() {
       const isAtBottom =
         container &&
         container.scrollHeight - container.scrollTop <=
-          container.clientHeight + 150;
+          container.clientHeight + 100;
 
       if (isMine || isAtBottom) {
         setTimeout(
@@ -168,11 +135,12 @@ export default function ChatRoomDetailPage() {
       }
     });
 
-    socket.on("room_info", ({ title, image, author }) => {
-      setRoomTitle(title);
-      setRoomImage(image);
-      setRoomAuthor(author);
+    socket.on("room_info", ({ title, image }) => {
+      setTargetNickname(title);
+      setTargetProfileImg(image);
     });
+
+    socket.emit("join_room", { roomId: socketRoomId, nickname: name, userId });
 
     socket.on("load_messages", (rawMessages) => {
       const formatted = rawMessages.map((msg) => ({
@@ -195,7 +163,7 @@ export default function ChatRoomDetailPage() {
       if (formatted.length > 0) {
         formatted.forEach((m) => {
           if (!m.isSystem && String(m.userId) !== String(userId)) {
-            socket.emit("mark_read", { messageId: m.id, userId, roomId });
+            socket.emit("mark_read", { messageId: m.id, userId, roomId: socketRoomId });
           }
         });
         setTimeout(
@@ -242,20 +210,8 @@ export default function ChatRoomDetailPage() {
       );
     });
 
-    socket.on("error_message", (msg) => {
-      toast.error(msg);
-      navigate("/chat-rooms");
-    });
-
-    socket.on("user_kicked", ({ targetUserId }) => {
-      if (Number(targetUserId) === Number(userId)) {
-        toast.error("방장에 의해 강퇴되었습니다.");
-        navigate("/chat-rooms");
-      }
-    });
-
     return () => socket.disconnect();
-  }, [roomId, userId, name, navigate]);
+  }, [roomId, userId, name, navigate, socketRoomId]);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -304,41 +260,31 @@ export default function ChatRoomDetailPage() {
     (e) => {
       if (e) e.preventDefault();
       if (!input.trim() || !socketRef.current) return;
-      if (!socketRef.current.connected) {
-        toast.error("채팅 서버에 연결되지 않았습니다.");
-        return;
-      }
 
       if (editId) {
         socketRef.current.emit("edit_message", {
           messageId: editId,
           content: input,
-          roomId,
+          roomId: socketRoomId,
         });
         setEditId(null);
       } else {
-        socketRef.current.emit(
-          "send_message",
-          {
-            roomId,
-            userId,
-            nickname: name,
-            profileImg,
-            content: input.trim(),
-            isSystem: false,
-            parentId: replyTo?.id || null,
-            time: new Date().toISOString(),
-          },
-          (res) => {
-            if (!res?.ok) toast.error("메시지 전송에 실패했습니다.");
-          },
-        );
+        socketRef.current.emit("send_message", {
+          roomId: socketRoomId,
+          userId,
+          nickname: name,
+          profileImg,
+          content: input,
+          isSystem: false,
+          parentId: replyTo?.id || null,
+          time: new Date().toISOString(),
+        });
         setReplyTo(null);
       }
       setInput("");
       inputRef.current?.focus();
     },
-    [input, editId, replyTo, roomId, userId, name, profileImg],
+    [input, editId, replyTo, socketRoomId, userId, name, profileImg],
   );
 
   const startEdit = (msg) => {
@@ -362,7 +308,7 @@ export default function ChatRoomDetailPage() {
         onClick: () => {
           socketRef.current.emit("delete_message", {
             messageId: msgId,
-            roomId,
+            roomId: socketRoomId,
           });
           if (editId === msgId) {
             setEditId(null);
@@ -378,7 +324,7 @@ export default function ChatRoomDetailPage() {
       messageId: msgId,
       userId,
       emoji,
-      roomId,
+      roomId: socketRoomId,
     });
     setShowEmojiPicker(null);
   };
@@ -396,53 +342,10 @@ export default function ChatRoomDetailPage() {
     }
   };
 
-  const toggleMembers = async () => {
-    if (!showMembers) {
-      try {
-        const post = await getPost(roomId);
-        // 방장 포함 멤버 리스트 만들기
-        const members = [];
-        if (post.authorDetails) {
-          members.push(post.authorDetails);
-        }
-        if (post.participantDetails) {
-          members.push(...post.participantDetails);
-        }
-        setRoomMembers(members);
-      } catch (err) {
-        console.error("Failed to fetch members:", err);
-        toast.error("멤버 정보를 불러오는 데 실패했습니다.");
-      }
-    }
-    setShowMembers(!showMembers);
-  };
-
   const cancelContext = () => {
     setReplyTo(null);
     setEditId(null);
     setInput("");
-  };
-
-  const handleLeave = async () => {
-    if (!window.confirm("정말로 이 채팅방에서 나가시겠습니까?")) return;
-
-    try {
-      // 소켓으로 퇴장 알림 (실시간 반영용)
-      socketRef.current?.emit("leave_room", {
-        roomId,
-        nickname: name,
-        userId,
-      });
-
-      // API로 DB 정보 업데이트 (인원 감소, 방장 위임, 퇴장 메시지 저장)
-      await leavePost(roomId);
-
-      toast.success("채팅방에서 나갔습니다.");
-      navigate("/chat-rooms");
-    } catch (err) {
-      console.error("Failed to leave room:", err);
-      toast.error("방 나가기에 실패했습니다.");
-    }
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -452,46 +355,27 @@ export default function ChatRoomDetailPage() {
       {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.headerThumb}>
-          {roomImage ? (
-            <img src={getImageUrl(roomImage)} alt="room" />
+          {targetProfileImg ? (
+            <img src={getImageUrl(targetProfileImg)} alt="target" />
           ) : (
-            <span className={styles.headerHashIcon}>#</span>
+            <span className={styles.headerHashIcon}>👤</span>
           )}
         </div>
         <span className={styles.headerName}>
-          {roomTitle || `채팅방 ${roomId}`}
+          {targetNickname || "사용자"}
         </span>
         <div className={styles.headerDivider} />
         <span className={styles.headerDesc}>
-          {roomTitle ? `${roomTitle} 채팅방입니다.` : ""}
+          {targetNickname}님과의 대화입니다.
         </span>
         <div className={styles.headerActions}>
-          {name === roomAuthor && (
-            <button
-              className={styles.headerIconBtn}
-              title="방 설정 변경"
-              onClick={() => setShowSettings(true)}
-            >
-              ⚙️
-            </button>
-          )}
           <button className={styles.headerIconBtn} title="채팅 알림 설정">
             🔔
-          </button>
-          <button className={styles.headerIconBtn} title="지도보기">
-            🗺️
-          </button>
-          <button
-            className={styles.headerIconBtn}
-            title="멤버보기"
-            onClick={toggleMembers}
-          >
-            👥
           </button>
           <button
             className={styles.headerIconBtn}
             title="나가기"
-            onClick={handleLeave}
+            onClick={() => navigate("/dms")}
           >
             🚪
           </button>
@@ -561,7 +445,6 @@ export default function ChatRoomDetailPage() {
                     <Avatar
                       profileImg={msg.profileImg}
                       nickname={msg.nickname}
-                      isHost={msg.nickname === roomAuthor}
                     />
                   )}
                 </div>
@@ -576,9 +459,6 @@ export default function ChatRoomDetailPage() {
                       >
                         {msg.nickname}
                       </span>
-                      {msg.nickname === roomAuthor && (
-                        <span className={styles.msgHostBadge}>방장</span>
-                      )}
                       <span className={styles.msgTimestamp}>
                         {formatTime(msg.time)}
                       </span>
@@ -878,7 +758,7 @@ export default function ChatRoomDetailPage() {
                 ? "메시지 수정..."
                 : replyTo
                   ? `@${replyTo.nickname}님에게 답장...`
-                  : `#${roomTitle || roomId}에 메시지 보내기`
+                  : `${targetNickname}님에게 메시지 보내기`
             }
           />
           <div className={styles.inputActions}>
@@ -927,36 +807,6 @@ export default function ChatRoomDetailPage() {
           </div>
         </div>
       </div>
-
-      {showSettings && (
-        <RoomSettingsModal
-          roomId={roomId}
-          onClose={() => setShowSettings(false)}
-          onUpdate={() => {
-            socketRef.current?.emit("join_room", {
-              roomId,
-              nickname: name,
-              userId,
-            });
-          }}
-        />
-      )}
-
-      <ChatMembersModal
-        isOpen={showMembers}
-        onClose={() => setShowMembers(false)}
-        members={roomMembers}
-        authorNickname={roomAuthor}
-        currentUserId={userId}
-        onKick={(target) => {
-          socketRef.current?.emit("kick_user", {
-            roomId,
-            targetUserId: target.user_id,
-            targetNickname: target.nickname,
-            myUserId: userId,
-          });
-        }}
-      />
     </div>
   );
 }

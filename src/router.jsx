@@ -1,15 +1,17 @@
 import { createBrowserRouter } from "react-router-dom";
-import Layout from "./components/Layout";
-import MainPage from "./pages/post_pages/MainPage";
-import DetailPage from "./pages/post_pages/DetailPage";
-import WritePage from "./pages/post_pages/WritePage";
-import LoginPage from "./pages/user_pages/LoginPage";
-import RegisterPage from "./pages/user_pages/RegisterPage";
-import UserPage from "./pages/user_pages/UserPage";
-import LikesPage from "./pages/my_pages/LikesPage";
-import MyPostsPage from "./pages/my_pages/MyPostsPage";
-import ChatRoomDetailPage from "./pages/chat_pages/ChatRoomDetailPage";
-import ChatRoomsPage from "./pages/chat_pages/ChatRoomsPage";
+import Layout from "./Components/Layout";
+import MainPage from "./Pages/MainPage";
+import DetailPage from "./Pages/DetailPage";
+import WritePage from "./Pages/WritePage";
+import LoginPage from "./Pages/LoginPage";
+import RegisterPage from "./Pages/RegisterPage";
+import UserPage from "./Pages/UserPage";
+import LikesPage from "./Pages/LikesPage";
+import MyPostsPage from "./Pages/MyPostsPage";
+import ChatRoomDetailPage from "./Pages/ChatRoomDetailPage";
+import ChatRoomsPage from "./Pages/ChatRoomsPage";
+import DMsPage from "./Pages/DMsPage";
+import DMDetailPage from "./Pages/DMDetailPage";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +36,8 @@ const router = createBrowserRouter([
         path: "/chat/:roomId",
         element: <ChatRoomDetailPage />,
       },
+      { path: "/dms", element: <DMsPage /> },
+      { path: "/dms/:roomId", element: <DMDetailPage /> },
     ],
   },
 ]);

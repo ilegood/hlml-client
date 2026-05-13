@@ -40,14 +40,12 @@ export const getBlockedUsers = async () => {
   return response.data;
 };
 
-export const searchUsers = async (query) => {
-  const response = await instance.get(`/users/search?q=${query}`);
+export const updateFriendMemo = async (targetId, memo) => {
+  const response = await instance.post("/friends/memo", { targetId, memo });
   return response.data;
 };
 
-export const updateFriendMemo = async (targetId, memo) => {
-  // 주의: "/friends/memo" 주소와 넘겨주는 데이터(targetId, memo)는
-  // 실제 백엔드 API 명세서에 맞게 수정하셔야 합니다!
-  const response = await instance.patch("/friends/memo", { targetId, memo });
+export const searchUsers = async (query) => {
+  const response = await instance.get(`/users/search?q=${query}`);
   return response.data;
 };

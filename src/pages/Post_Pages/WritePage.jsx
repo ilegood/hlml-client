@@ -237,9 +237,11 @@ export default function WritePage() {
               onChange={(e) => setPlace(e.target.value)}
               readOnly
             />
-            <button className={styles.searchBtn} onClick={handleSearchPlace}>지도에서 찾기</button>
+            <button className={styles.searchBtn} onClick={handleSearchPlace}>
+              지도에서 찾기
+            </button>
           </div>
-          
+
           {latitude && longitude && (
             <div className={styles.mapPreviewSection}>
               <MapPreview latitude={latitude} longitude={longitude} />

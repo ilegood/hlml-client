@@ -17,7 +17,8 @@ export default function LikesPage() {
         const currentUserId = userId || "me";
         const filtered = allPosts.filter(
           (p) =>
-            Array.isArray(p.likedBy) && p.likedBy.includes(String(currentUserId)),
+            Array.isArray(p.likedBy) &&
+            p.likedBy.includes(String(currentUserId)),
         );
         setLikedPosts(filtered);
       } catch (err) {

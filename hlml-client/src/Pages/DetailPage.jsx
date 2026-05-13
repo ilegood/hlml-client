@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "../context/auth";
 import {
   countComments,
   formatDateTime,
   STATUS_EMOJI,
   STATUS_CLASS,
-} from "../../api/homeConstants";
+} from "../api/homeConstants";
 import {
   getPost,
   deletePost,
@@ -16,15 +16,14 @@ import {
   createComment,
   updateComment as updatePostComment,
   deleteComment as deletePostComment,
-} from "../../api/posts";
-import { CommentItem } from "../../components/post_components/CommentItem";
-import MapPreview from "../../components/post_components/MapPreview";
+} from "../api/posts";
+import { CommentItem } from "../Components/CommentItem";
 import styles from "./DetailPage.module.css";
 
 export default function DetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { userId, token } = useAuth();
+  const { name, token } = useAuth();
   const [post, setPost] = useState(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -49,10 +48,10 @@ export default function DetailPage() {
     );
   }
 
-  const currentUserId = userId || "me";
-  const isAuthor = String(post.user_id) === String(currentUserId);
-  const liked = (post.likedBy || []).includes(String(currentUserId));
-  const joined = (post.joinedUserIds || []).includes(String(currentUserId));
+  const userId = name || "me";
+  const isAuthor = post.author === userId;
+  const liked = (post.likedBy || []).includes(userId);
+  const joined = (post.joinedBy || []).includes(userId);
   const isFull = (post.participants || 0) >= (post.capacity || 4);
   const pct = Math.min(
     100,
@@ -103,15 +102,15 @@ export default function DetailPage() {
       const next = await togglePostJoin(id);
       if (next) setPost(next);
 
-      const isNowJoined = (next.joinedUserIds || []).includes(
-        String(currentUserId),
-      );
+      const isNowJoined = (next.joinedBy || []).includes(name);
       if (isNowJoined) {
         navigate(`/chat-rooms/${id}`);
       }
     } catch (err) {
-      console.error("Failed to sync post:", err);
-      toast.error("참여 처리에 실패했습니다.");
+      // 서버에서 보낸 "이 방에서 강퇴당하여 다시 참여할 수 없습니다." 메시지를 보여줌
+      const errorMsg =
+        err.response?.data?.message || "참여 처리에 실패했습니다.";
+      toast.error(errorMsg);
     }
   };
 
@@ -334,13 +333,6 @@ export default function DetailPage() {
               <span>{post.place}</span>
             </div>
           )}
-
-          {post.latitude && post.longitude && (
-            <div className={styles.apptMapWrap}>
-              <MapPreview latitude={post.latitude} longitude={post.longitude} />
-            </div>
-          )}
-
           <div className={styles.apptRow}>
             <svg
               width="14"
@@ -368,7 +360,7 @@ export default function DetailPage() {
 
         <div className={styles.detailMetaRow}>
           <span className={styles.detailAuthor}>
-            작성자: {post.authorNickname || "익명"}
+            작성자: {post.author || "익명"}
           </span>
           <span className={styles.detailTime}>
             {new Date(post.createdAt).toLocaleString("ko-KR")}
@@ -379,7 +371,7 @@ export default function DetailPage() {
           <button
             className={`${styles.actionBtnLg}${liked ? ` ${styles.liked}` : ""}`}
             onClick={toggleLike}
-            disabled={isAuthor || !token || !post.user_id}
+            disabled={isAuthor || !token}
           >
             <svg
               width="16"
@@ -396,9 +388,7 @@ export default function DetailPage() {
           <button
             className={`${styles.actionBtnLg}${joined ? ` ${styles.joined}` : ""}`}
             onClick={handleJoinBtn}
-            disabled={
-              isAuthor || !token || (isFull && !joined) || !post.user_id
-            }
+            disabled={isAuthor || !token || (isFull && !joined)}
           >
             <svg
               width="16"
@@ -413,7 +403,7 @@ export default function DetailPage() {
               <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            {isAuthor || !post.user_id
+            {isAuthor
               ? "내 게시글"
               : joined
                 ? "참여중"
