@@ -4,7 +4,7 @@
   flex-direction: column;
   height: calc(100vh - 25px);
   background: var(--color-bg);
-  padding: 0 40px;
+  padding: 0 200px;
   font-family: inherit;
   overflow-x: hidden;
 }
