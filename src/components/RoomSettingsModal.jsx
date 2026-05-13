@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getPost, updatePost } from "../api/posts";
-import CategorySelector from "./CategorySelector";
-import ImageDropZone from "./ImageDropZone";
+import CategorySelector from "./post_components/CategorySelector";
+import ImageDropZone from "./post_components/ImageDropZone";
 import styles from "./RoomSettingsModal.module.css";
 
 const CATEGORY_EXCLUDES = ["인원"];

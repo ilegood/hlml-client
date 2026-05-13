@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
-import { getBlockedUsers, unblockUser } from "../api/friends";
-import { getImageUrl } from "../api/instance";
+import { getBlockedUsers, unblockUser } from "../../api/friends";
+import { getImageUrl } from "../../api/instance";
 
 // ... (ModalWrapper styled component content remains the same)
 const ModalWrapper = styled.div`

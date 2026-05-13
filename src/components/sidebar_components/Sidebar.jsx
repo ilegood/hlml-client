@@ -61,7 +61,7 @@ const Sidebar = () => {
           <img src={dashboardImg} alt="group" />
           <span className={styles.label}>그룹</span>
         </Link>
-        <Link to="/message" className={styles.itemWrap}>
+        <Link to="/dms" className={styles.itemWrap}>
           <img src={messageImg} alt="message" />
           <span className={styles.label}>메세지</span>
         </Link>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/auth";
-import { getPosts, getKickedPosts, deletePostBan } from "../api/posts";
-import ChatRoomItem from "../Components/ChatRoomItem";
+import { getPosts, getKickedPosts, deletePostBan } from "../../api/posts";
+import ChatRoomItem from "../../components/chat_components/ChatRoomItem";
 import styles from "./ChatRoomsPage.module.css";
 import { toast } from "sonner";
 

@@ -1,195 +1,52 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRef } from "react";
 import styles from "./FriendsList.module.css";
-import {
-  getFriends,
-  getFriendRequests,
-  acceptFriend,
-  rejectFriend,
-  blockUser,
-  updateFriendMemo,
-} from "../api/friends";
-import { useAuth } from "../context/auth";
-import { getImageUrl } from "../api/instance";
-import instance from "../api/instance";
-import AddFriendModal from "./AddFriendModal";
-import ReportModal from "./ReportModal";
+import { getImageUrl } from "../../api/instance";
+import AddFriendModal from "../AddFriendModal";
+import ReportModal from "../modals/ReportModal";
+import { useFriendManagement } from "../../hooks/useFriendManagement";
 
 const FriendsList = () => {
-  const navigate = useNavigate();
-  const { token } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const [friends, setFriends] = useState([]);
-  const [requests, setRequests] = useState([]);
-  const [selectedFriend, setSelectedFriend] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [activeMenuId, setActiveMenuId] = useState(null);
-  const [memos, setMemos] = useState({});
-  const [isEditingMemo, setIsEditingMemo] = useState(false);
-  const [tempMemo, setTempMemo] = useState("");
-  const [cardTop, setCardTop] = useState(0);
+  const {
+    isOpen,
+    searchQuery,
+    setSearchQuery,
+    isAddModalOpen,
+    setIsAddModalOpen,
+    isReportModalOpen,
+    handleToggleSidebar,
+    handleAccept,
+    handleReject,
+    filteredFriends,
+    selectedFriend,
+    handleFriendClick,
+    activeMenuId,
+    setActiveMenuId,
+    handleDeleteFriend,
+    handleBlockUser,
+    handleReport,
+    memos,
+    isEditingMemo,
+    tempMemo,
+    setTempMemo,
+    handleMemoEdit,
+    handleSaveMemo,
+    handleCancelMemo,
+    handleStartDM,
+    cardTop,
+    requests,
+    menuRef,
+  } = useFriendManagement();
 
-  const menuRef = useRef(null);
+  const sidebarRef = useRef(null); // Ref to get sidebar dimensions for cardTop calculation
 
-  const fetchAll = async () => {
-    if (!token) return;
-
-    // 개별적으로 요청하여 하나가 실패해도 다른 데이터는 표시되도록 함
-    try {
-      const fData = await getFriends();
-      setFriends(fData);
-
-      // DB에서 가져온 메모로 상태 초기화
-      const initialMemos = {};
-      fData.forEach((friend) => {
-        if (friend.memo) initialMemos[friend.id] = friend.memo;
-      });
-      setMemos(initialMemos);
-    } catch (err) {
-      console.error("친구 목록 로드 실패", err);
-    }
-
-    try {
-      const rData = await getFriendRequests();
-      setRequests(rData);
-    } catch (err) {
-      console.error("친구 요청 로드 실패", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchAll();
-  }, [token]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setActiveMenuId(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleAccept = async (id) => {
-    try {
-      await acceptFriend(id);
-      fetchAll();
-    } catch (err) {
-      alert("수락 실패");
-    }
-  };
-
-  const handleReject = async (id) => {
-    try {
-      await rejectFriend(id);
-      fetchAll();
-    } catch (err) {
-      alert("거절 실패");
-    }
-  };
-
-  const handleDeleteFriend = async (id) => {
-    if (window.confirm("정말 친구를 삭제하시겠습니까?")) {
-      try {
-        await rejectFriend(id);
-        fetchAll();
-        setActiveMenuId(null);
-        if (selectedFriend?.id === id) setSelectedFriend(null);
-      } catch (err) {
-        alert("삭제 실패");
-      }
-    }
-  };
-
-  const handleBlockUser = async (id) => {
-    if (window.confirm("정말 이 사용자를 차단하시겠습니까?")) {
-      try {
-        await blockUser(id);
-        fetchAll();
-        setActiveMenuId(null);
-        if (selectedFriend?.id === id) setSelectedFriend(null);
-        alert("차단되었습니다.");
-      } catch (err) {
-        alert("차단 실패");
-      }
-    }
-  };
-
-  const handleReport = () => {
-    setIsReportModalOpen(true);
-    setActiveMenuId(null);
-  };
-
-  const filteredFriends = friends.filter((friend) =>
-    (friend.name || "").toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const handleFriendClick = (e, friend) => {
-    if (selectedFriend?.id === friend.id) {
-      setSelectedFriend(null);
-      setIsEditingMemo(false);
-    } else {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const sidebarRect = e.currentTarget
-        .closest(`.${styles.friendSidebar}`)
-        .getBoundingClientRect();
-
-      let top = rect.top - sidebarRect.top;
-      const cardHeight = 350; // 예상 높이
-
-      // 화면 하단 영역을 벗어나지 않도록 보정
-      if (top + cardHeight > sidebarRect.height) {
-        top = sidebarRect.height - cardHeight - 20;
-      }
-      // 너무 위로 붙지 않도록 보정
-      if (top < 20) top = 20;
-
-      setCardTop(top);
-      setSelectedFriend(friend);
-      setIsEditingMemo(false);
-    }
-  };
-
-  const handleToggleSidebar = () => {
-    setIsOpen(!isOpen);
-    if (isOpen) setSelectedFriend(null);
-  };
-
-  const handleMemoEdit = () => {
-    setTempMemo(memos[selectedFriend.id] || "");
-    setIsEditingMemo(true);
-  };
-
-  const handleSaveMemo = async () => {
-    try {
-      await updateFriendMemo(selectedFriend.id, tempMemo);
-      setMemos({ ...memos, [selectedFriend.id]: tempMemo });
-      setIsEditingMemo(false);
-    } catch (err) {
-      alert("메모 저장 실패");
-    }
-  };
-
-  const handleCancelMemo = () => setIsEditingMemo(false);
-
-  const handleStartDM = async () => {
-    try {
-      const res = await instance.post("/chat/dm", { targetId: selectedFriend.id });
-      navigate(`/dms/${res.data.roomId}`);
-      setIsOpen(false);
-      setSelectedFriend(null);
-    } catch (err) {
-      console.error("DM 시작 실패:", err.response?.data || err.message);
-      alert("메시지 방을 열 수 없습니다. 다시 시도해주세요.");
-    }
+  const handleClick = (e, friend) => {
+    // Pass sidebarRef.current for position calculation
+    handleFriendClick(e, friend, sidebarRef.current.getBoundingClientRect());
   };
 
   return (
     <div className={styles.sidebarWrapper}>
-      <div className={`${styles.friendSidebar} ${isOpen ? styles.active : ""}`}>
+      <div ref={sidebarRef} className={`${styles.friendSidebar} ${isOpen ? styles.active : ""}`}>
         <button className={styles.toggleBtn} onClick={handleToggleSidebar}>
           {isOpen ? "〉" : "〈"}
         </button>
@@ -256,7 +113,7 @@ const FriendsList = () => {
                   <tr
                     key={friend.id}
                     className={`${styles.friendRow} ${selectedFriend?.id === friend.id ? styles.active : ""}`}
-                    onClick={(e) => handleFriendClick(e, friend)}
+                    onClick={(e) => handleClick(e, friend)}
                   >
                     <td className={styles.avatarCell}>
                       <div

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/auth";
-import { getImageUrl } from "../api/instance";
-import instance from "../api/instance";
+import { useAuth } from "../../context/auth";
+import { getImageUrl } from "../../api/instance";
+import instance from "../../api/instance";
 import styles from "./ChatRoomsPage.module.css";
-import itemStyles from "../Components/ChatRoomItem.module.css";
+import itemStyles from "../../components/chat_components/ChatRoomItem.module.css";
 
 const DMsPage = () => {
   const navigate = useNavigate();
@@ -34,9 +34,12 @@ const DMsPage = () => {
     const date = new Date(isoString);
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
-    
+
     if (isToday) {
-      return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     }
     return date.toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
   };
@@ -66,7 +69,9 @@ const DMsPage = () => {
                     : "none",
                 }}
               >
-                {!dm.targetProfileImg && <div className={itemStyles.noImage}></div>}
+                {!dm.targetProfileImg && (
+                  <div className={itemStyles.noImage}></div>
+                )}
               </div>
 
               <div className={itemStyles.roomInfo}>
@@ -85,7 +90,9 @@ const DMsPage = () => {
           ))
         ) : (
           <div className={styles.empty}>
-            진행 중인 대화가 없습니다.<br />친구 목록에서 메시지를 보내보세요!
+            진행 중인 대화가 없습니다.
+            <br />
+            친구 목록에서 메시지를 보내보세요!
           </div>
         )}
       </div>

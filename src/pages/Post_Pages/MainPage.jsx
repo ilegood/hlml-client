@@ -1,64 +1,17 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
-import { getPosts, togglePostLike } from "../../api/posts";
+import { togglePostLike } from "../../api/posts";
 import CategorySelector from "../../components/post_components/CategorySelector";
-import PostCard from "../../components/post_components/PostCard";
 import CentralMapBar from "../../components/post_components/CentralMapBar";
 import styles from "./MainPage.module.css";
-
-const MAIN_CATEGORY_ORDER = ["인원", "성별", "나이", "흡연", "음주", "활동"];
+import { usePostsData } from "../../hooks/usePostsData";
+import PostListDisplay from "../../components/post_pages/PostListDisplay";
 
 export default function MainPage() {
   const navigate = useNavigate();
   const { userId, token } = useAuth();
-  const [posts, setPosts] = useState([]);
-  const [search, setSearch] = useState("");
-  const [selCats, setSelCats] = useState({});
-
-  const fetchPosts = async () => {
-    try {
-      const data = await getPosts();
-      setPosts(data);
-    } catch (err) {
-      console.error("Failed to fetch posts:", err);
-    }
-  };
-
-  useEffect(() => {
-    let ignore = false;
-
-    const loadPosts = async () => {
-      try {
-        const data = await getPosts();
-        if (!ignore) setPosts(data);
-      } catch (err) {
-        console.error("Failed to fetch posts:", err);
-      }
-    };
-
-    loadPosts();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  const filtered = [...posts]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .filter((it) => {
-      const kw = search.toLowerCase();
-      const matchText =
-        it.title.toLowerCase().includes(kw) ||
-        it.content.toLowerCase().includes(kw);
-      const matchCat = Object.entries(selCats).every(([k, v]) => {
-        if (!v) return true;
-        if (k === "인원") return it.capacity === parseInt(v);
-        return it.categories?.[k] === v;
-      });
-      return matchText && matchCat;
-    });
+  const { filteredPosts, search, setSearch, selCats, setSelCats, fetchPosts, MAIN_CATEGORY_ORDER } = usePostsData();
 
   const handleLike = async (post) => {
     if (!token) {
@@ -141,27 +94,12 @@ export default function MainPage() {
 
       <CentralMapBar />
 
-      {/* 카드 목록 */}
-      <div className={styles.cardList}>
-        {filtered.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>🙈</div>
-            <p>아직 게시글이 없어요</p>
-            <span>첫 번째 글을 작성해보세요!</span>
-          </div>
-        ) : (
-          filtered.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              variant="main"
-              onLike={handleLike}
-              onOpen={(id) => navigate("/detail/" + id)}
-              currentUserId={userId || "me"}
-            />
-          ))
-        )}
-      </div>
+      <PostListDisplay
+        filteredPosts={filteredPosts}
+        handleLike={handleLike}
+        onOpen={(id) => navigate("/detail/" + id)}
+        currentUserId={userId || "me"}
+      />
     </main>
   );
 }
