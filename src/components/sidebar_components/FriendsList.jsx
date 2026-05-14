@@ -24,6 +24,7 @@ const FriendsList = () => {
     handleDeleteFriend,
     handleBlockUser,
     handleReport,
+    reportTarget,
     memos,
     isEditingMemo,
     tempMemo,
@@ -231,7 +232,10 @@ const FriendsList = () => {
         <AddFriendModal onClose={() => setIsAddModalOpen(false)} />
       )}
       {isReportModalOpen && (
-        <ReportModal onClose={() => setIsReportModalOpen(false)} />
+        <ReportModal 
+          onClose={() => setIsReportModalOpen(false)} 
+          targetUser={reportTarget}
+        />
       )}
     </div>
   );

@@ -22,6 +22,7 @@ export const useFriendManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState(null);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [memos, setMemos] = useState({});
   const [isEditingMemo, setIsEditingMemo] = useState(false);
@@ -114,6 +115,8 @@ export const useFriendManagement = () => {
   };
 
   const handleReport = () => {
+    const friendToReport = friends.find((f) => f.id === activeMenuId);
+    setReportTarget(friendToReport);
     setIsReportModalOpen(true);
     setActiveMenuId(null);
   };
@@ -209,6 +212,7 @@ export const useFriendManagement = () => {
     handleDeleteFriend,
     handleBlockUser,
     handleReport,
+    reportTarget,
     filteredFriends,
     handleFriendClick,
     handleToggleSidebar,
