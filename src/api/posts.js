@@ -1,4 +1,5 @@
 import instance from "./instance";
+import { normalizeStatus } from "./homeConstants";
 
 const API_URL = "/posts";
 const BASE_URL = "http://localhost:4000";
@@ -27,9 +28,9 @@ const parseCategories = (categories) => {
   }
 };
 
-const normalizeStatus = (status) => {
-  const text = String(status || "").trim();
-  return text === "모집완료" ? "모집완료" : "모집중";
+const normalizeImageUrl = (image) => {
+  if (!image) return null;
+  return image.startsWith("http") ? image : `${BASE_URL}${image}`;
 };
 
 const normalizePost = (post) => ({
@@ -37,17 +38,15 @@ const normalizePost = (post) => ({
   id: post.post_id,
   status: normalizeStatus(post.status),
   createdAt: post.created_at,
-  image: post.image
-    ? post.image.startsWith("http")
-      ? post.image
-      : `${BASE_URL}${post.image}`
-    : null,
+  image: normalizeImageUrl(post.image),
   latitude: post.latitude ? Number(post.latitude) : null,
   longitude: post.longitude ? Number(post.longitude) : null,
   categories: parseCategories(post.categories),
-  likedBy: Array.isArray(post.likedBy) ? post.likedBy : [],
-  joinedBy: Array.isArray(post.joinedBy) ? post.joinedBy : [],
-  joinedUserIds: Array.isArray(post.joinedUserIds) ? post.joinedUserIds : [],
+  likedBy: Array.isArray(post.likedBy) ? post.likedBy.map(String) : [],
+  joinedBy: Array.isArray(post.joinedBy) ? post.joinedBy.map(String) : [],
+  joinedUserIds: Array.isArray(post.joinedUserIds)
+    ? post.joinedUserIds.map(String)
+    : [],
   participantDetails: Array.isArray(post.participantDetails)
     ? post.participantDetails
     : [],
@@ -99,31 +98,26 @@ const toPostFormData = (data) => {
   return formData;
 };
 
-// 리스트
 export const getPosts = async () => {
   const res = await instance.get(API_URL);
   return res.data.map(normalizePost);
 };
 
-// 단일
 export const getPost = async (id) => {
   const res = await instance.get(`${API_URL}/${id}`);
   return normalizePost(res.data);
 };
 
-// 생성
 export const createPost = async (formData) => {
   const res = await instance.post(API_URL, formData);
   return res.data;
 };
 
-// 수정
 export const updatePost = async (id, data) => {
   const res = await instance.patch(`${API_URL}/${id}`, toPostFormData(data));
   return res.data;
 };
 
-// 삭제
 export const deletePost = async (id) => {
   const res = await instance.delete(`${API_URL}/${id}`);
   return res.data;

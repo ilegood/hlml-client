@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { STATUS_OPEN, currentTimeString, todayString } from "../../api/homeConstants";
 import { useAuth } from "../../context/auth";
-import { currentTimeString, todayString } from "../../api/homeConstants";
 import { createPost, getPost, updatePost } from "../../api/posts";
 import CategorySelector from "../../components/post_components/CategorySelector";
 import ImageDropZone from "../../components/post_components/ImageDropZone";
@@ -12,13 +12,11 @@ import styles from "./WritePage.module.css";
 
 const WRITE_CATEGORY_EXCLUDES = ["인원"];
 
-// ── Main Page Component ───────────────────────────────────
 export default function WritePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { userId } = useAuth();
-
-  const isEdit = !!id;
+  const isEdit = Boolean(id);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -29,7 +27,7 @@ export default function WritePage() {
   const [longitude, setLongitude] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [capacity, setCapacity] = useState(2);
-  const [status, setStatus] = useState("모집중");
+  const [status, setStatus] = useState(STATUS_OPEN);
   const [categories, setCategories] = useState({});
   const [image, setImage] = useState(null);
   const [existingImage, setExistingImage] = useState("");
@@ -38,45 +36,40 @@ export default function WritePage() {
   const currentTime = currentTimeString();
 
   useEffect(() => {
-    if (isEdit) {
-      const fetchPostData = async () => {
-        try {
-          const post = await getPost(id);
+    if (!isEdit) return;
 
-          setTitle(post.title || "");
-          setContent(post.content || "");
-          setDate(post.date ? String(post.date).slice(0, 10) : todayString());
-          setTime(post.time ? String(post.time).slice(0, 5) : "");
-          setPlace(post.place || "");
-          setLatitude(post.latitude || null);
-          setLongitude(post.longitude || null);
-          setCapacity(post.capacity || 2);
-          setStatus(post.status || "모집중");
-          setCategories(post.categories || {});
+    const fetchPostData = async () => {
+      try {
+        const post = await getPost(id);
+        setTitle(post.title || "");
+        setContent(post.content || "");
+        setDate(post.date ? String(post.date).slice(0, 10) : todayString());
+        setTime(post.time ? String(post.time).slice(0, 5) : "");
+        setPlace(post.place || "");
+        setLatitude(post.latitude || null);
+        setLongitude(post.longitude || null);
+        setCapacity(post.capacity || 2);
+        setStatus(post.status || STATUS_OPEN);
+        setCategories(post.categories || {});
 
-          if (post.image) {
-            setExistingImage(post.image);
-            setImage({ preview: post.image });
-          } else {
-            setExistingImage("");
-            setImage(null);
-          }
-        } catch (err) {
-          console.error("Failed to load post:", err);
-          alert("데이터를 불러오는 중 오류가 발생했습니다.");
-          navigate("/");
-        } finally {
-          setIsLoading(false);
+        if (post.image) {
+          setExistingImage(post.image);
+          setImage({ preview: post.image });
+        } else {
+          setExistingImage("");
+          setImage(null);
         }
-      };
+      } catch (err) {
+        console.error("Failed to load post:", err);
+        toast.error("게시글을 불러오지 못했습니다.");
+        navigate("/");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      fetchPostData();
-    }
+    fetchPostData();
   }, [id, isEdit, navigate]);
-
-  const handleSearchPlace = () => {
-    setIsSearchOpen(true);
-  };
 
   const handlePlaceSelect = (item) => {
     setPlace(item.place_name);
@@ -87,7 +80,7 @@ export default function WritePage() {
 
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
-      alert("제목과 내용을 입력해주세요!");
+      toast.error("제목과 내용을 입력해주세요.");
       return;
     }
 
@@ -104,7 +97,6 @@ export default function WritePage() {
     }
 
     const formData = new FormData();
-
     formData.append("title", title.trim());
     formData.append("content", content.trim());
     formData.append("date", date);
@@ -128,20 +120,16 @@ export default function WritePage() {
     try {
       if (isEdit) {
         await updatePost(id, formData);
-        toast.success("게시글이 수정되었습니다.");
+        toast.success("게시글을 수정했습니다.");
         navigate(`/detail/${id}`);
       } else {
         const result = await createPost(formData);
-        toast.success("게시글이 등록되었습니다.");
-        if (result && result.id) {
-          navigate(`/chat-rooms/${result.id}`);
-        } else {
-          navigate("/");
-        }
+        toast.success("게시글을 등록했습니다.");
+        navigate(result?.id ? `/chat-rooms/${result.id}` : "/");
       }
     } catch (err) {
       console.error("Failed to save post:", err);
-      toast.error("저장에 실패했습니다.");
+      toast.error(err.response?.data?.message || "저장에 실패했습니다.");
     }
   };
 
@@ -157,14 +145,7 @@ export default function WritePage() {
     <main className={styles.container}>
       <div className={styles.header}>
         <button className={styles.backBtn} onClick={() => navigate(-1)}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
@@ -174,7 +155,6 @@ export default function WritePage() {
       </div>
 
       <div className={styles.writeForm}>
-        {/* 제목 */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>제목</label>
           <input
@@ -185,7 +165,6 @@ export default function WritePage() {
           />
         </div>
 
-        {/* 내용 */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>내용</label>
           <textarea
@@ -196,7 +175,6 @@ export default function WritePage() {
           />
         </div>
 
-        {/* 날짜 / 시간 */}
         <div className={styles.formRow2}>
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>
@@ -226,18 +204,16 @@ export default function WritePage() {
           </div>
         </div>
 
-        {/* 장소 */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>약속 장소</label>
           <div className={styles.inputWithBtn}>
             <input
               className={styles.formInput}
-              placeholder="장소 이름 또는 주소 (선택)"
+              placeholder="장소 이름 또는 주소"
               value={place}
-              onChange={(e) => setPlace(e.target.value)}
               readOnly
             />
-            <button className={styles.searchBtn} onClick={handleSearchPlace}>
+            <button className={styles.searchBtn} onClick={() => setIsSearchOpen(true)}>
               지도에서 찾기
             </button>
           </div>
@@ -245,12 +221,11 @@ export default function WritePage() {
           {latitude && longitude && (
             <div className={styles.mapPreviewSection}>
               <MapPreview latitude={latitude} longitude={longitude} />
-              <p className={styles.mapHint}>선택된 장소의 위치입니다.</p>
+              <p className={styles.mapHint}>선택한 장소의 위치입니다.</p>
             </div>
           )}
         </div>
 
-        {/* 모집 인원 */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>
             모집 인원 (2~10명) {isEdit && "(수정 불가)"}
@@ -259,7 +234,7 @@ export default function WritePage() {
             <button
               type="button"
               className={styles.capBtn}
-              onClick={() => setCapacity((c) => Math.max(2, c - 1))}
+              onClick={() => setCapacity((value) => Math.max(2, value - 1))}
               disabled={isEdit || capacity <= 2}
             >
               -
@@ -268,7 +243,7 @@ export default function WritePage() {
             <button
               type="button"
               className={styles.capBtn}
-              onClick={() => setCapacity((c) => Math.min(10, c + 1))}
+              onClick={() => setCapacity((value) => Math.min(10, value + 1))}
               disabled={isEdit || capacity >= 10}
             >
               +
@@ -276,7 +251,6 @@ export default function WritePage() {
           </div>
         </div>
 
-        {/* 카테고리 */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>카테고리</label>
           <CategorySelector
@@ -286,7 +260,6 @@ export default function WritePage() {
           />
         </div>
 
-        {/* 이미지 */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>이미지 (선택)</label>
           <ImageDropZone

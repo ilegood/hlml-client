@@ -1,22 +1,32 @@
-// ── 상수 ──────────────────────────────────────────────────
+export const STATUS_OPEN = "모집중";
+export const STATUS_CLOSED = "모집완료";
+
 export const CATEGORY_MAP = {
-  성별: ["남성", "여성", "혼성"],
+  성별: ["남성", "여성", "무관"],
   나이: ["10대", "20대", "30대", "40대", "50대 이상"],
   흡연: ["흡연자", "비흡연자"],
   음주: ["음주", "금주"],
   인원: ["2명", "3명", "4명", "5명", "6명", "7명", "8명", "9명", "10명"],
-  활동: ["식사", "운동", "수다", "게임", "산책", "창작", "휴식", "기타"],
+  활동: ["식사", "운동", "수다", "게임", "공부", "창작", "휴식", "기타"],
 };
 
-export const STATUS_LIST = ["모집중", "모집완료"];
-export const STATUS_EMOJI = { 모집중: "🟢", 모집완료: "🔴" };
-export const STATUS_CLASS = { 모집중: "status-open", 모집완료: "status-full" };
+export const STATUS_LIST = [STATUS_OPEN, STATUS_CLOSED];
+export const STATUS_EMOJI = { [STATUS_OPEN]: "🟢", [STATUS_CLOSED]: "🔒" };
+export const STATUS_CLASS = {
+  [STATUS_OPEN]: "status-open",
+  [STATUS_CLOSED]: "status-full",
+};
 
-// ── 유틸 ──────────────────────────────────────────────────
+export function normalizeStatus(status) {
+  return String(status || "").trim() === STATUS_CLOSED
+    ? STATUS_CLOSED
+    : STATUS_OPEN;
+}
+
 export function getTimeAgo(ts) {
   if (!ts) return "";
   const date = new Date(ts);
-  if (isNaN(date.getTime())) return "";
+  if (Number.isNaN(date.getTime())) return "";
   const diff = Date.now() - date.getTime();
   const min = Math.floor(diff / 60000);
   const hr = Math.floor(diff / 3600000);
@@ -28,60 +38,59 @@ export function getTimeAgo(ts) {
 }
 
 export function countComments(comments = []) {
-  return comments.reduce((s, c) => s + 1 + (c.replies || []).length, 0);
+  return comments.reduce((sum, comment) => sum + 1 + (comment.replies || []).length, 0);
 }
 
 export function formatDateTime(dateStr, timeStr) {
   if (!dateStr) return null;
 
-  let d;
+  let date;
   if (
     typeof dateStr === "string" &&
     dateStr.includes("-") &&
     !dateStr.includes("T")
   ) {
-    // YYYY-MM-DD format를 로컬 시간으로 파싱
-    const [y, m, day] = dateStr.split("-").map(Number);
-    d = new Date(y, m - 1, day);
+    const [year, month, day] = dateStr.split("-").map(Number);
+    date = new Date(year, month - 1, day);
   } else {
-    d = new Date(dateStr);
+    date = new Date(dateStr);
   }
 
-  if (isNaN(d.getTime())) return dateStr;
+  if (Number.isNaN(date.getTime())) return dateStr;
 
-  const dateFormatted = d.toLocaleDateString("ko-KR", {
+  const dateFormatted = date.toLocaleDateString("ko-KR", {
     month: "long",
     day: "numeric",
     weekday: "short",
   });
 
   if (timeStr) {
-    const [h, m] = timeStr.split(":");
-    return `${dateFormatted} ${h}:${m}`;
+    const [hour, minute] = String(timeStr).split(":");
+    return `${dateFormatted} ${hour}:${minute}`;
   }
   return dateFormatted;
 }
 
 export function fileToBase64(file) {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = (e) => res(e.target.result);
-    r.onerror = () => rej();
-    r.readAsDataURL(file);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => resolve(event.target.result);
+    reader.onerror = () => reject();
+    reader.readAsDataURL(file);
   });
 }
 
 export function todayString() {
   const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function currentTimeString() {
   const now = new Date();
-  const h = String(now.getHours()).padStart(2, "0");
-  const m = String(now.getMinutes()).padStart(2, "0");
-  return `${h}:${m}`;
+  const hour = String(now.getHours()).padStart(2, "0");
+  const minute = String(now.getMinutes()).padStart(2, "0");
+  return `${hour}:${minute}`;
 }

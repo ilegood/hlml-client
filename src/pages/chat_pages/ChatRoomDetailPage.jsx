@@ -65,10 +65,13 @@ const createPendingFileId = (file) =>
     crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`
   }`;
 
+const displayName = (nickname) => nickname || "이름 없음";
+
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
 function Avatar({ profileImg, nickname, isHost, size = 40 }) {
   const url = getImageUrl(profileImg);
+  const label = displayName(nickname);
   return (
     <div className={styles.avatarWrapSmall}>
       {isHost && (
@@ -82,7 +85,7 @@ function Avatar({ profileImg, nickname, isHost, size = 40 }) {
         className={styles.msgAvatar}
         style={{ width: size, height: size, fontSize: size * 0.3 }}
       >
-        {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
+        {url ? <img src={url} alt={label} /> : label.slice(0, 2)}
       </div>
     </div>
   );
@@ -100,6 +103,7 @@ export default function ChatRoomDetailPage() {
   const [roomTitle, setRoomTitle] = useState("");
   const [roomImage, setRoomImage] = useState("");
   const [roomAuthor, setRoomAuthor] = useState("");
+  const [roomLocation, setRoomLocation] = useState(null);
 
   const [showSettings, setShowSettings] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
@@ -111,6 +115,11 @@ export default function ChatRoomDetailPage() {
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [fileAccept, setFileAccept] = useState("");
+  const [notificationsMuted, setNotificationsMuted] = useState(
+    () => localStorage.getItem(`chat-muted:${roomId}`) === "1",
+  );
   const [sending, setSending] = useState(false);
   const [blockWarning, setBlockWarning] = useState(null);
 
@@ -192,10 +201,15 @@ export default function ChatRoomDetailPage() {
       }
     });
 
-    socket.on("room_info", ({ title, image, author }) => {
+    socket.on("room_info", ({ title, image, author, place, latitude, longitude }) => {
       setRoomTitle(title);
       setRoomImage(image);
       setRoomAuthor(author);
+      setRoomLocation({
+        place,
+        latitude: latitude ? Number(latitude) : null,
+        longitude: longitude ? Number(longitude) : null,
+      });
     });
 
     socket.on("load_messages", (rawMessages) => {
@@ -358,10 +372,7 @@ export default function ChatRoomDetailPage() {
   }, []);
 
   const addPendingFiles = useCallback((fileList) => {
-    const files = Array.from(fileList || []).filter(
-      (file) =>
-        file.type.startsWith("image/") || file.type.startsWith("video/"),
-    );
+    const files = Array.from(fileList || []);
     if (files.length === 0) return;
 
     setPendingFiles((prev) => [
@@ -373,6 +384,12 @@ export default function ChatRoomDetailPage() {
       })),
     ]);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
+
+  const openFilePicker = useCallback((accept) => {
+    setFileAccept(accept);
+    setShowAttachMenu(false);
+    window.setTimeout(() => fileInputRef.current?.click(), 0);
   }, []);
 
   const removePendingFile = useCallback((id) => {
@@ -576,12 +593,7 @@ export default function ChatRoomDetailPage() {
 
   const handlePaste = (e) => {
     const files = Array.from(e.clipboardData?.files || []);
-    if (
-      files.some(
-        (file) =>
-          file.type.startsWith("image/") || file.type.startsWith("video/"),
-      )
-    ) {
+    if (files.length > 0) {
       e.preventDefault();
       addPendingFiles(files);
     }
@@ -590,6 +602,27 @@ export default function ChatRoomDetailPage() {
   const handleDrop = (e) => {
     e.preventDefault();
     addPendingFiles(e.dataTransfer?.files);
+  };
+
+  const toggleNotifications = () => {
+    const next = !notificationsMuted;
+    setNotificationsMuted(next);
+    localStorage.setItem(`chat-muted:${roomId}`, next ? "1" : "0");
+    toast.success(next ? "채팅방 알림을 껐습니다." : "채팅방 알림을 켰습니다.");
+  };
+
+  const openRoomMap = () => {
+    const { place, latitude, longitude } = roomLocation || {};
+    if (latitude && longitude) {
+      window.open(
+        `https://map.kakao.com/link/map/${encodeURIComponent(place || roomTitle)},${latitude},${longitude}`,
+        "_blank",
+        "noopener,noreferrer",
+      );
+      return;
+    }
+
+    toast.error("연결된 장소 정보가 없습니다.");
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -605,7 +638,7 @@ export default function ChatRoomDetailPage() {
           <div className={styles.warningModal}>
             <h3>차단한 사용자가 이 채팅방에 있습니다.</h3>
             <p>
-              {blockWarning.users.map((user) => user.nickname).join(", ")}님이
+              {blockWarning.users.map((user) => displayName(user.nickname)).join(", ")}님이
               현재 이 그룹 채팅방에 참여 중입니다.
             </p>
             <button
@@ -646,10 +679,18 @@ export default function ChatRoomDetailPage() {
               ⚙️
             </button>
           )}
-          <button className={styles.headerIconBtn} title="채팅 알림 설정">
-            🔔
+          <button
+            className={styles.headerIconBtn}
+            title={notificationsMuted ? "채팅 알림 켜기" : "채팅 알림 끄기"}
+            onClick={toggleNotifications}
+          >
+            {notificationsMuted ? "🔕" : "🔔"}
           </button>
-          <button className={styles.headerIconBtn} title="지도보기">
+          <button
+            className={styles.headerIconBtn}
+            title="지도보기"
+            onClick={openRoomMap}
+          >
             🗺️
           </button>
           <button
@@ -677,6 +718,7 @@ export default function ChatRoomDetailPage() {
       >
         {messages.map((msg, idx) => {
           const prevMsg = idx > 0 ? messages[idx - 1] : null;
+          const msgNickname = displayName(msg.nickname);
           const showDateDivider = !isSameDay(prevMsg?.time, msg.time);
           const compact = !showDateDivider && isCompact(prevMsg, msg);
           const isMine = String(msg.userId) === String(userId);
@@ -731,8 +773,8 @@ export default function ChatRoomDetailPage() {
                   ) : (
                     <Avatar
                       profileImg={msg.profileImg}
-                      nickname={msg.nickname}
-                      isHost={msg.nickname === roomAuthor}
+                      nickname={msgNickname}
+                      isHost={msgNickname === roomAuthor}
                     />
                   )}
                 </div>
@@ -745,9 +787,9 @@ export default function ChatRoomDetailPage() {
                       <span
                         className={`${styles.msgNickname} ${isMine ? styles.msgNicknameMine : ""}`}
                       >
-                        {msg.nickname}
+                        {msgNickname}
                       </span>
-                      {msg.nickname === roomAuthor && (
+                      {msgNickname === roomAuthor && (
                         <span className={styles.msgHostBadge}>방장</span>
                       )}
                       <span className={styles.msgTimestamp}>
@@ -766,14 +808,14 @@ export default function ChatRoomDetailPage() {
                         {parentMsg.profileImg ? (
                           <img
                             src={getImageUrl(parentMsg.profileImg)}
-                            alt={parentMsg.nickname}
+                            alt={displayName(parentMsg.nickname)}
                           />
                         ) : (
-                          parentMsg.nickname?.slice(0, 1)
+                          displayName(parentMsg.nickname).slice(0, 1)
                         )}
                       </div>
                       <span className={styles.replyName}>
-                        {parentMsg.nickname}
+                        {displayName(parentMsg.nickname)}
                       </span>
                       <span className={styles.replyContent}>
                         {parentMsg.isDeleted
@@ -985,7 +1027,7 @@ export default function ChatRoomDetailPage() {
                     <polyline points="9 17 4 12 9 7" />
                     <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
                   </svg>
-                  {replyTo.nickname}님에게 답장 중
+                  {displayName(replyTo.nickname)}님에게 답장 중
                 </>
               ) : (
                 <>
@@ -1042,12 +1084,17 @@ export default function ChatRoomDetailPage() {
                     src={item.previewUrl}
                     muted
                   />
-                ) : (
+                ) : item.file.type.startsWith("image/") ? (
                   <img
                     className={styles.pendingThumb}
                     src={item.previewUrl}
                     alt={item.file.name}
                   />
+                ) : (
+                  <div className={styles.attachmentFile}>
+                    <span className={styles.attachmentFileIcon}>📎</span>
+                    <span>{item.file.name}</span>
+                  </div>
                 )}
                 <button
                   type="button"
@@ -1065,17 +1112,27 @@ export default function ChatRoomDetailPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,video/*"
+            accept={fileAccept}
             multiple
             className={styles.fileInput}
             onChange={(e) => addPendingFiles(e.target.files)}
           />
+          {showAttachMenu && (
+            <div className={styles.attachMenu}>
+              <button type="button" onClick={() => openFilePicker("image/*,video/*")}>
+                이미지/동영상 선택
+              </button>
+              <button type="button" onClick={() => openFilePicker("")}>
+                일반 파일 선택
+              </button>
+            </div>
+          )}
           <button
             type="button"
             className={styles.attachBtn}
-            title="이미지 또는 동영상 추가"
+            title="파일 추가"
             disabled={sending}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => setShowAttachMenu((prev) => !prev)}
           >
             +
           </button>
@@ -1095,7 +1152,7 @@ export default function ChatRoomDetailPage() {
               editId
                 ? "메시지 수정..."
                 : replyTo
-                  ? `@${replyTo.nickname}님에게 답장...`
+                  ? `@${displayName(replyTo.nickname)}님에게 답장...`
                   : `#${roomTitle || roomId}에 메시지 보내기`
             }
           />
@@ -1174,6 +1231,9 @@ export default function ChatRoomDetailPage() {
             targetNickname: target.nickname,
             myUserId: userId,
           });
+          setRoomMembers((prev) =>
+            prev.filter((member) => Number(member.user_id) !== Number(target.user_id)),
+          );
         }}
       />
     </div>

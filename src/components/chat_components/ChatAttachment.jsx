@@ -37,20 +37,33 @@ export const parseMessagePayload = (content) => {
 
 export default function ChatAttachment({ attachment }) {
   const src = getImageUrl(attachment.url);
-  const isVideo = attachment.mimeType?.startsWith("video/");
+  const mimeType = attachment.mimeType || "";
+  const isImage = mimeType.startsWith("image/");
+  const isVideo = mimeType.startsWith("video/");
 
   return (
     <div className={styles.attachmentWrap}>
       {isVideo ? (
         <video className={styles.attachmentVideo} src={src} controls />
-      ) : (
+      ) : isImage ? (
         <img
           className={styles.attachmentImage}
           src={src}
           alt={attachment.name || "attachment"}
         />
+      ) : (
+        <a
+          className={styles.attachmentFile}
+          href={src}
+          target="_blank"
+          rel="noreferrer"
+          download={attachment.name}
+        >
+          <span className={styles.attachmentFileIcon}>📎</span>
+          <span>{attachment.name || "파일 다운로드"}</span>
+        </a>
       )}
-      {attachment.name && (
+      {attachment.name && (isImage || isVideo) && (
         <div className={styles.attachmentName}>{attachment.name}</div>
       )}
     </div>
