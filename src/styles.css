@@ -1,0 +1,172 @@
+/* 리셋.css */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/* 기본 색상 함수 : 라이트모드 */
+:root {
+  --color-active: #fd9319;
+  --color-deactive: #07b1bc;
+  --color-bg: white;
+  --color-text: #121212;
+  --color-sidebar: white;
+  --color-border: #e0e0e0;
+  --color-input-bg: #f7f8fa;
+  --color-input-focus-bg: #fff7ed;
+  --color-item-hover: #f3f4f6;
+  --color-dropdown-bg: #ffffff;
+  --color-dropdown-text: #151515;
+  --color-dropdown-hover-bg: #fff3e3;
+  --color-dropdown-hover-text: #b85f00;
+  --color-dropdown-shadow: rgba(15, 23, 42, 0.18);
+}
+
+/* 기본 색상 함수 : 다크모드 */
+[data-theme="dark"] {
+  --color-bg: #1e1e24;
+  --color-text: #e0e0e0;
+  --color-sidebar: #121212;
+  --color-border: #333;
+  --color-input-bg: #24242c;
+  --color-input-focus-bg: #30303a;
+  --color-item-hover: #2b2b34;
+  --color-dropdown-bg: #23232b;
+  --color-dropdown-text: #f2f2f4;
+  --color-dropdown-hover-bg: #3a2b1a;
+  --color-dropdown-hover-text: #ffb45f;
+  --color-dropdown-shadow: rgba(0, 0, 0, 0.55);
+}
+
+/* 페이지 기본 설정 */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+select {
+  background-color: var(--color-dropdown-bg);
+  color: var(--color-dropdown-text);
+}
+
+select option {
+  background-color: var(--color-dropdown-bg);
+  color: var(--color-dropdown-text);
+}
+
+main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding-left: 70px;
+  padding-right: 60px;
+  transition: padding 0.3s ease;
+}
+
+/* 헤더 고정 */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.page-wrap {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  main {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-wrap {
+    flex-direction: column;
+  }
+}
+
+/* Toast 알림 중앙 팝업 스타일 */
+[data-sonner-toaster] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+[data-sonner-toaster] ol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+[data-sonner-toast] {
+  pointer-events: auto;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  background: var(--color-sidebar);
+  color: var(--color-text);
+  min-width: 300px;
+  max-width: 450px;
+  transform: scale(1);
+  animation: modal-enter 0.2s ease-out;
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 팝업 내 버튼 스타일 조정 */
+[data-sonner-toast] button[data-button] {
+  background: var(--color-active);
+  color: white;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+
+/* ── 전역 커스텀 스크롤바 ── */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(47, 47, 48);
+  border-radius: 10px;
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
