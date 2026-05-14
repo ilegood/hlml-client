@@ -24,7 +24,7 @@ const PlaceSearchModal = ({ onClose, onSelect }) => {
     if (!keyword.trim()) return;
 
     if (!window.kakao || !window.kakao.maps) {
-      alert("카카오 맵 API를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+      alert("카카오 지도 API를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
       return;
     }
 
@@ -38,12 +38,6 @@ const PlaceSearchModal = ({ onClose, onSelect }) => {
     });
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
   return (
     <div className={styles.modalWrapper} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -51,8 +45,8 @@ const PlaceSearchModal = ({ onClose, onSelect }) => {
           <h3>장소 검색</h3>
           <button className={styles.closeBtn} onClick={onClose}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -63,7 +57,7 @@ const PlaceSearchModal = ({ onClose, onSelect }) => {
             placeholder="장소나 주소를 입력하세요"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            onKeyDown={handleKeyPress}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             autoFocus
           />
           <button className={styles.searchBtn} onClick={handleSearch}>

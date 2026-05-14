@@ -93,6 +93,26 @@
   border-color: var(--color-active);
 }
 
+.inputWithBtn {
+  display: flex;
+  gap: 8px;
+}
+
+.searchBtn {
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 12px;
+  padding: 0 14px;
+  background: var(--color-active);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mapPreviewSection {
+  margin-top: 10px;
+}
+
 .formTextarea {
   min-height: 100px;
   resize: vertical;

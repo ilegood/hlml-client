@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { STATUS_CLOSED, STATUS_OPEN } from "../api/homeConstants";
 import { getPost, updatePost } from "../api/posts";
 import CategorySelector from "./post_components/CategorySelector";
 import ImageDropZone from "./post_components/ImageDropZone";
+import MapPreview from "./post_components/MapPreview";
+import PlaceSearchModal from "./modals/PlaceSearchModal";
 import styles from "./RoomSettingsModal.module.css";
 
 const CATEGORY_EXCLUDES = ["인원"];
@@ -14,11 +17,20 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [place, setPlace] = useState("");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
   const [capacity, setCapacity] = useState(2);
-  const [status, setStatus] = useState("모집중");
+  const [currentParticipants, setCurrentParticipants] = useState(1);
+  const [status, setStatus] = useState(STATUS_OPEN);
   const [categories, setCategories] = useState({});
   const [image, setImage] = useState(null);
   const [existingImage, setExistingImage] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const minCapacity = useMemo(
+    () => Math.max(2, Number(currentParticipants) || 1),
+    [currentParticipants],
+  );
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -29,31 +41,45 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
         setDate(post.date ? String(post.date).slice(0, 10) : "");
         setTime(post.time ? String(post.time).slice(0, 5) : "");
         setPlace(post.place || "");
-        setCapacity(post.capacity || 2);
-        setStatus(post.status || "모집중");
+        setLatitude(post.latitude || null);
+        setLongitude(post.longitude || null);
+        setCurrentParticipants(post.participants || 1);
+        setCapacity(Math.max(post.capacity || 2, post.participants || 1));
+        setStatus(post.status || STATUS_OPEN);
         setCategories(post.categories || {});
-        
+
         if (post.image) {
           setExistingImage(post.image);
           setImage({ preview: post.image });
         }
       } catch (err) {
         console.error("Failed to load room data:", err);
-        toast.error("방 정보를 불러오는 데 실패했습니다.");
+        toast.error("방 정보를 불러오지 못했습니다.");
         onClose();
       } finally {
         setLoading(false);
       }
     };
 
-    if (roomId) {
-      fetchRoomData();
-    }
+    if (roomId) fetchRoomData();
   }, [roomId, onClose]);
+
+  const handlePlaceSelect = (item) => {
+    setPlace(item.place_name);
+    setLatitude(Number(item.y));
+    setLongitude(Number(item.x));
+    setIsSearchOpen(false);
+  };
 
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
-      toast.error("제목과 내용을 입력해주세요!");
+      toast.error("제목과 내용을 입력해주세요.");
+      return;
+    }
+
+    if (capacity < minCapacity) {
+      toast.error(`현재 참여 인원(${currentParticipants}명)보다 적게 설정할 수 없습니다.`);
+      setCapacity(minCapacity);
       return;
     }
 
@@ -63,6 +89,8 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
     formData.append("date", date);
     formData.append("time", time);
     formData.append("place", place.trim());
+    formData.append("latitude", latitude || "");
+    formData.append("longitude", longitude || "");
     formData.append("capacity", capacity);
     formData.append("status", status);
     formData.append("categories", JSON.stringify(categories));
@@ -77,12 +105,12 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
 
     try {
       await updatePost(roomId, formData);
-      toast.success("방 설정이 수정되었습니다.");
-      if (onUpdate) onUpdate();
+      toast.success("방 설정을 저장했습니다.");
+      onUpdate?.();
       onClose();
     } catch (err) {
       console.error("Failed to update room:", err);
-      toast.error("수정에 실패했습니다.");
+      toast.error(err.response?.data?.message || "방 설정 저장에 실패했습니다.");
     }
   };
 
@@ -93,11 +121,12 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2>방 설정 변경</h2>
-          <button className={styles.closeBtn} onClick={onClose}>&times;</button>
+          <button className={styles.closeBtn} onClick={onClose}>
+            &times;
+          </button>
         </div>
 
         <div className={styles.scrollArea}>
-          {/* 제목 */}
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>제목</label>
             <input
@@ -108,7 +137,6 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
             />
           </div>
 
-          {/* 내용 */}
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>내용</label>
             <textarea
@@ -119,18 +147,30 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
             />
           </div>
 
-          {/* 장소 */}
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>약속 장소</label>
-            <input
-              className={styles.formInput}
-              value={place}
-              onChange={(e) => setPlace(e.target.value)}
-              placeholder="장소 이름 또는 주소"
-            />
+            <div className={styles.inputWithBtn}>
+              <input
+                className={styles.formInput}
+                value={place}
+                readOnly
+                placeholder="지도에서 장소를 선택하세요"
+              />
+              <button
+                type="button"
+                className={styles.searchBtn}
+                onClick={() => setIsSearchOpen(true)}
+              >
+                지도에서 찾기
+              </button>
+            </div>
+            {latitude && longitude && (
+              <div className={styles.mapPreviewSection}>
+                <MapPreview latitude={latitude} longitude={longitude} />
+              </div>
+            )}
           </div>
 
-          {/* 카테고리 */}
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>카테고리</label>
             <CategorySelector
@@ -140,7 +180,6 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
             />
           </div>
 
-          {/* 이미지 */}
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>이미지</label>
             <ImageDropZone
@@ -155,41 +194,62 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
               }}
             />
           </div>
-          
+
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>인원 수</label>
+              <label className={styles.formLabel}>
+                인원 수 (현재 {currentParticipants}명)
+              </label>
               <div className={styles.capacityRow}>
-                <button 
-                  className={styles.capBtn} 
-                  onClick={() => setCapacity(c => Math.max(2, c - 1))}
-                >-</button>
+                <button
+                  type="button"
+                  className={styles.capBtn}
+                  onClick={() => setCapacity((value) => Math.max(minCapacity, value - 1))}
+                  disabled={capacity <= minCapacity}
+                >
+                  -
+                </button>
                 <span>{capacity}명</span>
-                <button 
-                  className={styles.capBtn} 
-                  onClick={() => setCapacity(c => Math.min(10, c + 1))}
-                >+</button>
+                <button
+                  type="button"
+                  className={styles.capBtn}
+                  onClick={() => setCapacity((value) => Math.min(10, value + 1))}
+                  disabled={capacity >= 10}
+                >
+                  +
+                </button>
               </div>
             </div>
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>상태</label>
-              <select 
+              <select
                 className={styles.formSelect}
-                value={status} 
+                value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value="모집중">모집중</option>
-                <option value="모집완료">모집완료</option>
+                <option value={STATUS_OPEN}>모집중</option>
+                <option value={STATUS_CLOSED}>모집완료</option>
               </select>
             </div>
           </div>
         </div>
 
         <div className={styles.footer}>
-          <button className={styles.cancelBtn} onClick={onClose}>취소</button>
-          <button className={styles.submitBtn} onClick={handleSubmit}>저장하기</button>
+          <button className={styles.cancelBtn} onClick={onClose}>
+            취소
+          </button>
+          <button className={styles.submitBtn} onClick={handleSubmit}>
+            저장하기
+          </button>
         </div>
       </div>
+
+      {isSearchOpen && (
+        <PlaceSearchModal
+          onClose={() => setIsSearchOpen(false)}
+          onSelect={handlePlaceSelect}
+        />
+      )}
     </div>
   );
 }
