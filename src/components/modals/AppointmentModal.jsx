@@ -10,6 +10,7 @@ export default function AppointmentModal({ onClose }) {
   const [appointments, setAppointments] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date());
+  const [hoveredDay, setHoveredDay] = useState(null);
 
   const today = new Date();
   const currentUserId = userId ? String(userId) : null;
@@ -33,8 +34,7 @@ export default function AppointmentModal({ onClose }) {
         const allPosts = await getPosts();
         const filtered = allPosts.filter(
           (p) =>
-            (currentUserId !== null &&
-              String(p.user_id) === currentUserId) ||
+            (currentUserId !== null && String(p.user_id) === currentUserId) ||
             (currentUserId !== null &&
               Array.isArray(p.joinedUserIds) &&
               p.joinedUserIds.includes(currentUserId)),
@@ -47,7 +47,6 @@ export default function AppointmentModal({ onClose }) {
     fetchAppts();
   }, [currentUserId]);
 
-  // ── 캘린더 계산 ────────────────────────────────────────
   const viewYear = currentMonth.getFullYear();
   const viewMonth = currentMonth.getMonth();
 
@@ -133,14 +132,12 @@ export default function AppointmentModal({ onClose }) {
           </div>
 
           <div className={styles.daysGrid}>
-            {/* 요일 레이블 */}
             {DAY_LABELS.map((d) => (
               <div key={d} className={styles.dayLabel}>
                 {d}
               </div>
             ))}
 
-            {/* 이전 달 마지막 날들 */}
             {Array.from({ length: firstDayOfMonth }).map((_, i) => (
               <div
                 key={`prev-${i}`}
@@ -150,9 +147,9 @@ export default function AppointmentModal({ onClose }) {
               </div>
             ))}
 
-            {/* 현재 달 날들 */}
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => {
               const hasAppt = getDayAppts(d).length > 0;
+              const dayAppts = hasAppt ? getDayAppts(d) : [];
               const cellClass = [
                 styles.dayCell,
                 isToday(d) ? styles.today : "",
@@ -168,9 +165,32 @@ export default function AppointmentModal({ onClose }) {
                   onClick={() =>
                     setSelectedDay(new Date(viewYear, viewMonth, d))
                   }
+                  onMouseEnter={() => setHoveredDay(d)}
+                  onMouseLeave={() => setHoveredDay(null)}
                 >
                   {d}
                   {hasAppt && <div className={styles.dot} />}
+                  {hoveredDay === d && hasAppt && (
+                    <div className={styles.dotPopup}>
+                      {dayAppts.map((appt, idx) => (
+                        <div
+                          key={idx}
+                          className={styles.dotPopupItem}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.location.href = `/detail/${appt.id}`;
+                          }}
+                        >
+                          <span className={styles.dotPopupTime}>
+                            {formatTime(appt.time)}
+                          </span>
+                          <span className={styles.dotPopupTitle}>
+                            {appt.title}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
