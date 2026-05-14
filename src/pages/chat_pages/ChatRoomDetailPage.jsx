@@ -12,6 +12,7 @@ import Picker from "@emoji-mart/react";
 import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
+import UserProfileModal from "../../components/modals/UserProfileModal";
 import borderImg from "../../assets/border.png";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
@@ -69,11 +70,15 @@ const displayName = (nickname) => nickname || "이름 없음";
 
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
-function Avatar({ profileImg, nickname, isHost, size = 40 }) {
+function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
   const url = getImageUrl(profileImg);
   const label = displayName(nickname);
   return (
-    <div className={styles.avatarWrapSmall}>
+    <div 
+      className={styles.avatarWrapSmall} 
+      onClick={onClick} 
+      style={{ cursor: onClick ? "pointer" : "default" }}
+    >
       {isHost && (
         <img
           src={borderImg}
@@ -122,6 +127,7 @@ export default function ChatRoomDetailPage() {
   );
   const [sending, setSending] = useState(false);
   const [blockWarning, setBlockWarning] = useState(null);
+  const [selectedProfileId, setSelectedProfileId] = useState(null);
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
@@ -778,6 +784,7 @@ export default function ChatRoomDetailPage() {
                       profileImg={msg.profileImg}
                       nickname={msgNickname}
                       isHost={msgNickname === roomAuthor}
+                      onClick={() => setSelectedProfileId(msg.userId)}
                     />
                   )}
                 </div>
@@ -789,6 +796,8 @@ export default function ChatRoomDetailPage() {
                     <div className={styles.msgHeader}>
                       <span
                         className={`${styles.msgNickname} ${isMine ? styles.msgNicknameMine : ""}`}
+                        onClick={() => setSelectedProfileId(msg.userId)}
+                        style={{ cursor: "pointer" }}
                       >
                         {msgNickname}
                       </span>
@@ -1256,6 +1265,14 @@ export default function ChatRoomDetailPage() {
           );
         }}
       />
+
+      {selectedProfileId && (
+        <UserProfileModal
+          userId={selectedProfileId}
+          currentUserId={userId}
+          onClose={() => setSelectedProfileId(null)}
+        />
+      )}
     </div>
   );
 }

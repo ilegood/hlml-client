@@ -40,3 +40,8 @@ export const deleteUser = async () => {
   });
   return data;
 };
+
+export const getUserPublicProfile = async (id) => {
+  const { data } = await instance.get(`/users/${id}`);
+  return data;
+};

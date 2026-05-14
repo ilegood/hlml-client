@@ -50,7 +50,7 @@ export default function MyPostsPage() {
               key={post.id}
               post={post}
               variant="my-posts"
-              onOpen={(id) => navigate(`/detail/${id}`)}
+              onOpen={(id) => navigate(`/chat/${id}`)}
               currentUserId={userId || "me"}
             />
           ))}
