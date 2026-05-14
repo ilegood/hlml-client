@@ -262,12 +262,16 @@
   border-color: #ff4757;
   color: #ff4757;
   background: #fff1f2;
+  box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.7); /* Increased intensity */
+  transform: scale(0.98); /* Simulate press */
 }
 
 .actionBtnLg.joined {
   background: var(--color-active);
   border-color: var(--color-active);
   color: white;
+  box-shadow: 0 0 0 3px rgba(253, 147, 25, 0.7); /* Increased intensity */
+  transform: scale(0.98); /* Simulate press */
 }
 
 .actionBtnLg:disabled {
