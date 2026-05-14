@@ -13,6 +13,14 @@
   --color-text: #121212;
   --color-sidebar: white;
   --color-border: #e0e0e0;
+  --color-input-bg: #f7f8fa;
+  --color-input-focus-bg: #fff7ed;
+  --color-item-hover: #f3f4f6;
+  --color-dropdown-bg: #ffffff;
+  --color-dropdown-text: #151515;
+  --color-dropdown-hover-bg: #fff3e3;
+  --color-dropdown-hover-text: #b85f00;
+  --color-dropdown-shadow: rgba(15, 23, 42, 0.18);
 }
 
 /* 기본 색상 함수 : 다크모드 */
@@ -21,12 +29,30 @@
   --color-text: #e0e0e0;
   --color-sidebar: #121212;
   --color-border: #333;
+  --color-input-bg: #24242c;
+  --color-input-focus-bg: #30303a;
+  --color-item-hover: #2b2b34;
+  --color-dropdown-bg: #23232b;
+  --color-dropdown-text: #f2f2f4;
+  --color-dropdown-hover-bg: #3a2b1a;
+  --color-dropdown-hover-text: #ffb45f;
+  --color-dropdown-shadow: rgba(0, 0, 0, 0.55);
 }
 
 /* 페이지 기본 설정 */
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
+}
+
+select {
+  background-color: var(--color-dropdown-bg);
+  color: var(--color-dropdown-text);
+}
+
+select option {
+  background-color: var(--color-dropdown-bg);
+  color: var(--color-dropdown-text);
 }
 
 main {

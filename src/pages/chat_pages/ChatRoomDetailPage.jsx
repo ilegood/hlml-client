@@ -421,6 +421,9 @@ export default function ChatRoomDetailPage() {
       text,
       attachments: uploads.map((uploaded) => ({
         url: uploaded.url,
+        downloadUrl: uploaded.downloadUrl,
+        publicId: uploaded.publicId,
+        resourceType: uploaded.resourceType,
         name: uploaded.name,
         mimeType: uploaded.mimeType,
         size: uploaded.size,

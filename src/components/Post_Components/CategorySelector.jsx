@@ -54,11 +54,12 @@ const CategoryDropdown = styled.div`
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  background: var(--color-sidebar);
-  border: 1.5px solid var(--color-border);
+  background: var(--color-dropdown-bg);
+  color: var(--color-dropdown-text);
+  border: 1.5px solid var(--color-active);
   border-radius: 12px;
   padding: 6px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13);
+  box-shadow: 0 10px 28px var(--color-dropdown-shadow);
   z-index: 100;
   min-width: 110px;
   animation: dropIn 0.12s ease;
@@ -82,11 +83,12 @@ const TagBtn = styled.div`
   font-size: 13px;
   border-radius: 8px;
   transition: background 0.1s;
-  color: var(--color-text);
+  color: var(--color-dropdown-text);
+  font-weight: 700;
 
   &:hover {
-    background: var(--color-input-focus-bg);
-    color: var(--color-active);
+    background: var(--color-dropdown-hover-bg);
+    color: var(--color-dropdown-hover-text);
   }
 
   &.active {
