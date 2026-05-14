@@ -12,13 +12,49 @@ import { ChatMessageContent } from "../../components/chat_components/ChatAttachm
 import UserProfileModal from "../../components/modals/UserProfileModal";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
-// ... (rest of helpers)
-
 const formatTime = (isoString) => {
-// ...
+  if (!isoString) return "";
+  return new Date(isoString).toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
-// ... (omitted for brevity, using exact match for replace)
+const formatDate = (isoString) => {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) return "오늘";
+  if (date.toDateString() === yesterday.toDateString()) return "어제";
+  return date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+const isSameDay = (a, b) => {
+  if (!a || !b) return false;
+  const first = new Date(a);
+  const second = new Date(b);
+
+  return (
+    first.getFullYear() === second.getFullYear() &&
+    first.getMonth() === second.getMonth() &&
+    first.getDate() === second.getDate()
+  );
+};
+
+const isCompact = (prev, curr) => {
+  if (!prev || prev.isSystem || curr.isSystem) return false;
+  if (String(prev.userId) !== String(curr.userId)) return false;
+
+  const diff = new Date(curr.time) - new Date(prev.time);
+  return diff >= 0 && diff < 2 * 60 * 1000;
+};
 
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
