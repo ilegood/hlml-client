@@ -9,65 +9,26 @@ import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
+import UserProfileModal from "../../components/modals/UserProfileModal";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
+// ... (rest of helpers)
 
 const formatTime = (isoString) => {
-  if (!isoString) return "";
-  return new Date(isoString).toLocaleTimeString("ko-KR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+// ...
 };
 
-const formatDate = (isoString) => {
-  if (!isoString) return "";
-  const d = new Date(isoString);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-
-  if (d.toDateString() === today.toDateString()) return "오늘";
-  if (d.toDateString() === yesterday.toDateString()) return "어제";
-  return d.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-const isSameDay = (a, b) => {
-  if (!a || !b) return false;
-  const da = new Date(a),
-    db = new Date(b);
-  return (
-    da.getFullYear() === db.getFullYear() &&
-    da.getMonth() === db.getMonth() &&
-    da.getDate() === db.getDate()
-  );
-};
-
-// 같은 유저가 2분 이내에 연속 작성한 경우 compact 처리
-const isCompact = (prev, curr) => {
-  if (!prev || prev.isSystem || curr.isSystem) return false;
-  if (prev.userId !== curr.userId) return false;
-  const diff = new Date(curr.time) - new Date(prev.time);
-  return diff < 2 * 60 * 1000;
-};
-
-const createPendingFileId = (file) =>
-  `${file.name}-${file.size}-${file.lastModified}-${
-    crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`
-  }`;
+// ... (omitted for brevity, using exact match for replace)
 
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
-function Avatar({ profileImg, nickname, size = 40 }) {
+function Avatar({ profileImg, nickname, size = 40, onClick }) {
   const url = getImageUrl(profileImg);
   return (
     <div
       className={styles.msgAvatar}
-      style={{ width: size, height: size, fontSize: size * 0.3 }}
+      onClick={onClick}
+      style={{ width: size, height: size, fontSize: size * 0.3, cursor: onClick ? "pointer" : "default" }}
     >
       {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
     </div>
@@ -85,6 +46,7 @@ export default function DMDetailPage() {
   const [input, setInput] = useState("");
   const [targetNickname, setTargetNickname] = useState("");
   const [targetProfileImg, setTargetProfileImg] = useState("");
+  const [targetUserId, setTargetUserId] = useState(null);
 
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
@@ -94,6 +56,7 @@ export default function DMDetailPage() {
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [pendingFiles, setPendingFiles] = useState([]);
   const [sending, setSending] = useState(false);
+  const [selectedProfileId, setSelectedProfileId] = useState(null);
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
@@ -158,9 +121,10 @@ export default function DMDetailPage() {
       }
     });
 
-    socket.on("room_info", ({ title, image }) => {
+    socket.on("room_info", ({ title, image, targetId }) => {
       setTargetNickname(title);
       setTargetProfileImg(image);
+      setTargetUserId(targetId);
     });
 
     socket.emit("join_room", { roomId: socketRoomId, nickname: name, userId });
@@ -570,6 +534,7 @@ export default function DMDetailPage() {
                     <Avatar
                       profileImg={msg.profileImg}
                       nickname={msg.nickname}
+                      onClick={() => setSelectedProfileId(msg.userId)}
                     />
                   )}
                 </div>
@@ -581,6 +546,8 @@ export default function DMDetailPage() {
                     <div className={styles.msgHeader}>
                       <span
                         className={`${styles.msgNickname} ${isMine ? styles.msgNicknameMine : ""}`}
+                        onClick={() => setSelectedProfileId(msg.userId)}
+                        style={{ cursor: "pointer" }}
                       >
                         {msg.nickname}
                       </span>
@@ -980,6 +947,14 @@ export default function DMDetailPage() {
           </div>
         </div>
       </div>
+
+      {selectedProfileId && (
+        <UserProfileModal
+          userId={selectedProfileId}
+          currentUserId={userId}
+          onClose={() => setSelectedProfileId(null)}
+        />
+      )}
     </div>
   );
 }
