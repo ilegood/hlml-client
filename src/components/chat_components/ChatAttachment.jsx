@@ -141,7 +141,7 @@ function MediaLightbox({ attachments, index, onClose, onMove }) {
   if (!attachment) return null;
 
   return (
-    <div className={styles.mediaLightbox} onClick={onClose}>
+    <div className={styles.mediaLightbox} onMouseDown={onClose}>
       <button
         type="button"
         className={styles.lightboxClose}

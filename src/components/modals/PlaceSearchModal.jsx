@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import styles from "./PlaceSearchModal.module.css";
 
 const PlaceSearchModal = ({ onClose, onSelect }) => {
@@ -13,9 +14,9 @@ const PlaceSearchModal = ({ onClose, onSelect }) => {
         setResults(data);
       } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
         setResults([]);
-        alert("검색 결과가 없습니다.");
+        toast.error("검색 결과가 없습니다.");
       } else {
-        alert("검색 중 오류가 발생했습니다.");
+        toast.error("검색 중 오류가 발생했습니다.");
       }
     });
   };
@@ -24,13 +25,13 @@ const PlaceSearchModal = ({ onClose, onSelect }) => {
     if (!keyword.trim()) return;
 
     if (!window.kakao || !window.kakao.maps) {
-      alert("카카오 지도 API를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+      toast.error("카카오 지도 API를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
       return;
     }
 
     window.kakao.maps.load(() => {
       if (!window.kakao.maps.services) {
-        alert("카카오 장소 검색 서비스를 불러오지 못했습니다.");
+        toast.error("카카오 장소 검색 서비스를 불러오지 못했습니다.");
         return;
       }
 
@@ -39,8 +40,8 @@ const PlaceSearchModal = ({ onClose, onSelect }) => {
   };
 
   return (
-    <div className={styles.modalWrapper} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.modalWrapper} onMouseDown={onClose}>
+      <div className={styles.modalContent} onMouseDown={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h3>장소 검색</h3>
           <button className={styles.closeBtn} onClick={onClose}>

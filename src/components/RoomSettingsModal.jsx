@@ -117,8 +117,8 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
   if (loading) return null;
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.modalOverlay} onMouseDown={onClose}>
+      <div className={styles.modalContent} onMouseDown={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2>방 설정 변경</h2>
           <button className={styles.closeBtn} onClick={onClose}>

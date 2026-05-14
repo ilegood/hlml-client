@@ -2,7 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { AuthContext } from "../../context/auth";
-import { BASE_URL, getImageUrl } from "../../api/instance";
+import instance, { BASE_URL, getImageUrl } from "../../api/instance";
 import { uploadChatFile } from "../../api/chat";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
@@ -91,6 +91,9 @@ export default function DMDetailPage() {
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [notificationsMuted, setNotificationsMuted] = useState(
+    () => localStorage.getItem(`dm-muted:${roomId}`) === "1",
+  );
   const [sending, setSending] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
 
@@ -100,6 +103,8 @@ export default function DMDetailPage() {
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const pendingFilesRef = useRef([]);
+  const notificationsMutedRef = useRef(notificationsMuted);
+  const targetNicknameRef = useRef("");
 
   const socketRoomId = `dm_${roomId}`;
 
@@ -108,10 +113,28 @@ export default function DMDetailPage() {
   }, [pendingFiles]);
 
   useEffect(() => {
+    notificationsMutedRef.current = notificationsMuted;
+  }, [notificationsMuted]);
+
+  useEffect(() => {
     return () => {
       pendingFilesRef.current.forEach((item) =>
         URL.revokeObjectURL(item.previewUrl),
       );
+    };
+  }, []);
+
+  useEffect(() => {
+    const preventBrowserDrop = (event) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("dragover", preventBrowserDrop);
+    window.addEventListener("drop", preventBrowserDrop);
+
+    return () => {
+      window.removeEventListener("dragover", preventBrowserDrop);
+      window.removeEventListener("drop", preventBrowserDrop);
     };
   }, []);
 
@@ -138,6 +161,14 @@ export default function DMDetailPage() {
         },
       ]);
 
+      if (
+        !msg.isSystem &&
+        String(msg.userId) !== String(userId) &&
+        !notificationsMutedRef.current
+      ) {
+        toast(`${targetNicknameRef.current || "상대방"}님이 새 메시지를 보냈습니다.`);
+      }
+
       if (!msg.isSystem && String(msg.userId) !== String(userId)) {
         socket.emit("mark_read", { messageId: msg.id, userId, roomId: socketRoomId });
       }
@@ -158,9 +189,16 @@ export default function DMDetailPage() {
     });
 
     socket.on("room_info", ({ title, image, targetId }) => {
+      targetNicknameRef.current = title || "";
       setTargetNickname(title);
       setTargetProfileImg(image);
       setTargetUserId(targetId);
+    });
+
+    socket.on("dm_room_deleted", ({ roomId: deletedRoomId }) => {
+      if (String(deletedRoomId) !== String(roomId)) return;
+      toast.success("대화 기록이 삭제되었습니다.");
+      navigate("/dms", { replace: true });
     });
 
     socket.emit("join_room", { roomId: socketRoomId, nickname: name, userId });
@@ -237,6 +275,36 @@ export default function DMDetailPage() {
   }, [roomId, userId, name, navigate, socketRoomId]);
 
   useEffect(() => {
+    let mounted = true;
+
+    const loadRoom = async () => {
+      try {
+        const { data } = await instance.get(`/chat/dm/${roomId}`);
+        if (!mounted) return;
+
+        targetNicknameRef.current = data.targetNickname || "";
+        setTargetNickname(data.targetNickname || "");
+        setTargetProfileImg(data.targetProfileImg || "");
+        setTargetUserId(data.targetId || null);
+      } catch (err) {
+        if (!mounted) return;
+        if (err?.response?.status === 404) {
+          toast.error("이미 삭제된 대화입니다.");
+          navigate("/dms", { replace: true });
+          return;
+        }
+        console.error("Failed to load DM room:", err);
+      }
+    };
+
+    loadRoom();
+
+    return () => {
+      mounted = false;
+    };
+  }, [roomId, navigate]);
+
+  useEffect(() => {
     const handleClickOutside = () => {
       setShowEmojiPicker(null);
       setShowMainEmojiPicker(false);
@@ -278,6 +346,33 @@ export default function DMDetailPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
   // ── Actions ─────────────────────────────────────────────────────────────────
+
+  const toggleNotifications = () => {
+    const next = !notificationsMuted;
+    setNotificationsMuted(next);
+    localStorage.setItem(`dm-muted:${roomId}`, next ? "1" : "0");
+    toast.success(next ? "DM 알림을 껐습니다." : "DM 알림을 켰습니다.");
+  };
+
+  const handleLeaveDM = async () => {
+    if (!window.confirm("정말로 이 대화를 나가고 기록을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      await instance.delete(`/chat/dm/${roomId}`);
+      toast.success("대화 기록을 삭제하고 나갔습니다.");
+      navigate("/dms", { replace: true });
+    } catch (err) {
+      console.error("Failed to delete DM room:", err);
+      if (err?.response?.status === 404) {
+        toast.error("이미 삭제된 대화입니다.");
+        navigate("/dms", { replace: true });
+        return;
+      }
+      toast.error("대화 나가기에 실패했습니다.");
+    }
+  };
 
   const clearPendingFiles = useCallback(() => {
     setPendingFiles((prev) => {
@@ -494,13 +589,17 @@ export default function DMDetailPage() {
           {targetNickname}님과의 대화입니다.
         </span>
         <div className={styles.headerActions}>
-          <button className={styles.headerIconBtn} title="채팅 알림 설정">
-            🔔
+          <button
+            className={styles.headerIconBtn}
+            title={notificationsMuted ? "DM 알림 켜기" : "DM 알림 끄기"}
+            onClick={toggleNotifications}
+          >
+            {notificationsMuted ? "🔕" : "🔔"}
           </button>
           <button
             className={styles.headerIconBtn}
             title="나가기"
-            onClick={() => navigate("/dms")}
+            onClick={handleLeaveDM}
           >
             🚪
           </button>

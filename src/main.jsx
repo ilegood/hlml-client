@@ -7,7 +7,7 @@ import "./styles.css";
 
 createRoot(document.getElementById("root")).render(
   <AuthProvider>
-    <Toaster richColors />
+    <Toaster richColors position="top-center" closeButton />
     <RouterProvider router={router} />
   </AuthProvider>,
 );

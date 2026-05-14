@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
+import { toast } from "sonner";
 import { searchUsers, addFriend } from "../api/friends";
 import { getImageUrl } from "../api/instance";
 
@@ -137,15 +138,15 @@ const AddFriendModal = ({ onClose }) => {
   const handleAdd = async (nickname) => {
     try {
       const data = await addFriend(nickname);
-      alert(data.message || `${nickname}님께 친구 요청을 보냈습니다.`);
+      toast.success(data.message || `${nickname}님께 친구 요청을 보냈습니다.`);
     } catch (err) {
-      alert(err.response?.data?.message || "요청 실패");
+      toast.error(err.response?.data?.message || "요청 실패");
     }
   };
 
   return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
+    <ModalOverlay onMouseDown={onClose}>
+      <ModalContent onMouseDown={(e) => e.stopPropagation()}>
         <h2>친구 추가</h2>
         <div className="search-box">
           <input 

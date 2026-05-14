@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import styled from "styled-components";
 
 const ModalWrapper = styled.div`
@@ -54,8 +55,8 @@ const ModalWrapper = styled.div`
 
 export default function ReportModal({ onClose }) {
   return (
-    <ModalWrapper onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+    <ModalWrapper onMouseDown={onClose}>
+      <div className="modal-content" onMouseDown={e => e.stopPropagation()}>
         <div className="header">
           <h2>신고하기</h2>
           <button className="close-btn" onClick={onClose}>
@@ -83,7 +84,7 @@ export default function ReportModal({ onClose }) {
           <textarea placeholder="구체적인 상황을 설명해주세요"></textarea>
         </div>
 
-        <button className="submit-btn" onClick={() => { alert('신고가 접수되었습니다.'); onClose(); }}>
+        <button className="submit-btn" onClick={() => { toast.success('신고가 접수되었습니다.'); onClose(); }}>
           신고 제출
         </button>
       </div>

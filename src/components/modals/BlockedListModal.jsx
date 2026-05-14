@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
+import { toast } from "sonner";
 import { getBlockedUsers, unblockUser } from "../../api/friends";
 import { getImageUrl } from "../../api/instance";
 
@@ -121,16 +122,16 @@ export default function BlockedListModal({ onClose }) {
     if (!window.confirm("정말 차단을 해제하시겠습니까?")) return;
     try {
       await unblockUser(targetId);
-      alert("차단이 해제되었습니다.");
+      toast.success("차단이 해제되었습니다.");
       fetchBlockedUsers();
     } catch (_err) {
-      alert("차단 해제에 실패했습니다.");
+      toast.error("차단 해제에 실패했습니다.");
     }
   };
 
   return (
-    <ModalWrapper onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <ModalWrapper onMouseDown={onClose}>
+      <div className="modal-content" onMouseDown={(e) => e.stopPropagation()}>
         <div className="header">
           <h2>차단 목록</h2>
           <button className="close-btn" onClick={onClose}>

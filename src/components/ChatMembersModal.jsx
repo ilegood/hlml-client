@@ -21,8 +21,8 @@ export default function ChatMembersModal({
 
   return (
     <>
-      <div className={styles.overlay} onClick={onClose}>
-        <div className={styles.drawer} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.overlay} onMouseDown={onClose}>
+        <div className={styles.drawer} onMouseDown={(e) => e.stopPropagation()}>
           <div className={styles.header}>
             <h3>채팅방 멤버 ({members.length})</h3>
             <button className={styles.closeBtn} onClick={onClose}>

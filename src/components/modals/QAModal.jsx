@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import { deleteUser } from "../../api/users";
 import styles from "./QAModal.module.css";
@@ -67,7 +68,7 @@ export default function QAModal({ onClose }) {
       navigate("/login", { replace: true });
     } catch (error) {
       console.error("Failed to delete user:", error);
-      alert(
+      toast.error(
         error?.response?.data?.message ||
           "회원탈퇴 중 오류가 발생했습니다. 다시 시도해주세요.",
       );
@@ -77,8 +78,8 @@ export default function QAModal({ onClose }) {
   };
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.modalOverlay} onMouseDown={onClose}>
+      <div className={styles.modalContent} onMouseDown={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2>자주 묻는 질문 (Q&A)</h2>
           <button className={styles.closeBtn} onClick={onClose}>
