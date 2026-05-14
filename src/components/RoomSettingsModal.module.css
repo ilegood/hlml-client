@@ -93,6 +93,16 @@
   border-color: var(--color-active);
 }
 
+.formSelect {
+  background-color: var(--color-dropdown-bg);
+  color: var(--color-dropdown-text);
+}
+
+.formSelect option {
+  background: var(--color-dropdown-bg);
+  color: var(--color-dropdown-text);
+}
+
 .inputWithBtn {
   display: flex;
   gap: 8px;

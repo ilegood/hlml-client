@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { BASE_URL, getImageUrl } from "../../api/instance";
+import { getImageUrl } from "../../api/instance";
 import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
 
 export const parseAttachment = (content) => {
@@ -59,12 +59,8 @@ const isMedia = (attachment) => {
 };
 
 const getDownloadUrl = (attachment) => {
-  const filename = repairFilename(attachment.name) || "파일 다운로드";
-  const storedFilename = attachment.url ? attachment.url.split("/").pop() : "";
-
-  return storedFilename
-    ? `${BASE_URL}/chat/download/${encodeURIComponent(storedFilename)}?name=${encodeURIComponent(filename)}`
-    : getImageUrl(attachment.url);
+  if (attachment.downloadUrl) return attachment.downloadUrl;
+  return getImageUrl(attachment.url);
 };
 
 const downloadAttachment = (attachment) => {

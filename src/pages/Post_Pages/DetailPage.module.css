@@ -46,10 +46,10 @@
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  background: var(--color-sidebar);
-  border: 1.5px solid var(--color-border);
+  background: var(--color-dropdown-bg);
+  border: 1.5px solid var(--color-active);
   border-radius: 12px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13);
+  box-shadow: 0 10px 28px var(--color-dropdown-shadow);
   overflow: hidden;
   min-width: 100px;
   z-index: 100;
@@ -62,11 +62,12 @@
   cursor: pointer;
   transition: background 0.1s;
   font-weight: 500;
-  color: var(--color-text);
+  color: var(--color-dropdown-text);
 }
 
 .moreItem:hover {
-  background: var(--color-item-hover);
+  background: var(--color-dropdown-hover-bg);
+  color: var(--color-dropdown-hover-text);
 }
 
 .moreItem.delete {
