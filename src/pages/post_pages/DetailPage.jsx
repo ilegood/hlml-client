@@ -91,7 +91,27 @@ export default function DetailPage() {
       navigate("/login");
       return;
     }
-    runPostAction(() => togglePostLike(id), "찜 처리에 실패했습니다.");
+
+    const previous = post;
+    const currentUserIdString = String(currentUserId);
+    setPost({
+      ...post,
+      likes: Math.max(0, (post.likes || 0) + (liked ? -1 : 1)),
+      likedBy: liked
+        ? (post.likedBy || []).filter(
+            (likedUserId) => String(likedUserId) !== currentUserIdString,
+          )
+        : [...(post.likedBy || []), currentUserIdString],
+    });
+
+    runPostAction(async () => {
+      try {
+        return await togglePostLike(id);
+      } catch (error) {
+        setPost(previous);
+        throw error;
+      }
+    }, "찜 처리에 실패했습니다.");
   };
 
   const handleJoinBtn = async () => {

@@ -13,6 +13,7 @@ const FriendsList = () => {
     isAddModalOpen,
     setIsAddModalOpen,
     isReportModalOpen,
+    setIsReportModalOpen,
     handleToggleSidebar,
     handleAccept,
     handleReject,

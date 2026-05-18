@@ -55,6 +55,11 @@ const ChatRoomItem = ({ room, onDelete }) => {
           {room.time && formatTime(room.time)}
         </div>
         <div className={styles.place}>{room.place || ""}</div>
+        {room.unreadCount > 0 && (
+          <span className={styles.unreadBadge}>
+            {room.unreadCount > 99 ? "99+" : room.unreadCount}
+          </span>
+        )}
       </div>
 
       {onDelete && (

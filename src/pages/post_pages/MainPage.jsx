@@ -19,6 +19,7 @@ export default function MainPage() {
     selCats,
     setSelCats,
     fetchPosts,
+    setPosts,
     MAIN_CATEGORY_ORDER,
   } = usePostsData();
 
@@ -34,11 +35,29 @@ export default function MainPage() {
       navigate("/login");
       return;
     }
+
+    const currentUserId = String(userId);
+    const wasLiked = (post.likedBy || []).map(String).includes(currentUserId);
+    const optimisticPost = {
+      ...post,
+      likes: Math.max(0, (post.likes || 0) + (wasLiked ? -1 : 1)),
+      likedBy: wasLiked
+        ? (post.likedBy || []).filter((id) => String(id) !== currentUserId)
+        : [...(post.likedBy || []), currentUserId],
+    };
+
+    setPosts((prev) =>
+      prev.map((item) => (item.id === post.id ? optimisticPost : item)),
+    );
+
     try {
-      await togglePostLike(post.id);
-      fetchPosts();
+      const updated = await togglePostLike(post.id);
+      setPosts((prev) =>
+        prev.map((item) => (item.id === post.id ? updated : item)),
+      );
     } catch (err) {
       console.error("Failed to update like:", err);
+      setPosts((prev) => prev.map((item) => (item.id === post.id ? post : item)));
       toast.error("찜 처리에 실패했습니다.");
     }
   };

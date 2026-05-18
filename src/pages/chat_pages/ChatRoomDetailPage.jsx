@@ -1,7 +1,8 @@
-﻿import { useEffect, useRef, useState, useContext, useCallback } from "react";
+import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { AuthContext } from "../../context/auth";
+import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
 import { getRoomBlockWarning, uploadChatFile } from "../../api/chat";
 import { leavePost, getPost } from "../../api/posts";
@@ -10,13 +11,14 @@ import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
+import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import borderImg from "../../assets/border.png";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
-// ... (omitted for brevity, will use full content in actual tool call)
+// ... (helper functions - formatTime, formatDate, isSameDay, isCompact, createPendingFileId, formatAppointmentDateTime, displayName, Avatar)
 
 const formatTime = (isoString) => {
   if (!isoString) return "";
@@ -66,6 +68,17 @@ const createPendingFileId = (file) =>
     crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`
   }`;
 
+const formatAppointmentDateTime = (date, time) => {
+  const dateText = date
+    ? new Date(date).toLocaleDateString("ko-KR", {
+        month: "long",
+        day: "numeric",
+      })
+    : "";
+  const timeText = time ? String(time).slice(0, 5) : "";
+  return [dateText, timeText].filter(Boolean).join(" ");
+};
+
 const displayName = (nickname) => nickname || "이름 없음";
 
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
@@ -101,6 +114,7 @@ function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
 export default function ChatRoomDetailPage() {
   const { roomId } = useParams();
   const { name, userId, profileImg } = useContext(AuthContext);
+  const { notifications } = useChatNotifications() || {};
   const navigate = useNavigate();
 
   const [messages, setMessages] = useState([]);
@@ -120,6 +134,7 @@ export default function ChatRoomDetailPage() {
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [showFileGallery, setShowFileGallery] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [fileAccept, setFileAccept] = useState("");
   const [notificationsMuted, setNotificationsMuted] = useState(
@@ -135,10 +150,18 @@ export default function ChatRoomDetailPage() {
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const pendingFilesRef = useRef([]);
+  const notificationsMutedRef = useRef(notificationsMuted);
+  const appointmentReminder = (notifications?.reminders || []).find(
+    (item) => String(item.roomId) === String(roomId),
+  );
 
   useEffect(() => {
     pendingFilesRef.current = pendingFiles;
   }, [pendingFiles]);
+
+  useEffect(() => {
+    notificationsMutedRef.current = notificationsMuted;
+  }, [notificationsMuted]);
 
   useEffect(() => {
     return () => {
@@ -172,6 +195,7 @@ export default function ChatRoomDetailPage() {
     }
 
     socketRef.current = io(BASE_URL, {
+      auth: { token: localStorage.getItem("token") },
       reconnectionAttempts: 5,
     });
     const socket = socketRef.current;
@@ -203,6 +227,9 @@ export default function ChatRoomDetailPage() {
       });
 
       if (!msg.isSystem && String(msg.userId) !== String(userId)) {
+        if (!notificationsMutedRef.current) {
+          toast(`${msg.nickname || "상대방"}님이 새 메시지를 보냈습니다.`);
+        }
         socket.emit("mark_read", { messageId: msg.id, userId, roomId });
       }
 
@@ -404,13 +431,14 @@ export default function ChatRoomDetailPage() {
       })),
     ]);
     if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  }, [fileInputRef, inputRef]); // Add dependencies
 
   const openFilePicker = useCallback((accept) => {
     setFileAccept(accept);
     setShowAttachMenu(false);
     window.setTimeout(() => fileInputRef.current?.click(), 0);
-  }, []);
+  }, [setFileAccept, setShowAttachMenu]);
 
   const removePendingFile = useCallback((id) => {
     setPendingFiles((prev) => {
@@ -461,6 +489,7 @@ export default function ChatRoomDetailPage() {
           messageId: editId,
           content: input,
           roomId,
+          userId,
         });
         setEditId(null);
       } else {
@@ -487,7 +516,9 @@ export default function ChatRoomDetailPage() {
           clearPendingFiles();
         } catch (error) {
           console.error("Failed to upload chat file:", error);
-          toast.error("파일 업로드에 실패했습니다.");
+          toast.error(
+            error?.response?.data?.message || "파일 업로드에 실패했습니다.",
+          );
           setSending(false);
           return;
         }
@@ -507,6 +538,10 @@ export default function ChatRoomDetailPage() {
       replyTo,
       buildMessageContent,
       clearPendingFiles,
+      setEditId,
+      setInput,
+      setReplyTo,
+      setSending,
     ],
   );
 
@@ -532,6 +567,7 @@ export default function ChatRoomDetailPage() {
           socketRef.current.emit("delete_message", {
             messageId: msgId,
             roomId,
+            userId,
           });
           if (editId === msgId) {
             setEditId(null);
@@ -711,6 +747,13 @@ export default function ChatRoomDetailPage() {
           </button>
           <button
             className={styles.headerIconBtn}
+            title="파일 모아보기"
+            onClick={() => setShowFileGallery(true)}
+          >
+            📎
+          </button>
+          <button
+            className={styles.headerIconBtn}
             title="지도보기"
             onClick={openRoomMap}
           >
@@ -732,6 +775,30 @@ export default function ChatRoomDetailPage() {
           </button>
         </div>
       </div>
+
+      {appointmentReminder && (
+        <div className={styles.appointmentReminderBar}>
+          <div className={styles.appointmentReminderIcon}>30</div>
+          <div className={styles.appointmentReminderText}>
+            <strong>{appointmentReminder.title || roomTitle || "약속"}</strong>
+            <span>
+              약속이 30분 이내에 시작됩니다.
+              {formatAppointmentDateTime(
+                appointmentReminder.date,
+                appointmentReminder.time,
+              ) && ` ${formatAppointmentDateTime(appointmentReminder.date, appointmentReminder.time)}`}
+              {appointmentReminder.place && ` · ${appointmentReminder.place}`}
+            </span>
+          </div>
+          <button
+            type="button"
+            className={styles.appointmentReminderAction}
+            onClick={openRoomMap}
+          >
+            위치 보기
+          </button>
+        </div>
+      )}
 
       {/* ── Message list ── */}
       <div
@@ -1001,7 +1068,7 @@ export default function ChatRoomDetailPage() {
                             <polyline points="3 6 5 6 21 6" />
                             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                             <path d="M10 11v6M14 11v6" />
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 2 0 0 1 1 1v2" />
                           </svg>
                         </button>
                       </>
@@ -1117,25 +1184,24 @@ export default function ChatRoomDetailPage() {
                     alt={item.file.name}
                   />
                 ) : (
-                  <div className={styles.attachmentFileCard}>
-                    <span className={styles.attachmentFileName}>
-                      {item.file.name}
-                    </span>
-                    <span className={styles.attachmentDownloadIcon}>
+                  <div className={styles.pendingFilePreview}>
+                    <span className={styles.pendingFileIcon}>
                       <svg
-                        width="18"
-                        height="18"
+                        width="22"
+                        height="22"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2.4"
+                        strokeWidth="2.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
                       </svg>
+                    </span>
+                    <span className={styles.pendingFileName}>
+                      {item.file.name}
                     </span>
                   </div>
                 )}
@@ -1258,6 +1324,13 @@ export default function ChatRoomDetailPage() {
               userId,
             });
           }}
+        />
+      )}
+
+      {showFileGallery && (
+        <ChatFileGallery
+          messages={messages}
+          onClose={() => setShowFileGallery(false)}
         />
       )}
 

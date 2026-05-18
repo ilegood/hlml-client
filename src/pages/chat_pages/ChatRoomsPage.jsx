@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
+import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { deletePostBan, getKickedPosts, getPosts } from "../../api/posts";
 import ChatRoomItem from "../../components/chat_components/ChatRoomItem";
 import styles from "./ChatRoomsPage.module.css";
@@ -18,8 +19,20 @@ const sortByAppointment = (rooms) =>
 
 const ChatRoomsPage = () => {
   const { userId } = useAuth();
+  const { summary } = useChatNotifications() || {};
   const [chatRooms, setChatRooms] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const unreadByRoomId = useMemo(
+    () =>
+      new Map(
+        (summary?.rooms?.groups || []).map((room) => [
+          String(room.roomId),
+          room.unreadCount || 0,
+        ]),
+      ),
+    [summary?.rooms?.groups],
+  );
 
   const fetchChatRooms = useCallback(async () => {
     if (!userId) {
@@ -64,6 +77,15 @@ const ChatRoomsPage = () => {
   useEffect(() => {
     fetchChatRooms();
   }, [fetchChatRooms]);
+
+  useEffect(() => {
+    setChatRooms((prev) =>
+      prev.map((room) => ({
+        ...room,
+        unreadCount: unreadByRoomId.get(String(room.post_id || room.id)) || 0,
+      })),
+    );
+  }, [unreadByRoomId]);
 
   const handleDeleteKickedRoom = async (postId) => {
     if (!window.confirm("이 채팅방을 목록에서 삭제하시겠습니까?")) return;
