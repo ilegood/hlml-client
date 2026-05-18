@@ -347,7 +347,14 @@ export default function ChatRoomDetailPage() {
 
     const loadBlockWarning = async () => {
       try {
-        const data = await getRoomBlockWarning(roomId);
+        // Ensure roomId is only the numeric part, in case it contains extra path segments
+        const cleanRoomId = String(roomId).match(/^\d+/)?.[0];
+        if (!cleanRoomId) {
+          console.warn("Invalid roomId for block warning lookup:", roomId);
+          return;
+        }
+
+        const data = await getRoomBlockWarning(cleanRoomId);
         const blockedUsers = data?.blockedUsers || [];
         if (blockedUsers.length === 0) return;
 
@@ -833,7 +840,7 @@ export default function ChatRoomDetailPage() {
                     </span>
                   </div>
                 )}
-                <div className={styles.systemMsg}>{msg.content}</div>
+                <div className={msg.isDeletionWarning ? styles.deletionWarningMsg : styles.systemMsg}>{msg.content}</div>
               </div>
             );
           }

@@ -220,6 +220,20 @@
   margin: 4px 0;
 }
 
+.deletionWarningMsg {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #666;
+  background: #f0f0f0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin: 12px auto;
+  width: fit-content;
+  max-width: 80%;
+  border: 1px solid #ddd;
+}
+
 /* ── Message row ── */
 .msgRow {
   display: flex;
