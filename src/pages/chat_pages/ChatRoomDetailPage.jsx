@@ -148,6 +148,20 @@ export default function ChatRoomDetailPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const preventBrowserDrop = (event) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("dragover", preventBrowserDrop);
+    window.addEventListener("drop", preventBrowserDrop);
+
+    return () => {
+      window.removeEventListener("dragover", preventBrowserDrop);
+      window.removeEventListener("drop", preventBrowserDrop);
+    };
+  }, []);
+
   // ── Socket setup ────────────────────────────────────────────────────────────
 
   useEffect(() => {
