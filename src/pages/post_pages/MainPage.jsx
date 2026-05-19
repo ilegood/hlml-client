@@ -81,7 +81,7 @@ export default function MainPage() {
           </svg>
           <input
             className={styles.searchInput}
-            placeholder="제목이나 내용 검색..."
+            placeholder="제목, 내용, 약속장소 검색..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
