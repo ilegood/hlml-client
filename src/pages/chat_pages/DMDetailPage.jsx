@@ -8,7 +8,10 @@ import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
+import {
+  ChatMessageContent,
+  MessageRowErrorBoundary,
+} from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import { formatChatPreview } from "../../utils/chatPreview";
@@ -239,8 +242,6 @@ export default function DMDetailPage() {
       navigate("/dms", { replace: true });
     });
 
-    socket.emit("join_room", { roomId: socketRoomId, nickname: name, userId });
-
     socket.on("load_messages", (rawMessages) => {
       const formatted = rawMessages.map((msg) => ({
         id: msg.id,
@@ -271,6 +272,8 @@ export default function DMDetailPage() {
         );
       }
     });
+
+    socket.emit("join_room", { roomId: socketRoomId, nickname: name, userId });
 
     socket.on("message_edited", ({ messageId, content }) => {
       setMessages((prev) =>
@@ -848,18 +851,20 @@ export default function DMDetailPage() {
                   )}
 
                   {/* 메시지 본문 */}
-                  <div
-                    className={`${styles.msgBubble} ${
-                      msg.isDeleted ? styles.deleted : ""
-                    } ${msg.isPending ? styles.pendingMessage : ""} ${
-                      msg.isFailed ? styles.failedMessage : ""
-                    }`}
-                  >
-                    <ChatMessageContent content={msg.content} />
-                    {msg.isEdited && !msg.isDeleted && (
-                      <span className={styles.editedTag}>(수정됨)</span>
-                    )}
-                  </div>
+                  <MessageRowErrorBoundary fallbackText={msg.content}>
+                    <div
+                      className={`${styles.msgBubble} ${
+                        msg.isDeleted ? styles.deleted : ""
+                      } ${msg.isPending ? styles.pendingMessage : ""} ${
+                        msg.isFailed ? styles.failedMessage : ""
+                      }`}
+                    >
+                      <ChatMessageContent content={msg.content} />
+                      {msg.isEdited && !msg.isDeleted && (
+                        <span className={styles.editedTag}>(수정됨)</span>
+                      )}
+                    </div>
+                  </MessageRowErrorBoundary>
 
                   {/* 읽음 수 */}
                   {isMine && msg.readCount > 0 && (

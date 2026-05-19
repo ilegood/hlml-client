@@ -10,7 +10,10 @@ import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
+import {
+  ChatMessageContent,
+  MessageRowErrorBoundary,
+} from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
@@ -1039,18 +1042,20 @@ export default function ChatRoomDetailPage() {
                   )}
 
                   {/* 메시지 본문 */}
-                  <div
-                    className={`${styles.msgBubble} ${
-                      msg.isDeleted ? styles.deleted : ""
-                    } ${msg.isPending ? styles.pendingMessage : ""} ${
-                      msg.isFailed ? styles.failedMessage : ""
-                    }`}
-                  >
-                    <ChatMessageContent content={msg.content} />
-                    {msg.isEdited && !msg.isDeleted && (
-                      <span className={styles.editedTag}>(수정됨)</span>
-                    )}
-                  </div>
+                  <MessageRowErrorBoundary fallbackText={msg.content}>
+                    <div
+                      className={`${styles.msgBubble} ${
+                        msg.isDeleted ? styles.deleted : ""
+                      } ${msg.isPending ? styles.pendingMessage : ""} ${
+                        msg.isFailed ? styles.failedMessage : ""
+                      }`}
+                    >
+                      <ChatMessageContent content={msg.content} />
+                      {msg.isEdited && !msg.isDeleted && (
+                        <span className={styles.editedTag}>(수정됨)</span>
+                      )}
+                    </div>
+                  </MessageRowErrorBoundary>
 
                   {/* 읽음 수 */}
                   {isMine && msg.readCount > 0 && (

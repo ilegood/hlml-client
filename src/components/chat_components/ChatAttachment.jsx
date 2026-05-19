@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { Component, useCallback, useEffect, useState } from "react";
 import { getImageUrl } from "../../api/instance";
 import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
 
@@ -251,6 +251,60 @@ function YouTubePreview({ url, videoId }) {
   );
 }
 
+class ChatMessageContentErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.error("Chat message render failed:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className={styles.payloadText}>
+          {String(this.props.fallbackText || "")}
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export class MessageRowErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.error("Chat message row render failed:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className={styles.msgBubble}>
+          {String(this.props.fallbackText || "메시지를 표시할 수 없습니다.")}
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export default function ChatAttachment({ attachment }) {
   const filename = repairFilename(attachment.name) || "파일 다운로드";
   const downloadUrl = getDownloadUrl(attachment);
@@ -445,12 +499,13 @@ function MediaGrid({ attachments }) {
   );
 }
 
-export function ChatMessageContent({ content }) {
+function ChatMessageContentBody({ content }) {
   const payload = parseMessagePayload(content);
   const youtubePreview = getYouTubePreview(payload ? payload.text : content);
+
   if (!payload) {
     if (isSingleEmoji(content)) {
-      return <span className={styles.emojiOnly}>{content.trim()}</span>;
+      return <span className={styles.emojiOnly}>{String(content || "").trim()}</span>;
     }
 
     const text = String(content || "");
@@ -516,5 +571,13 @@ export function ChatMessageContent({ content }) {
         </div>
       )}
     </div>
+  );
+}
+
+export function ChatMessageContent({ content }) {
+  return (
+    <ChatMessageContentErrorBoundary fallbackText={content}>
+      <ChatMessageContentBody content={content} />
+    </ChatMessageContentErrorBoundary>
   );
 }
