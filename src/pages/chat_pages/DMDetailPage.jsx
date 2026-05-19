@@ -12,6 +12,8 @@ import { ChatMessageContent } from "../../components/chat_components/ChatAttachm
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import { formatChatPreview } from "../../utils/chatPreview";
+import { useCustomReactions } from "../../hooks/useCustomReactions";
+import ReactionCustomizerModal from "../../components/modals/ReactionCustomizerModal";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 const formatTime = (isoString) => {
@@ -108,6 +110,8 @@ export default function DMDetailPage() {
   );
   const [sending, setSending] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
+  const [showCustomizer, setShowCustomizer] = useState(false);
+  const { reactions, saveReactions } = useCustomReactions();
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
@@ -890,7 +894,7 @@ export default function DMDetailPage() {
                   >
                     {/* 빠른 반응 */}
                     <div className={styles.quickReactions}>
-                      {["👍", "❤️", "😂"].map((emoji) => (
+                      {reactions.map((emoji) => (
                         <button
                           key={emoji}
                           type="button"
@@ -900,6 +904,20 @@ export default function DMDetailPage() {
                           {emoji}
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        className={styles.editReactionBtn}
+                        title="반응 커스텀"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowCustomizer(true);
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
                     </div>
 
                     <div className={styles.actionDivider} />
@@ -1238,6 +1256,17 @@ export default function DMDetailPage() {
           </div>
         </div>
       </div>
+
+      {showCustomizer && (
+        <ReactionCustomizerModal
+          currentReactions={reactions}
+          onSave={(newReactions) => {
+            saveReactions(newReactions);
+            setShowCustomizer(false);
+          }}
+          onClose={() => setShowCustomizer(false)}
+        />
+      )}
 
       {selectedProfileId && (
         <UserProfileModal

@@ -962,6 +962,16 @@
   display: flex;
 }
 
+.editReactionBtn {
+  opacity: 0.5;
+  font-size: 12px !important;
+  padding: 6px 4px !important;
+}
+
+.editReactionBtn:hover {
+  opacity: 1 !important;
+}
+
 .actionDivider {
   width: 1px;
   height: 20px;
