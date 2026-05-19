@@ -79,6 +79,13 @@ const ChatRoomsPage = () => {
   }, [fetchChatRooms]);
 
   useEffect(() => {
+    window.addEventListener("chat:rooms-changed", fetchChatRooms);
+    return () => {
+      window.removeEventListener("chat:rooms-changed", fetchChatRooms);
+    };
+  }, [fetchChatRooms]);
+
+  useEffect(() => {
     setChatRooms((prev) =>
       prev.map((room) => ({
         ...room,

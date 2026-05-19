@@ -11,6 +11,7 @@ import Picker from "@emoji-mart/react";
 import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
+import { formatChatPreview } from "../../utils/chatPreview";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 const formatTime = (isoString) => {
@@ -740,7 +741,7 @@ export default function DMDetailPage() {
                       <span className={styles.replyContent}>
                         {parentMsg.isDeleted
                           ? "삭제된 메시지"
-                          : parentMsg.content}
+                          : formatChatPreview(parentMsg.content)}
                       </span>
                     </div>
                   )}
@@ -968,8 +969,8 @@ export default function DMDetailPage() {
             </div>
             <div className={styles.contextText}>
               {replyTo
-                ? replyTo.content
-                : messages.find((m) => m.id === editId)?.content}
+                ? formatChatPreview(replyTo.content)
+                : formatChatPreview(messages.find((m) => m.id === editId)?.content)}
             </div>
           </div>
           <button

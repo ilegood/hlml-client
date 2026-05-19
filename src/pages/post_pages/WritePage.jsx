@@ -1,7 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { STATUS_OPEN, currentTimeString, todayString } from "../../api/homeConstants";
+import {
+  STATUS_OPEN,
+  currentTimeString,
+  nextYearTodayString,
+  todayString,
+} from "../../api/homeConstants";
 import { useAuth } from "../../context/auth";
 import { createPost, getPost, updatePost } from "../../api/posts";
 import CategorySelector from "../../components/post_components/CategorySelector";
@@ -12,6 +17,217 @@ import styles from "./WritePage.module.css";
 
 const WRITE_CATEGORY_EXCLUDES = ["인원"];
 
+const TIME_GROUPS = [
+  { label: "오전", start: 0, end: 11 },
+  { label: "오후", start: 12, end: 23 },
+];
+
+const TIME_SLOTS = Array.from({ length: 48 }, (_, index) => {
+  const hour = Math.floor(index / 2);
+  const minute = index % 2 === 0 ? "00" : "30";
+  return `${String(hour).padStart(2, "0")}:${minute}`;
+});
+
+const formatTimeLabel = (value) => {
+  const [hourText, minute] = String(value).split(":");
+  const hour = Number(hourText);
+  const period = hour < 12 ? "오전" : "오후";
+  const displayHour = hour % 12 || 12;
+  return `${period} ${displayHour}:${minute}`;
+};
+
+const formatDateLabel = (value) => {
+  if (!value) return "날짜 선택";
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  });
+};
+
+const toDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const createDateFromKey = (value) => {
+  const [year, month, day] = String(value).split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const getNextHalfHourTime = () => {
+  const now = new Date();
+  const next = new Date(now);
+  next.setSeconds(0, 0);
+  next.setMinutes(now.getMinutes() <= 30 ? 30 : 60);
+
+  if (next.getDate() !== now.getDate()) {
+    return currentTimeString();
+  }
+
+  return `${String(next.getHours()).padStart(2, "0")}:${String(
+    next.getMinutes(),
+  ).padStart(2, "0")}`;
+};
+
+function DatePickerModal({
+  calendarMonth,
+  maxDate,
+  minDate,
+  selectedDate,
+  setCalendarMonth,
+  onClose,
+  onSelect,
+}) {
+  const viewYear = calendarMonth.getFullYear();
+  const viewMonth = calendarMonth.getMonth();
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const calendarCells = Array.from({ length: 42 }, (_, index) => {
+    const day = index - firstDay + 1;
+    return day >= 1 && day <= daysInMonth ? day : null;
+  });
+  const monthLabel = calendarMonth.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+  });
+  const canMovePrev =
+    toDateKey(new Date(viewYear, viewMonth - 1, 1)) >=
+    minDate.slice(0, 8) + "01";
+  const canMoveNext =
+    toDateKey(new Date(viewYear, viewMonth + 1, 1)) <=
+    maxDate.slice(0, 8) + "01";
+
+  return (
+    <div className={styles.pickerOverlay} onMouseDown={onClose}>
+      <div className={styles.pickerModal} onMouseDown={(e) => e.stopPropagation()}>
+        <div className={styles.pickerHeader}>
+          <div>
+            <span>약속 날짜</span>
+            <h3>{formatDateLabel(selectedDate)}</h3>
+          </div>
+          <button type="button" className={styles.pickerCloseBtn} onClick={onClose}>
+            &times;
+          </button>
+        </div>
+
+        <div className={styles.calendarHeader}>
+          <button
+            type="button"
+            onClick={() => setCalendarMonth(new Date(viewYear, viewMonth - 1, 1))}
+            disabled={!canMovePrev}
+          >
+            이전
+          </button>
+          <strong>{monthLabel}</strong>
+          <button
+            type="button"
+            onClick={() => setCalendarMonth(new Date(viewYear, viewMonth + 1, 1))}
+            disabled={!canMoveNext}
+          >
+            다음
+          </button>
+        </div>
+
+        <div className={styles.calendarGrid}>
+          {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+            <div className={styles.calendarWeekday} key={day}>
+              {day}
+            </div>
+          ))}
+          {calendarCells.map((day, index) => {
+            if (!day) {
+              return (
+                <div
+                  className={styles.calendarBlank}
+                  key={`blank-${index}`}
+                />
+              );
+            }
+
+              const dateKey = toDateKey(new Date(viewYear, viewMonth, day));
+              const disabled = dateKey < minDate || dateKey > maxDate;
+              return (
+                <button
+                  type="button"
+                  key={dateKey}
+                  className={`${styles.calendarDay} ${
+                    dateKey === selectedDate ? styles.calendarDayActive : ""
+                  }`}
+                  disabled={disabled}
+                  onClick={() => {
+                    onSelect(dateKey);
+                    onClose();
+                  }}
+                >
+                  {day}
+                </button>
+              );
+            })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TimePickerModal({
+  groupedTimeSlots,
+  isPastTimeSlot,
+  onClose,
+  onSelect,
+  selectedTime,
+}) {
+  return (
+    <div className={styles.pickerOverlay} onMouseDown={onClose}>
+      <div className={styles.pickerModal} onMouseDown={(e) => e.stopPropagation()}>
+        <div className={styles.pickerHeader}>
+          <div>
+            <span>약속 시간</span>
+            <h3>{selectedTime ? formatTimeLabel(selectedTime) : "시간 선택"}</h3>
+          </div>
+          <button type="button" className={styles.pickerCloseBtn} onClick={onClose}>
+            &times;
+          </button>
+        </div>
+
+        <div className={styles.modalTimeGroups}>
+          {groupedTimeSlots.map((group) => (
+            <section className={styles.modalTimeGroup} key={group.label}>
+              <div className={styles.modalTimeGroupLabel}>{group.label}</div>
+              <div className={styles.modalTimeGrid}>
+                {group.slots.map((slot) => {
+                  const disabled = isPastTimeSlot(slot);
+                  return (
+                    <button
+                      type="button"
+                      key={slot}
+                      className={`${styles.timeSlotBtn} ${
+                        selectedTime === slot ? styles.timeSlotBtnActive : ""
+                      }`}
+                      onClick={() => {
+                        onSelect(slot);
+                        onClose();
+                      }}
+                      disabled={disabled}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function WritePage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,7 +237,7 @@ export default function WritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [date, setDate] = useState(todayString());
-  const [time, setTime] = useState(() => currentTimeString());
+  const [time, setTime] = useState(() => getNextHalfHourTime());
   const [place, setPlace] = useState("");
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
@@ -32,8 +248,34 @@ export default function WritePage() {
   const [image, setImage] = useState(null);
   const [existingImage, setExistingImage] = useState("");
   const [isLoading, setIsLoading] = useState(isEdit);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() =>
+    createDateFromKey(todayString()),
+  );
   const today = todayString();
+  const maxDate = nextYearTodayString();
   const currentTime = currentTimeString();
+  const groupedTimeSlots = useMemo(
+    () =>
+      TIME_GROUPS.map((group) => ({
+        ...group,
+        slots: TIME_SLOTS.filter((slot) => {
+          const hour = Number(slot.slice(0, 2));
+          return hour >= group.start && hour <= group.end;
+        }),
+      })),
+    [],
+  );
+  const isPastTimeSlot = (slot) => !isEdit && date === today && slot < currentTime;
+
+  const handleDateChange = (nextDate) => {
+    setDate(nextDate);
+    setCalendarMonth(createDateFromKey(nextDate));
+    if (!isEdit && nextDate === today && time < currentTime) {
+      setTime(getNextHalfHourTime());
+    }
+  };
 
   useEffect(() => {
     if (!isEdit) return;
@@ -87,6 +329,12 @@ export default function WritePage() {
     if (date < today) {
       toast.error("오늘 이전 날짜는 선택할 수 없습니다.");
       setDate(today);
+      return;
+    }
+
+    if (date > maxDate) {
+      toast.error("약속 날짜는 최대 내년 오늘까지 선택할 수 있습니다.");
+      setDate(maxDate);
       return;
     }
 
@@ -180,27 +428,29 @@ export default function WritePage() {
             <label className={styles.formLabel}>
               약속 날짜 {isEdit && "(수정 불가)"}
             </label>
-            <input
-              className={styles.formInput}
-              type="date"
-              min={today}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+            <button
+              type="button"
+              className={styles.selectionCard}
+              onClick={() => !isEdit && setIsDatePickerOpen(true)}
               disabled={isEdit}
-            />
+            >
+              <span>선택한 날짜</span>
+              <strong>{formatDateLabel(date)}</strong>
+            </button>
           </div>
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>
               약속 시간 {isEdit && "(수정 불가)"}
             </label>
-            <input
-              className={styles.formInput}
-              type="time"
-              min={!isEdit && date === today ? currentTime : undefined}
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
+            <button
+              type="button"
+              className={styles.selectionCard}
+              onClick={() => !isEdit && setIsTimePickerOpen(true)}
               disabled={isEdit}
-            />
+            >
+              <span>선택한 시간</span>
+              <strong>{time ? formatTimeLabel(time) : "시간 선택"}</strong>
+            </button>
           </div>
         </div>
 
@@ -284,6 +534,28 @@ export default function WritePage() {
         <PlaceSearchModal
           onClose={() => setIsSearchOpen(false)}
           onSelect={handlePlaceSelect}
+        />
+      )}
+
+      {isDatePickerOpen && (
+        <DatePickerModal
+          calendarMonth={calendarMonth}
+          minDate={today}
+          maxDate={maxDate}
+          selectedDate={date}
+          setCalendarMonth={setCalendarMonth}
+          onSelect={handleDateChange}
+          onClose={() => setIsDatePickerOpen(false)}
+        />
+      )}
+
+      {isTimePickerOpen && (
+        <TimePickerModal
+          groupedTimeSlots={groupedTimeSlots}
+          isPastTimeSlot={isPastTimeSlot}
+          selectedTime={time}
+          onSelect={setTime}
+          onClose={() => setIsTimePickerOpen(false)}
         />
       )}
     </main>

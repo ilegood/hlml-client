@@ -16,6 +16,7 @@ import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import borderImg from "../../assets/border.png";
+import { formatChatPreview } from "../../utils/chatPreview";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 // ... (helper functions - formatTime, formatDate, isSameDay, isCompact, createPendingFileId, formatAppointmentDateTime, displayName, Avatar)
@@ -337,6 +338,27 @@ export default function ChatRoomDetailPage() {
         toast.error("방장에 의해 강퇴되었습니다.");
         navigate("/chat-rooms");
       }
+    });
+
+    socket.on("chat_room_deletion_warning", (warning) => {
+      if (String(warning.roomId) !== String(roomId)) return;
+      const key = `room-delete-warning:${userId}:${warning.roomId}:${warning.deletesAt}`;
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+      toast.warning(`${warning.title || "채팅방"}이 30분 뒤 삭제됩니다.`, {
+        description: warning.message,
+      });
+    });
+
+    socket.on("chat_room_deleted", ({ roomId: deletedRoomId, title }) => {
+      if (String(deletedRoomId) !== String(roomId)) return;
+      const key = `room-deleted:${userId}:${deletedRoomId}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, "1");
+        toast(`${title || "채팅방"}이 삭제되었습니다.`);
+      }
+      navigate("/chat-rooms", { replace: true });
+      window.dispatchEvent(new Event("chat:rooms-changed"));
     });
 
     return () => socket.disconnect();
@@ -920,7 +942,7 @@ export default function ChatRoomDetailPage() {
                       <span className={styles.replyContent}>
                         {parentMsg.isDeleted
                           ? "삭제된 메시지"
-                          : parentMsg.content}
+                          : formatChatPreview(parentMsg.content)}
                       </span>
                     </div>
                   )}
@@ -1148,8 +1170,8 @@ export default function ChatRoomDetailPage() {
             </div>
             <div className={styles.contextText}>
               {replyTo
-                ? replyTo.content
-                : messages.find((m) => m.id === editId)?.content}
+                ? formatChatPreview(replyTo.content)
+                : formatChatPreview(messages.find((m) => m.id === editId)?.content)}
             </div>
           </div>
           <button

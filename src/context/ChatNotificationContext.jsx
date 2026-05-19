@@ -23,7 +23,11 @@ const formatReminderTime = (date, time) => {
 export const ChatNotificationProvider = ({ children }) => {
   const { token, userId } = useAuth();
   const [summary, setSummary] = useState(emptySummary);
-  const [notifications, setNotifications] = useState({ unread: [], reminders: [] });
+  const [notifications, setNotifications] = useState({
+    unread: [],
+    reminders: [],
+    deletionWarnings: [],
+  });
   const [loading, setLoading] = useState(false);
   const socketRef = useRef(null);
   const refreshTimerRef = useRef(null);
@@ -31,7 +35,7 @@ export const ChatNotificationProvider = ({ children }) => {
   const refresh = useCallback(async ({ quiet = true } = {}) => {
     if (!token || !userId) {
       setSummary(emptySummary);
-      setNotifications({ unread: [], reminders: [] });
+      setNotifications({ unread: [], reminders: [], deletionWarnings: [] });
       return;
     }
 
@@ -42,7 +46,9 @@ export const ChatNotificationProvider = ({ children }) => {
         getChatNotifications(),
       ]);
       setSummary(nextSummary || emptySummary);
-      setNotifications(nextNotifications || { unread: [], reminders: [] });
+      setNotifications(
+        nextNotifications || { unread: [], reminders: [], deletionWarnings: [] },
+      );
 
       (nextNotifications?.reminders || []).forEach((item) => {
         const key = `appointment-reminder:${userId}:${item.roomId}:${item.date}:${item.time}`;
@@ -50,6 +56,15 @@ export const ChatNotificationProvider = ({ children }) => {
         localStorage.setItem(key, "1");
         toast(`${item.title} 약속이 30분 이내에 시작됩니다.`, {
           description: formatReminderTime(item.date, item.time),
+        });
+      });
+
+      (nextNotifications?.deletionWarnings || []).forEach((item) => {
+        const key = `room-delete-warning:${userId}:${item.roomId}:${item.deletesAt}`;
+        if (localStorage.getItem(key)) return;
+        localStorage.setItem(key, "1");
+        toast.warning(`${item.title || "채팅방"}이 30분 뒤 삭제됩니다.`, {
+          description: item.message,
         });
       });
     } catch (error) {
@@ -93,6 +108,26 @@ export const ChatNotificationProvider = ({ children }) => {
 
     socket.on("chat_unread_changed", () => {
       refresh();
+    });
+
+    socket.on("chat_room_deletion_warning", (warning) => {
+      const key = `room-delete-warning:${userId}:${warning.roomId}:${warning.deletesAt}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, "1");
+        toast.warning(`${warning.title || "채팅방"}이 30분 뒤 삭제됩니다.`, {
+          description: warning.message,
+        });
+      }
+      refresh();
+    });
+
+    socket.on("chat_room_deleted", ({ roomId, title }) => {
+      const key = `room-deleted:${userId}:${roomId}`;
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+      toast(`${title || "채팅방"}이 삭제되었습니다.`);
+      refresh();
+      window.dispatchEvent(new Event("chat:rooms-changed"));
     });
 
     return () => {
