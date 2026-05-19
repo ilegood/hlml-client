@@ -551,40 +551,44 @@ export default function ChatRoomDetailPage() {
         setSending(true);
         let clientTempId = null;
         try {
-          clientTempId = createClientMessageId();
           const isUploadingMessage = pendingFiles.length > 0;
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: clientTempId,
-              clientTempId,
-              roomId,
-              userId,
-              nickname: name,
-              profileImg,
-              content: isUploadingMessage ? "파일 업로드 중..." : input.trim(),
-              isSystem: false,
-              isPending: true,
-              isUploading: isUploadingMessage,
-              isFailed: false,
-              parentId: replyTo?.id || null,
-              reactions: [],
-              readCount: 0,
-              time: new Date().toISOString(),
-            },
-          ]);
-          setTimeout(
-            () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
-            0,
-          );
+          if (!isUploadingMessage) {
+            clientTempId = createClientMessageId();
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: clientTempId,
+                clientTempId,
+                roomId,
+                userId,
+                nickname: name,
+                profileImg,
+                content: input.trim(),
+                isSystem: false,
+                isPending: true,
+                isUploading: false,
+                isFailed: false,
+                parentId: replyTo?.id || null,
+                reactions: [],
+                readCount: 0,
+                time: new Date().toISOString(),
+              },
+            ]);
+            setTimeout(
+              () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+              0,
+            );
+          }
           const content = await buildMessageContent();
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.clientTempId === clientTempId
-                ? { ...m, content, isUploading: false }
-                : m,
-            ),
-          );
+          if (clientTempId) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.clientTempId === clientTempId
+                  ? { ...m, content, isUploading: false }
+                  : m,
+              ),
+            );
+          }
           socketRef.current.emit(
             "send_message",
             {
@@ -599,7 +603,7 @@ export default function ChatRoomDetailPage() {
               time: new Date().toISOString(),
             },
             (res) => {
-              if (!res?.ok) {
+              if (clientTempId && !res?.ok) {
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.clientTempId === clientTempId
@@ -613,6 +617,12 @@ export default function ChatRoomDetailPage() {
           );
           setReplyTo(null);
           clearPendingFiles();
+          if (!clientTempId) {
+            setTimeout(
+              () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+              0,
+            );
+          }
         } catch (error) {
           if (clientTempId) {
             setMessages((prev) =>

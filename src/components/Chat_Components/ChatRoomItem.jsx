@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import styles from "./ChatRoomItem.module.css";
 
-const ChatRoomItem = ({ room, onDelete }) => {
+const ChatRoomItem = ({ room, onDelete, hideUnreadBadge = false }) => {
   const navigate = useNavigate();
 
   const formatDate = (dateStr) => {
@@ -55,7 +55,7 @@ const ChatRoomItem = ({ room, onDelete }) => {
           {room.time && formatTime(room.time)}
         </div>
         <div className={styles.place}>{room.place || ""}</div>
-        {room.unreadCount > 0 && (
+        {!hideUnreadBadge && room.unreadCount > 0 && (
           <span className={styles.unreadBadge}>
             {room.unreadCount > 99 ? "99+" : room.unreadCount}
           </span>
