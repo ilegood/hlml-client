@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
-import { deletePostBan, getKickedPosts, getMyChatRooms, hidePost } from "../../api/posts";
+import { deletePostBan, getKickedPosts, getPosts } from "../../api/posts";
 import ChatRoomItem from "../../components/chat_components/ChatRoomItem";
 import styles from "./ChatRoomsPage.module.css";
 
@@ -43,12 +43,20 @@ const ChatRoomsPage = () => {
 
     setLoading(true);
     try {
-      const [myRooms, kickedPosts] = await Promise.all([
-        getMyChatRooms(),
+      const [allPosts, kickedPosts] = await Promise.all([
+        getPosts(),
         getKickedPosts(),
       ]);
 
-      const myJoinedRooms = myRooms.map((room) => ({ ...room, isKicked: false }));
+      const myJoinedRooms = allPosts
+        .filter((post) => {
+          const isAuthor = String(post.user_id) === String(userId);
+          const isParticipant = (post.joinedUserIds || [])
+            .map(Number)
+            .includes(Number(userId));
+          return isAuthor || isParticipant;
+        })
+        .map((room) => ({ ...room, isKicked: false }));
 
       const combined = [...myJoinedRooms];
       kickedPosts.forEach((room) => {
@@ -71,28 +79,21 @@ const ChatRoomsPage = () => {
   }, [fetchChatRooms]);
 
   useEffect(() => {
-    setChatRooms((prev) =>
-      prev.map((room) => ({
-        ...room,
-        unreadCount: unreadByRoomId.get(String(room.post_id || room.id)) || 0,
-      })),
-    );
-  }, [unreadByRoomId]);
+    window.addEventListener("chat:rooms-changed", fetchChatRooms);
+    return () => {
+      window.removeEventListener("chat:rooms-changed", fetchChatRooms);
+    };
+  }, [fetchChatRooms]);
 
-  const handleDeleteRoom = async (room) => {
-    const isKicked = room.isKicked;
-    if (!window.confirm(`이 채팅방을 목록에서 ${isKicked ? "영구 삭제" : "숨기기"}하시겠습니까?`)) return;
+  const handleDeleteKickedRoom = async (postId) => {
+    if (!window.confirm("이 채팅방을 목록에서 삭제하시겠습니까?")) return;
 
     try {
-      if (isKicked) {
-        await deletePostBan(room.id);
-      } else {
-        await hidePost(room.id);
-      }
+      await deletePostBan(postId);
       toast.success("목록에서 삭제했습니다.");
       fetchChatRooms();
     } catch (err) {
-      console.error("Failed to delete room:", err);
+      console.error("Failed to delete kicked room:", err);
       toast.error("삭제에 실패했습니다.");
     }
   };
@@ -107,13 +108,21 @@ const ChatRoomsPage = () => {
         {loading ? (
           <div className={styles.empty}>채팅방을 불러오는 중...</div>
         ) : chatRooms.length > 0 ? (
-          chatRooms.map((room) => (
-            <ChatRoomItem
-              key={room.id}
-              room={room}
-              onDelete={() => handleDeleteRoom(room)}
-            />
-          ))
+          chatRooms.map((room) => {
+            const roomId = String(room.post_id || room.id);
+            return (
+              <ChatRoomItem
+                key={room.id}
+                room={{
+                  ...room,
+                  unreadCount: unreadByRoomId.get(roomId) || 0,
+                }}
+                onDelete={
+                  room.isKicked ? () => handleDeleteKickedRoom(room.id) : null
+                }
+              />
+            );
+          })
         ) : (
           <div className={styles.empty}>
             {userId
@@ -127,4 +136,3 @@ const ChatRoomsPage = () => {
 };
 
 export default ChatRoomsPage;
-

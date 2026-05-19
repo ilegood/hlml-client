@@ -104,13 +104,19 @@ const DMsPage = () => {
         {loading ? (
           <div className={styles.empty}>메시지를 불러오는 중...</div>
         ) : dms.length > 0 ? (
-          dms.map((dm) => (
-            <div
-              key={dm.roomId}
-              className={itemStyles.chatRoomItem}
-              onClick={() => navigate(`/dms/${dm.roomId}`)}
-              style={{ cursor: "pointer" }}
-            >
+          dms.map((dm) => {
+            const roomKey = String(dm.roomId);
+            const unreadCount = unreadByRoomId.has(roomKey)
+              ? unreadByRoomId.get(roomKey)
+              : dm.unreadCount || 0;
+
+            return (
+              <div
+                key={dm.roomId}
+                className={itemStyles.chatRoomItem}
+                onClick={() => navigate(`/dms/${dm.roomId}`)}
+                style={{ cursor: "pointer" }}
+              >
               <div
                 className={itemStyles.roomAvatar}
                 style={{
@@ -135,16 +141,17 @@ const DMsPage = () => {
                 <div className={itemStyles.dateTime}>
                   {dm.lastMessageTime && formatTime(dm.lastMessageTime)}
                 </div>
-                {(unreadByRoomId.get(String(dm.roomId)) || dm.unreadCount) > 0 && (
+                {unreadCount > 0 && (
                   <span className={itemStyles.unreadBadge}>
-                    {(unreadByRoomId.get(String(dm.roomId)) || dm.unreadCount) > 99
+                    {unreadCount > 99
                       ? "99+"
-                      : unreadByRoomId.get(String(dm.roomId)) || dm.unreadCount}
+                      : unreadCount}
                   </span>
                 )}
               </div>
             </div>
-          ))
+            );
+          })
         ) : (
           <div className={styles.empty}>
             진행 중인 대화가 없습니다.

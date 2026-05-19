@@ -8,10 +8,10 @@ import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { ChatMessageContent, getMessagePreviewText } from "../../components/chat_components/ChatAttachment";
+import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
-import ReactionCustomizerModal from "../../components/modals/ReactionCustomizerModal";
+import { formatChatPreview } from "../../utils/chatPreview";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 const formatTime = (isoString) => {
@@ -63,6 +63,9 @@ const createPendingFileId = (file) =>
     crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`
   }`;
 
+const createClientMessageId = () =>
+  `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
+
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
 function Avatar({ profileImg, nickname, size = 40, onClick }) {
@@ -106,29 +109,13 @@ export default function DMDetailPage() {
   const [sending, setSending] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
 
-  const [quickReactions, setQuickReactions] = useState(() => {
-    try {
-      const saved = localStorage.getItem(`quick-reactions:${userId}`);
-      return saved ? JSON.parse(saved) : ["👍", "❤️", "😂", "😮", "😢", "🔥"];
-    } catch {
-      return ["👍", "❤️", "😂", "😮", "😢", "🔥"];
-    }
-  });
-  const [showReactionCustomizer, setShowReactionCustomizer] = useState(false);
-
-  const handleSaveQuickReactions = (newReactions) => {
-    setQuickReactions(newReactions);
-    localStorage.setItem(`quick-reactions:${userId}`, JSON.stringify(newReactions));
-    setShowReactionCustomizer(false);
-    toast.success("초기 반응이 변경되었습니다.");
-  };
-
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const pendingFilesRef = useRef([]);
+  const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
   const targetNicknameRef = useRef("");
 
@@ -179,15 +166,39 @@ export default function DMDetailPage() {
     const socket = socketRef.current;
 
     socket.on("receive_message", (msg) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...msg,
-          isEdited: msg.is_edited === 1,
-          isDeleted: msg.is_deleted === 1,
-          time: msg.created_at || new Date().toISOString(),
-        },
-      ]);
+      setMessages((prev) => {
+        if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+        if (msg.clientTempId) {
+          const pendingIndex = prev.findIndex(
+            (m) => m.clientTempId === msg.clientTempId,
+          );
+          if (pendingIndex !== -1) {
+            return prev.map((m, index) =>
+              index === pendingIndex
+                ? {
+                    ...m,
+                    ...msg,
+                    isPending: false,
+                    isFailed: false,
+                    isEdited: msg.is_edited === 1,
+                    isDeleted: msg.is_deleted === 1,
+                    time: msg.created_at || msg.time || m.time,
+                  }
+                : m,
+            );
+          }
+        }
+
+        return [
+          ...prev,
+          {
+            ...msg,
+            isEdited: msg.is_edited === 1,
+            isDeleted: msg.is_deleted === 1,
+            time: msg.created_at || new Date().toISOString(),
+          },
+        ];
+      });
 
       if (
         !msg.isSystem &&
@@ -466,6 +477,7 @@ export default function DMDetailPage() {
   const handleSend = useCallback(
     async (e) => {
       if (e) e.preventDefault();
+      if (sendingRef.current) return;
       if ((!input.trim() && pendingFiles.length === 0) || !socketRef.current)
         return;
 
@@ -479,29 +491,91 @@ export default function DMDetailPage() {
         });
         setEditId(null);
       } else {
+        sendingRef.current = true;
         setSending(true);
+        let clientTempId = null;
         try {
+          clientTempId = createClientMessageId();
+          const isUploadingMessage = pendingFiles.length > 0;
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: clientTempId,
+              clientTempId,
+              roomId: socketRoomId,
+              userId,
+              nickname: name,
+              profileImg,
+              content: isUploadingMessage ? "파일 업로드 중..." : input.trim(),
+              isSystem: false,
+              isPending: true,
+              isUploading: isUploadingMessage,
+              isFailed: false,
+              parentId: replyTo?.id || null,
+              reactions: [],
+              readCount: 0,
+              time: new Date().toISOString(),
+            },
+          ]);
+          setTimeout(
+            () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+            0,
+          );
           const content = await buildMessageContent();
-          socketRef.current.emit("send_message", {
-            roomId: socketRoomId,
-            userId,
-            nickname: name,
-            profileImg,
-            content,
-            isSystem: false,
-            parentId: replyTo?.id || null,
-            time: new Date().toISOString(),
-          });
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.clientTempId === clientTempId
+                ? { ...m, content, isUploading: false }
+                : m,
+            ),
+          );
+          socketRef.current.emit(
+            "send_message",
+            {
+              clientTempId,
+              roomId: socketRoomId,
+              userId,
+              nickname: name,
+              profileImg,
+              content,
+              isSystem: false,
+              parentId: replyTo?.id || null,
+              time: new Date().toISOString(),
+            },
+            (res) => {
+              if (!res?.ok) {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.clientTempId === clientTempId
+                      ? { ...m, isPending: false, isFailed: true }
+                      : m,
+                  ),
+                );
+                toast.error("메시지 전송에 실패했습니다.");
+              }
+            },
+          );
           setReplyTo(null);
           clearPendingFiles();
         } catch (error) {
+          if (clientTempId) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.clientTempId === clientTempId
+                  ? { ...m, isPending: false, isUploading: false, isFailed: true }
+                  : m,
+              ),
+            );
+          }
           console.error("Failed to upload chat file:", error);
           toast.error(
             error?.response?.data?.message || "파일 업로드에 실패했습니다.",
           );
+          sendingRef.current = false;
           setSending(false);
           return;
         }
+        sendingRef.current = false;
         setSending(false);
       }
       setInput("");
@@ -758,14 +832,18 @@ export default function DMDetailPage() {
                       <span className={styles.replyContent}>
                         {parentMsg.isDeleted
                           ? "삭제된 메시지"
-                          : getMessagePreviewText(parentMsg.content, parentMsg.nickname)}
+                          : formatChatPreview(parentMsg.content)}
                       </span>
                     </div>
                   )}
 
                   {/* 메시지 본문 */}
                   <div
-                    className={`${styles.msgBubble} ${msg.isDeleted ? styles.deleted : ""}`}
+                    className={`${styles.msgBubble} ${
+                      msg.isDeleted ? styles.deleted : ""
+                    } ${msg.isPending ? styles.pendingMessage : ""} ${
+                      msg.isFailed ? styles.failedMessage : ""
+                    }`}
                   >
                     <ChatMessageContent content={msg.content} />
                     {msg.isEdited && !msg.isDeleted && (
@@ -802,14 +880,17 @@ export default function DMDetailPage() {
                 </div>
 
                 {/* ── Action toolbar (항상 오른쪽 끝) ── */}
-                {hoveredMsgId === msg.id && !msg.isDeleted && (
+                {hoveredMsgId === msg.id &&
+                  !msg.isDeleted &&
+                  !msg.isPending &&
+                  !msg.isFailed && (
                   <div
                     className={styles.msgActions}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* 빠른 반응 */}
                     <div className={styles.quickReactions}>
-                      {quickReactions.map((emoji) => (
+                      {["👍", "❤️", "😂"].map((emoji) => (
                         <button
                           key={emoji}
                           type="button"
@@ -822,18 +903,6 @@ export default function DMDetailPage() {
                     </div>
 
                     <div className={styles.actionDivider} />
-
-                    {/* 반응 커스텀 */}
-                    <button
-                      type="button"
-                      title="반응 커스텀"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowReactionCustomizer(true);
-                      }}
-                    >
-                      ⚙️
-                    </button>
 
                     {/* 반응 더 추가 */}
                     <button
@@ -998,8 +1067,8 @@ export default function DMDetailPage() {
             </div>
             <div className={styles.contextText}>
               {replyTo
-                ? getMessagePreviewText(replyTo.content, replyTo.nickname)
-                : getMessagePreviewText(messages.find((m) => m.id === editId)?.content, name)}
+                ? formatChatPreview(replyTo.content)
+                : formatChatPreview(messages.find((m) => m.id === editId)?.content)}
             </div>
           </div>
           <button
@@ -1182,14 +1251,6 @@ export default function DMDetailPage() {
         <ChatFileGallery
           messages={messages}
           onClose={() => setShowFileGallery(false)}
-        />
-      )}
-
-      {showReactionCustomizer && (
-        <ReactionCustomizerModal
-          currentReactions={quickReactions}
-          onSave={handleSaveQuickReactions}
-          onClose={() => setShowReactionCustomizer(false)}
         />
       )}
     </div>

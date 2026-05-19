@@ -15,6 +15,60 @@ const emptySummary = {
   rooms: { groups: [], dms: [] },
 };
 
+const updateRoomUnread = (rooms, roomId, reason) => {
+  const roomKey = String(roomId);
+  let found = false;
+  const nextRooms = rooms.map((room) => {
+    if (String(room.roomId) !== roomKey) return room;
+
+    found = true;
+    const current = Number(room.unreadCount || 0);
+    return {
+      ...room,
+      unreadCount: reason === "read" ? 0 : current + 1,
+    };
+  });
+
+  if (!found && reason === "message") {
+    nextRooms.push({ roomId: roomKey, unreadCount: 1 });
+  }
+
+  return nextRooms;
+};
+
+const countUnread = (rooms) =>
+  rooms.reduce((sum, room) => sum + Number(room.unreadCount || 0), 0);
+
+const updateUnreadNotifications = (items, roomId, reason) => {
+  const roomKey = String(roomId);
+  let found = false;
+  const nextItems = items
+    .map((item) => {
+      if (String(item.roomKey || item.roomId) !== roomKey) return item;
+
+      found = true;
+      const current = Number(item.count || 0);
+      return {
+        ...item,
+        count: reason === "read" ? 0 : current + 1,
+      };
+    })
+    .filter((item) => Number(item.count || 0) > 0);
+
+  if (!found && reason === "message") {
+    nextItems.push({
+      id: `unread:${roomKey}`,
+      type: roomKey.startsWith("dm_") ? "dm" : "group",
+      roomId: roomKey.startsWith("dm_") ? roomKey.slice(3) : roomKey,
+      roomKey,
+      title: "새 메시지",
+      count: 1,
+    });
+  }
+
+  return nextItems;
+};
+
 const formatReminderTime = (date, time) => {
   if (!date || !time) return "";
   return `${String(date).slice(0, 10)} ${String(time).slice(0, 5)}`;
@@ -23,15 +77,65 @@ const formatReminderTime = (date, time) => {
 export const ChatNotificationProvider = ({ children }) => {
   const { token, userId } = useAuth();
   const [summary, setSummary] = useState(emptySummary);
-  const [notifications, setNotifications] = useState({ unread: [], reminders: [] });
+  const [notifications, setNotifications] = useState({
+    unread: [],
+    reminders: [],
+    deletionWarnings: [],
+  });
   const [loading, setLoading] = useState(false);
   const socketRef = useRef(null);
   const refreshTimerRef = useRef(null);
 
+  const showAppointmentReminder = useCallback((item) => {
+    const key = `appointment-reminder:${userId}:${item.roomId}:${item.date}:${item.time}`;
+    if (localStorage.getItem(key)) return false;
+
+    localStorage.setItem(key, "1");
+    toast(`${item.title} 약속이 30분 이내에 시작됩니다.`, {
+      description: formatReminderTime(item.date, item.time),
+    });
+    return true;
+  }, [userId]);
+
+  const applyUnreadEvent = useCallback(({ roomId, reason = "message" } = {}) => {
+    if (!roomId) return;
+
+    setSummary((current) => {
+      const roomKey = String(roomId);
+      const isDm = roomKey.startsWith("dm_");
+      const normalizedRoomId = isDm ? roomKey.slice(3) : roomKey;
+      const currentRooms = current?.rooms || { groups: [], dms: [] };
+      const nextGroups = isDm
+        ? currentRooms.groups || []
+        : updateRoomUnread(currentRooms.groups || [], normalizedRoomId, reason);
+      const nextDms = isDm
+        ? updateRoomUnread(currentRooms.dms || [], normalizedRoomId, reason)
+        : currentRooms.dms || [];
+      const groupUnread = countUnread(nextGroups);
+      const dmUnread = countUnread(nextDms);
+
+      return {
+        ...emptySummary,
+        ...current,
+        groupUnread,
+        dmUnread,
+        totalUnread: groupUnread + dmUnread,
+        rooms: {
+          groups: nextGroups,
+          dms: nextDms,
+        },
+      };
+    });
+    setNotifications((current) => ({
+      ...current,
+      unread: updateUnreadNotifications(current.unread || [], roomId, reason),
+    }));
+  }, []);
+
   const refresh = useCallback(async ({ quiet = true } = {}) => {
     if (!token || !userId) {
       setSummary(emptySummary);
-      setNotifications({ unread: [], reminders: [] });
+      setNotifications({ unread: [], reminders: [], deletionWarnings: [] });
       return;
     }
 
@@ -42,14 +146,18 @@ export const ChatNotificationProvider = ({ children }) => {
         getChatNotifications(),
       ]);
       setSummary(nextSummary || emptySummary);
-      setNotifications(nextNotifications || { unread: [], reminders: [] });
+      setNotifications(
+        nextNotifications || { unread: [], reminders: [], deletionWarnings: [] },
+      );
 
-      (nextNotifications?.reminders || []).forEach((item) => {
-        const key = `appointment-reminder:${userId}:${item.roomId}:${item.date}:${item.time}`;
+      (nextNotifications?.reminders || []).forEach(showAppointmentReminder);
+
+      (nextNotifications?.deletionWarnings || []).forEach((item) => {
+        const key = `room-delete-warning:${userId}:${item.roomId}:${item.deletesAt}`;
         if (localStorage.getItem(key)) return;
         localStorage.setItem(key, "1");
-        toast(`${item.title} 약속이 30분 이내에 시작됩니다.`, {
-          description: formatReminderTime(item.date, item.time),
+        toast.warning(`${item.title || "채팅방"}이 30분 뒤 삭제됩니다.`, {
+          description: item.message,
         });
       });
     } catch (error) {
@@ -57,7 +165,7 @@ export const ChatNotificationProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [token, userId]);
+  }, [showAppointmentReminder, token, userId]);
 
   useEffect(() => {
     refresh({ quiet: false });
@@ -91,22 +199,41 @@ export const ChatNotificationProvider = ({ children }) => {
     });
     socketRef.current = socket;
 
-    socket.on("chat_unread_changed", () => {
+    socket.on("chat_unread_changed", (event) => {
+      applyUnreadEvent(event);
       refresh();
     });
 
-    socket.on("entrance_alarm", ({ roomTitle, message }) => {
-      toast(`${roomTitle}`, {
-        description: message,
-        duration: 5000,
-      });
+    socket.on("appointment_reminder", (item) => {
+      showAppointmentReminder(item);
+      refresh();
+    });
+
+    socket.on("chat_room_deletion_warning", (warning) => {
+      const key = `room-delete-warning:${userId}:${warning.roomId}:${warning.deletesAt}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, "1");
+        toast.warning(`${warning.title || "채팅방"}이 30분 뒤 삭제됩니다.`, {
+          description: warning.message,
+        });
+      }
+      refresh();
+    });
+
+    socket.on("chat_room_deleted", ({ roomId, title }) => {
+      const key = `room-deleted:${userId}:${roomId}`;
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+      toast(`${title || "채팅방"}이 삭제되었습니다.`);
+      refresh();
+      window.dispatchEvent(new Event("chat:rooms-changed"));
     });
 
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [refresh, token, userId]);
+  }, [applyUnreadEvent, refresh, showAppointmentReminder, token, userId]);
 
   const value = useMemo(
     () => ({

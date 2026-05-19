@@ -31,6 +31,13 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
     () => Math.max(2, Number(currentParticipants) || 1),
     [currentParticipants],
   );
+  const isAtCapacity = Number(capacity) <= Number(currentParticipants);
+
+  useEffect(() => {
+    if (isAtCapacity && status !== STATUS_CLOSED) {
+      setStatus(STATUS_CLOSED);
+    }
+  }, [isAtCapacity, status]);
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -83,6 +90,7 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
       return;
     }
 
+    const nextStatus = isAtCapacity ? STATUS_CLOSED : status;
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("content", content.trim());
@@ -92,7 +100,7 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
     formData.append("latitude", latitude || "");
     formData.append("longitude", longitude || "");
     formData.append("capacity", capacity);
-    formData.append("status", status);
+    formData.append("status", nextStatus);
     formData.append("categories", JSON.stringify(categories));
 
     if (image?.file) {
@@ -227,7 +235,9 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value={STATUS_OPEN}>모집중</option>
+                <option value={STATUS_OPEN} disabled={isAtCapacity}>
+                  모집중
+                </option>
                 <option value={STATUS_CLOSED}>모집완료</option>
               </select>
             </div>
