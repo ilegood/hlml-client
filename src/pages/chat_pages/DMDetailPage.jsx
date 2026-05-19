@@ -11,6 +11,7 @@ import Picker from "@emoji-mart/react";
 import { ChatMessageContent, getMessagePreviewText } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
+import ReactionCustomizerModal from "../../components/modals/ReactionCustomizerModal";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 const formatTime = (isoString) => {
@@ -104,6 +105,23 @@ export default function DMDetailPage() {
   );
   const [sending, setSending] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
+
+  const [quickReactions, setQuickReactions] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`quick-reactions:${userId}`);
+      return saved ? JSON.parse(saved) : ["👍", "❤️", "😂", "😮", "😢", "🔥"];
+    } catch {
+      return ["👍", "❤️", "😂", "😮", "😢", "🔥"];
+    }
+  });
+  const [showReactionCustomizer, setShowReactionCustomizer] = useState(false);
+
+  const handleSaveQuickReactions = (newReactions) => {
+    setQuickReactions(newReactions);
+    localStorage.setItem(`quick-reactions:${userId}`, JSON.stringify(newReactions));
+    setShowReactionCustomizer(false);
+    toast.success("초기 반응이 변경되었습니다.");
+  };
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
@@ -791,7 +809,7 @@ export default function DMDetailPage() {
                   >
                     {/* 빠른 반응 */}
                     <div className={styles.quickReactions}>
-                      {["👍", "❤️", "😂"].map((emoji) => (
+                      {quickReactions.map((emoji) => (
                         <button
                           key={emoji}
                           type="button"
@@ -804,6 +822,18 @@ export default function DMDetailPage() {
                     </div>
 
                     <div className={styles.actionDivider} />
+
+                    {/* 반응 커스텀 */}
+                    <button
+                      type="button"
+                      title="반응 커스텀"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowReactionCustomizer(true);
+                      }}
+                    >
+                      ⚙️
+                    </button>
 
                     {/* 반응 더 추가 */}
                     <button
@@ -1152,6 +1182,14 @@ export default function DMDetailPage() {
         <ChatFileGallery
           messages={messages}
           onClose={() => setShowFileGallery(false)}
+        />
+      )}
+
+      {showReactionCustomizer && (
+        <ReactionCustomizerModal
+          currentReactions={quickReactions}
+          onSave={handleSaveQuickReactions}
+          onClose={() => setShowReactionCustomizer(false)}
         />
       )}
     </div>
