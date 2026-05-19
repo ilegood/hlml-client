@@ -2,13 +2,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { AuthContext } from "../../context/auth";
-import { BASE_URL, getImageUrl } from "../../api/instance";
+import instance, { BASE_URL, getImageUrl } from "../../api/instance";
 import { uploadChatFile } from "../../api/chat";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
+import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
@@ -56,6 +57,11 @@ const isCompact = (prev, curr) => {
   return diff >= 0 && diff < 2 * 60 * 1000;
 };
 
+const createPendingFileId = (file) =>
+  `${file.name}-${file.size}-${file.lastModified}-${
+    crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`
+  }`;
+
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
 function Avatar({ profileImg, nickname, size = 40, onClick }) {
@@ -82,7 +88,6 @@ export default function DMDetailPage() {
   const [input, setInput] = useState("");
   const [targetNickname, setTargetNickname] = useState("");
   const [targetProfileImg, setTargetProfileImg] = useState("");
-  const [targetUserId, setTargetUserId] = useState(null);
 
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
@@ -91,6 +96,12 @@ export default function DMDetailPage() {
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [showFileGallery, setShowFileGallery] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [fileAccept, setFileAccept] = useState("");
+  const [notificationsMuted, setNotificationsMuted] = useState(
+    () => localStorage.getItem(`dm-muted:${roomId}`) === "1",
+  );
   const [sending, setSending] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
 
@@ -100,6 +111,8 @@ export default function DMDetailPage() {
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const pendingFilesRef = useRef([]);
+  const notificationsMutedRef = useRef(notificationsMuted);
+  const targetNicknameRef = useRef("");
 
   const socketRoomId = `dm_${roomId}`;
 
@@ -108,10 +121,28 @@ export default function DMDetailPage() {
   }, [pendingFiles]);
 
   useEffect(() => {
+    notificationsMutedRef.current = notificationsMuted;
+  }, [notificationsMuted]);
+
+  useEffect(() => {
     return () => {
       pendingFilesRef.current.forEach((item) =>
         URL.revokeObjectURL(item.previewUrl),
       );
+    };
+  }, []);
+
+  useEffect(() => {
+    const preventBrowserDrop = (event) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("dragover", preventBrowserDrop);
+    window.addEventListener("drop", preventBrowserDrop);
+
+    return () => {
+      window.removeEventListener("dragover", preventBrowserDrop);
+      window.removeEventListener("drop", preventBrowserDrop);
     };
   }, []);
 
@@ -124,7 +155,9 @@ export default function DMDetailPage() {
       return;
     }
 
-    socketRef.current = io(BASE_URL);
+    socketRef.current = io(BASE_URL, {
+      auth: { token: localStorage.getItem("token") },
+    });
     const socket = socketRef.current;
 
     socket.on("receive_message", (msg) => {
@@ -137,6 +170,14 @@ export default function DMDetailPage() {
           time: msg.created_at || new Date().toISOString(),
         },
       ]);
+
+      if (
+        !msg.isSystem &&
+        String(msg.userId) !== String(userId) &&
+        !notificationsMutedRef.current
+      ) {
+        toast(`${targetNicknameRef.current || "상대방"}님이 새 메시지를 보냈습니다.`);
+      }
 
       if (!msg.isSystem && String(msg.userId) !== String(userId)) {
         socket.emit("mark_read", { messageId: msg.id, userId, roomId: socketRoomId });
@@ -157,10 +198,16 @@ export default function DMDetailPage() {
       }
     });
 
-    socket.on("room_info", ({ title, image, targetId }) => {
+    socket.on("room_info", ({ title, image }) => {
+      targetNicknameRef.current = title || "";
       setTargetNickname(title);
       setTargetProfileImg(image);
-      setTargetUserId(targetId);
+    });
+
+    socket.on("dm_room_deleted", ({ roomId: deletedRoomId }) => {
+      if (String(deletedRoomId) !== String(roomId)) return;
+      toast.success("대화 기록이 삭제되었습니다.");
+      navigate("/dms", { replace: true });
     });
 
     socket.emit("join_room", { roomId: socketRoomId, nickname: name, userId });
@@ -237,6 +284,35 @@ export default function DMDetailPage() {
   }, [roomId, userId, name, navigate, socketRoomId]);
 
   useEffect(() => {
+    let mounted = true;
+
+    const loadRoom = async () => {
+      try {
+        const { data } = await instance.get(`/chat/dm/${roomId}`);
+        if (!mounted) return;
+
+        targetNicknameRef.current = data.targetNickname || "";
+        setTargetNickname(data.targetNickname || "");
+        setTargetProfileImg(data.targetProfileImg || "");
+      } catch (err) {
+        if (!mounted) return;
+        if (err?.response?.status === 404) {
+          toast.error("이미 삭제된 대화입니다.");
+          navigate("/dms", { replace: true });
+          return;
+        }
+        console.error("Failed to load DM room:", err);
+      }
+    };
+
+    loadRoom();
+
+    return () => {
+      mounted = false;
+    };
+  }, [roomId, navigate]);
+
+  useEffect(() => {
     const handleClickOutside = () => {
       setShowEmojiPicker(null);
       setShowMainEmojiPicker(false);
@@ -279,6 +355,33 @@ export default function DMDetailPage() {
 
   // ── Actions ─────────────────────────────────────────────────────────────────
 
+  const toggleNotifications = () => {
+    const next = !notificationsMuted;
+    setNotificationsMuted(next);
+    localStorage.setItem(`dm-muted:${roomId}`, next ? "1" : "0");
+    toast.success(next ? "DM 알림을 껐습니다." : "DM 알림을 켰습니다.");
+  };
+
+  const handleLeaveDM = async () => {
+    if (!window.confirm("정말로 이 대화를 나가고 기록을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      await instance.delete(`/chat/dm/${roomId}`);
+      toast.success("대화 기록을 삭제하고 나갔습니다.");
+      navigate("/dms", { replace: true });
+    } catch (err) {
+      console.error("Failed to delete DM room:", err);
+      if (err?.response?.status === 404) {
+        toast.error("이미 삭제된 대화입니다.");
+        navigate("/dms", { replace: true });
+        return;
+      }
+      toast.error("대화 나가기에 실패했습니다.");
+    }
+  };
+
   const clearPendingFiles = useCallback(() => {
     setPendingFiles((prev) => {
       prev.forEach((item) => URL.revokeObjectURL(item.previewUrl));
@@ -288,10 +391,7 @@ export default function DMDetailPage() {
   }, []);
 
   const addPendingFiles = useCallback((fileList) => {
-    const files = Array.from(fileList || []).filter(
-      (file) =>
-        file.type.startsWith("image/") || file.type.startsWith("video/"),
-    );
+    const files = Array.from(fileList || []);
     if (files.length === 0) return;
 
     setPendingFiles((prev) => [
@@ -303,6 +403,13 @@ export default function DMDetailPage() {
       })),
     ]);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  }, []);
+
+  const openFilePicker = useCallback((accept) => {
+    setFileAccept(accept);
+    setShowAttachMenu(false);
+    window.setTimeout(() => fileInputRef.current?.click(), 0);
   }, []);
 
   const removePendingFile = useCallback((id) => {
@@ -328,6 +435,9 @@ export default function DMDetailPage() {
       text,
       attachments: uploads.map((uploaded) => ({
         url: uploaded.url,
+        downloadUrl: uploaded.downloadUrl,
+        publicId: uploaded.publicId,
+        resourceType: uploaded.resourceType,
         name: uploaded.name,
         mimeType: uploaded.mimeType,
         size: uploaded.size,
@@ -347,6 +457,7 @@ export default function DMDetailPage() {
           messageId: editId,
           content: input,
           roomId: socketRoomId,
+          userId,
         });
         setEditId(null);
       } else {
@@ -367,7 +478,9 @@ export default function DMDetailPage() {
           clearPendingFiles();
         } catch (error) {
           console.error("Failed to upload chat file:", error);
-          toast.error("파일 업로드에 실패했습니다.");
+          toast.error(
+            error?.response?.data?.message || "파일 업로드에 실패했습니다.",
+          );
           setSending(false);
           return;
         }
@@ -412,6 +525,7 @@ export default function DMDetailPage() {
           socketRef.current.emit("delete_message", {
             messageId: msgId,
             roomId: socketRoomId,
+            userId,
           });
           if (editId === msgId) {
             setEditId(null);
@@ -494,13 +608,24 @@ export default function DMDetailPage() {
           {targetNickname}님과의 대화입니다.
         </span>
         <div className={styles.headerActions}>
-          <button className={styles.headerIconBtn} title="채팅 알림 설정">
-            🔔
+          <button
+            className={styles.headerIconBtn}
+            title={notificationsMuted ? "DM 알림 켜기" : "DM 알림 끄기"}
+            onClick={toggleNotifications}
+          >
+            {notificationsMuted ? "🔕" : "🔔"}
+          </button>
+          <button
+            className={styles.headerIconBtn}
+            title="파일 모아보기"
+            onClick={() => setShowFileGallery(true)}
+          >
+            📎
           </button>
           <button
             className={styles.headerIconBtn}
             title="나가기"
-            onClick={() => navigate("/dms")}
+            onClick={handleLeaveDM}
           >
             🚪
           </button>
@@ -879,12 +1004,33 @@ export default function DMDetailPage() {
                     src={item.previewUrl}
                     muted
                   />
-                ) : (
+                ) : item.file.type.startsWith("image/") ? (
                   <img
                     className={styles.pendingThumb}
                     src={item.previewUrl}
                     alt={item.file.name}
                   />
+                ) : (
+                  <div className={styles.pendingFilePreview}>
+                    <span className={styles.pendingFileIcon}>
+                      <svg
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                    </span>
+                    <span className={styles.pendingFileName}>
+                      {item.file.name}
+                    </span>
+                  </div>
                 )}
                 <button
                   type="button"
@@ -902,17 +1048,27 @@ export default function DMDetailPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,video/*"
+            accept={fileAccept}
             multiple
             className={styles.fileInput}
             onChange={(e) => addPendingFiles(e.target.files)}
           />
+          {showAttachMenu && (
+            <div className={styles.attachMenu}>
+              <button type="button" onClick={() => openFilePicker("image/*,video/*")}>
+                이미지/동영상 선택
+              </button>
+              <button type="button" onClick={() => openFilePicker("")}>
+                일반 파일 선택
+              </button>
+            </div>
+          )}
           <button
             type="button"
             className={styles.attachBtn}
-            title="이미지 또는 동영상 추가"
+            title="파일 추가"
             disabled={sending}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => setShowAttachMenu((prev) => !prev)}
           >
             +
           </button>
@@ -989,6 +1145,13 @@ export default function DMDetailPage() {
           userId={selectedProfileId}
           currentUserId={userId}
           onClose={() => setSelectedProfileId(null)}
+        />
+      )}
+
+      {showFileGallery && (
+        <ChatFileGallery
+          messages={messages}
+          onClose={() => setShowFileGallery(false)}
         />
       )}
     </div>

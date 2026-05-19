@@ -481,8 +481,8 @@ export default function ReportListModal({ onClose }) {
   };
 
   return (
-    <ModalWrapper onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <ModalWrapper onMouseDown={onClose}>
+      <div className="modal-content" onMouseDown={(e) => e.stopPropagation()}>
         <div className="header">
           <div className="title-row">
             {view === "form" && (

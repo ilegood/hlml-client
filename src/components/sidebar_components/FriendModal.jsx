@@ -98,8 +98,8 @@ const FriendModal = ({ friend, onClose }) => {
   if (!friend) return null;
 
   return (
-    <ModalOverlay onClick={onClose}>
-      <FriendCardStyles onClick={(e) => e.stopPropagation()}>
+    <ModalOverlay onMouseDown={onClose}>
+      <FriendCardStyles onMouseDown={(e) => e.stopPropagation()}>
         <div className="card-profile"></div>
         <h4>{friend.name}</h4>
         <p>{friend.statusMessage || "상태 메시지가 없습니다."}</p>

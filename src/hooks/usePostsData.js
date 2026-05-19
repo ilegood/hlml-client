@@ -17,8 +17,9 @@ export const usePostsData = () => {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPosts();
-  }, []);
+  }, [fetchPosts]);
 
   const filteredPosts = [...posts]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -37,6 +38,7 @@ export const usePostsData = () => {
 
   return {
     posts,
+    setPosts,
     filteredPosts,
     search,
     setSearch,

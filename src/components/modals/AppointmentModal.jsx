@@ -93,8 +93,8 @@ export default function AppointmentModal({ onClose }) {
     viewMonth === today.getMonth() && viewYear === today.getFullYear();
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay} onMouseDown={onClose}>
+      <div className={styles.modalContent} onMouseDown={(e) => e.stopPropagation()}>
         {/* ── Header ── */}
         <div className={styles.header}>
           <h2>내 약속 관리</h2>

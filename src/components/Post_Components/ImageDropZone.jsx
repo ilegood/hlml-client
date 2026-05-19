@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import { toast } from "sonner";
 import styles from "./ImageDropZone.module.css";
 
 export default function ImageDropZone({ value, onChange, small = false }) {
@@ -9,13 +10,13 @@ export default function ImageDropZone({ value, onChange, small = false }) {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("이미지 파일만 업로드 가능");
+      toast.error("이미지 파일만 업로드 가능합니다.");
       return;
     }
 
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert("5MB 이하만 가능");
+      toast.error("5MB 이하만 가능합니다.");
       return;
     }
 

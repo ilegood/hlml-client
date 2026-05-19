@@ -2,18 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getImageUrl } from "../../api/instance";
 import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
 
-export const parseAttachment = (content) => {
-  if (!content || typeof content !== "string") return null;
-
-  try {
-    const parsed = JSON.parse(content);
-    return parsed?.kind === "chat_attachment" ? parsed : null;
-  } catch {
-    return null;
-  }
-};
-
-export const parseMessagePayload = (content) => {
+const parseMessagePayload = (content) => {
   if (!content || typeof content !== "string") return null;
 
   try {
@@ -36,7 +25,8 @@ export const parseMessagePayload = (content) => {
   return null;
 };
 
-const countHangul = (value) => (String(value).match(/[가-힣]/g) || []).length;
+const countHangul = (value) =>
+  (String(value).match(/[\uAC00-\uD7A3]/g) || []).length;
 
 const repairFilename = (name) => {
   const value = String(name || "");
@@ -46,7 +36,7 @@ const repairFilename = (name) => {
     const bytes = Uint8Array.from(
       [...value].map((char) => char.charCodeAt(0) & 0xff),
     );
-    const decoded = new TextDecoder("utf-8").decode(bytes);
+    const decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     return countHangul(decoded) > countHangul(value) ? decoded : value;
   } catch {
     return value;
@@ -64,8 +54,11 @@ const getDownloadUrl = (attachment) => {
 };
 
 const downloadAttachment = (attachment) => {
+  const href = getDownloadUrl(attachment);
+  if (!href) return;
+
   const link = document.createElement("a");
-  link.href = getDownloadUrl(attachment);
+  link.href = href;
   link.download = repairFilename(attachment.name) || "download";
   link.rel = "noreferrer";
   document.body.appendChild(link);
@@ -80,20 +73,24 @@ const isSingleEmoji = (value) => {
   return (
     parts.length <= 2 &&
     /\p{Extended_Pictographic}/u.test(text) &&
-    !/[0-9A-Za-z가-힣]/.test(text)
+    !/[0-9A-Za-z\uAC00-\uD7A3]/u.test(text)
   );
 };
 
 export default function ChatAttachment({ attachment }) {
   const filename = repairFilename(attachment.name) || "파일 다운로드";
+  const downloadUrl = getDownloadUrl(attachment);
 
   return (
     <div className={styles.attachmentWrap}>
       <a
         className={styles.attachmentFileCard}
-        href={getDownloadUrl(attachment)}
+        href={downloadUrl || "#"}
         download={filename}
         title={filename}
+        onClick={(event) => {
+          if (!downloadUrl) event.preventDefault();
+        }}
       >
         <span className={styles.attachmentFileName}>{filename}</span>
         <span className={styles.attachmentDownloadIcon} aria-hidden="true">
@@ -121,6 +118,8 @@ function MediaLightbox({ attachments, index, onClose, onMove }) {
   const attachment = attachments[index];
   const src = getImageUrl(attachment?.url);
   const isVideo = attachment?.mimeType?.startsWith("video/");
+  const filename = repairFilename(attachment?.name) || "미디어";
+
   const downloadAll = () => {
     attachments.forEach((item, itemIndex) => {
       window.setTimeout(() => downloadAttachment(item), itemIndex * 120);
@@ -141,34 +140,26 @@ function MediaLightbox({ attachments, index, onClose, onMove }) {
   if (!attachment) return null;
 
   return (
-    <div className={styles.mediaLightbox} onClick={onClose}>
+    <div className={styles.mediaLightbox} onMouseDown={onClose}>
       <button
         type="button"
         className={styles.lightboxClose}
+        onMouseDown={(event) => event.stopPropagation()}
         onClick={onClose}
         title="닫기"
       >
         ×
       </button>
 
-      <div className={styles.lightboxDownloadActions}>
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            downloadAttachment(attachment);
-          }}
-        >
-          이것만 다운로드
+      <div
+        className={styles.lightboxDownloadActions}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button type="button" onClick={() => downloadAttachment(attachment)}>
+          현재 파일 다운로드
         </button>
         {attachments.length > 1 && (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              downloadAll();
-            }}
-          >
+          <button type="button" onClick={downloadAll}>
             모두 다운로드
           </button>
         )}
@@ -179,10 +170,8 @@ function MediaLightbox({ attachments, index, onClose, onMove }) {
           <button
             type="button"
             className={`${styles.lightboxNav} ${styles.lightboxPrev}`}
-            onClick={(event) => {
-              event.stopPropagation();
-              onMove(-1);
-            }}
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={() => onMove(-1)}
             title="이전"
           >
             ‹
@@ -190,10 +179,8 @@ function MediaLightbox({ attachments, index, onClose, onMove }) {
           <button
             type="button"
             className={`${styles.lightboxNav} ${styles.lightboxNext}`}
-            onClick={(event) => {
-              event.stopPropagation();
-              onMove(1);
-            }}
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={() => onMove(1)}
             title="다음"
           >
             ›
@@ -203,15 +190,15 @@ function MediaLightbox({ attachments, index, onClose, onMove }) {
 
       <div
         className={styles.lightboxBody}
-        onClick={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
       >
         {isVideo ? (
           <video src={src} controls autoPlay />
         ) : (
-          <img src={src} alt={attachment.name || "attachment"} />
+          <img src={src} alt={filename} />
         )}
         <div className={styles.lightboxMeta}>
-          <span>{repairFilename(attachment.name) || "미디어"}</span>
+          <span>{filename}</span>
           <span>
             {index + 1} / {attachments.length}
           </span>
@@ -248,6 +235,7 @@ function MediaGrid({ attachments }) {
           const src = getImageUrl(attachment.url);
           const isVideo = attachment.mimeType?.startsWith("video/");
           const showOverlay = index === visible.length - 1 && overflow > 0;
+          const filename = repairFilename(attachment.name) || "미디어 보기";
 
           return (
             <button
@@ -255,12 +243,12 @@ function MediaGrid({ attachments }) {
               type="button"
               className={styles.mediaGridItem}
               onClick={() => setLightboxIndex(index)}
-              title={repairFilename(attachment.name) || "미디어 보기"}
+              title={filename}
             >
               {isVideo ? (
                 <video src={src} muted />
               ) : (
-                <img src={src} alt={attachment.name || "attachment"} />
+                <img src={src} alt={filename} />
               )}
               {isVideo && <span className={styles.videoBadge}>동영상</span>}
               {showOverlay && (

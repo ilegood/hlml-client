@@ -2,9 +2,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
+import { useChatNotifications } from "../../context/ChatNotificationContext";
 import styles from "./Sidebar.module.css";
 
-// 이미지 임포트
 import logoImg from "../../assets/logo.png";
 import dashboardImg from "../../assets/dashboard.png";
 import homeImg from "../../assets/home.png";
@@ -15,9 +15,16 @@ import darkImg from "../../assets/dark.png";
 import logoutImg from "../../assets/logout.png";
 import loginImg from "../../assets/login.png";
 
+const Badge = ({ count }) => {
+  if (!count) return null;
+  return <span className={styles.badge}>{count > 99 ? "99+" : count}</span>;
+};
+
 const Sidebar = () => {
   const navigate = useNavigate();
   const { logout, token } = useAuth();
+  const { summary, notifications, refresh } = useChatNotifications() || {};
+  const [showNotifications, setShowNotifications] = useState(false);
   const [isDark, setIsDark] = useState(
     localStorage.getItem("theme") === "dark",
   );
@@ -42,6 +49,18 @@ const Sidebar = () => {
     setIsDark((prev) => !prev);
   };
 
+  const openNotificationTarget = (item) => {
+    setShowNotifications(false);
+    if (item.type === "dm") {
+      navigate(`/dms/${item.roomId}`);
+      return;
+    }
+    navigate(`/chat-rooms/${item.roomId}`);
+  };
+
+  const reminderItems = notifications?.reminders || [];
+  const unreadItems = notifications?.unread || [];
+
   return (
     <div className={styles.sidebar}>
       <div className={styles.top}>
@@ -55,20 +74,81 @@ const Sidebar = () => {
         </Link>
         <Link to="/write" className={styles.itemWrap}>
           <img src={postImg} alt="post" />
-          <span className={styles.label}>게시글쓰기</span>
+          <span className={styles.label}>게시글 쓰기</span>
         </Link>
         <Link to="/chat-rooms" className={styles.itemWrap}>
           <img src={dashboardImg} alt="group" />
           <span className={styles.label}>그룹</span>
+          <Badge count={summary?.groupUnread || 0} />
         </Link>
         <Link to="/dms" className={styles.itemWrap}>
           <img src={messageImg} alt="message" />
-          <span className={styles.label}>메세지</span>
+          <span className={styles.label}>메시지</span>
+          <Badge count={summary?.dmUnread || 0} />
         </Link>
         <Link to="/user" className={styles.itemWrap}>
           <img src={profileImg} alt="mypage" />
           <span className={styles.label}>마이페이지</span>
         </Link>
+
+        {token && (
+          <div className={styles.notificationWrap}>
+            <button
+              type="button"
+              className={styles.itemWrap}
+              onClick={() => {
+                setShowNotifications((prev) => !prev);
+                refresh?.();
+              }}
+            >
+              <img src={messageImg} alt="notifications" />
+              <span className={styles.label}>알림</span>
+              <Badge count={(summary?.totalUnread || 0) + reminderItems.length} />
+            </button>
+
+            {showNotifications && (
+              <div className={styles.notificationPanel}>
+                <div className={styles.notificationTitle}>알림 센터</div>
+                {reminderItems.length === 0 && unreadItems.length === 0 ? (
+                  <div className={styles.notificationEmpty}>새 알림이 없습니다.</div>
+                ) : (
+                  <>
+                    {reminderItems.map((item) => (
+                      <button
+                        type="button"
+                        key={item.id}
+                        className={styles.notificationItem}
+                        onClick={() => openNotificationTarget(item)}
+                      >
+                        <span className={styles.notificationMain}>
+                          {item.title}
+                        </span>
+                        <span className={styles.notificationSub}>
+                          약속이 30분 이내에 시작됩니다.
+                        </span>
+                      </button>
+                    ))}
+                    {unreadItems.map((item) => (
+                      <button
+                        type="button"
+                        key={item.id}
+                        className={styles.notificationItem}
+                        onClick={() => openNotificationTarget(item)}
+                      >
+                        <span className={styles.notificationMain}>
+                          {item.title}
+                        </span>
+                        <span className={styles.notificationSub}>
+                          읽지 않은 메시지 {item.count}개
+                        </span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className={styles.bottom}>
@@ -91,6 +171,7 @@ const Sidebar = () => {
 
         {token ? (
           <button
+            type="button"
             onClick={handleLogout}
             className={`${styles.itemWrap} ${styles.logoutBtn}`}
           >

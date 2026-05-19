@@ -90,8 +90,8 @@ const MapModal = ({ onClose }) => {
   }, [posts, currentUserId]);
 
   return (
-    <div className={styles.modalWrapper} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.modalWrapper} onMouseDown={onClose}>
+      <div className={styles.modalContent} onMouseDown={(e) => e.stopPropagation()}>
         <header className={styles.header}>
           <h2>약속 지도 보기</h2>
           <button className={styles.closeBtn} onClick={onClose}>

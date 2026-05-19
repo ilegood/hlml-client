@@ -30,6 +30,9 @@ export default function LikesPage() {
 
   const handleLike = async (post) => {
     const currentUserId = userId || "me";
+    const previous = likedPosts;
+
+    setLikedPosts((prev) => prev.filter((p) => p.id !== post.id));
 
     try {
       const updated = await togglePostLike(post.id);
@@ -41,6 +44,7 @@ export default function LikesPage() {
       );
     } catch (err) {
       console.error("Failed to update like:", err);
+      setLikedPosts(previous);
     }
   };
 

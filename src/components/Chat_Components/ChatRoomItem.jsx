@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import styles from "./ChatRoomItem.module.css";
 
 const ChatRoomItem = ({ room, onDelete }) => {
@@ -18,7 +19,7 @@ const ChatRoomItem = ({ room, onDelete }) => {
 
   const handleClick = () => {
     if (room.isKicked) {
-      alert("강퇴된 채팅방에는 입장할 수 없습니다.");
+      toast.error("강퇴된 채팅방에는 입장할 수 없습니다.");
       return;
     }
     navigate(`/chat-rooms/${room.post_id || room.id}`);
@@ -54,6 +55,11 @@ const ChatRoomItem = ({ room, onDelete }) => {
           {room.time && formatTime(room.time)}
         </div>
         <div className={styles.place}>{room.place || ""}</div>
+        {room.unreadCount > 0 && (
+          <span className={styles.unreadBadge}>
+            {room.unreadCount > 99 ? "99+" : room.unreadCount}
+          </span>
+        )}
       </div>
 
       {onDelete && (

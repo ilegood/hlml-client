@@ -39,8 +39,8 @@ export default function UserProfileModal({ userId, onClose, currentUserId }) {
   if (!userId) return null;
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay} onMouseDown={onClose}>
+      <div className={styles.modal} onMouseDown={(e) => e.stopPropagation()}>
         {loading ? (
           <div className={styles.loading}>불러오는 중...</div>
         ) : user ? (

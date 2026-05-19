@@ -107,6 +107,74 @@
 }
 
 /* ── Message list ── */
+.appointmentReminderBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-active) 45%, var(--color-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-active) 12%, var(--color-bg));
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+
+.appointmentReminderIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--color-active);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.appointmentReminderText {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.appointmentReminderText strong,
+.appointmentReminderText span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appointmentReminderText strong {
+  font-size: 14px;
+}
+
+.appointmentReminderText span {
+  font-size: 13px;
+  color: var(--color-deactive);
+}
+
+.appointmentReminderAction {
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-active);
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.appointmentReminderAction:hover {
+  opacity: 0.9;
+}
+
 .messages {
   flex: 1;
   overflow-y: auto;
@@ -150,6 +218,20 @@
   padding: 4px 8px;
   align-self: center;
   margin: 4px 0;
+}
+
+.deletionWarningMsg {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #666;
+  background: #f0f0f0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin: 12px auto;
+  width: fit-content;
+  max-width: 80%;
+  border: 1px solid #ddd;
 }
 
 /* ── Message row ── */
@@ -601,6 +683,179 @@
   background: rgba(255, 255, 255, 0.22);
 }
 
+.fileGalleryOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.fileGalleryPanel {
+  width: min(760px, 100%);
+  max-height: min(720px, calc(100vh - 64px));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-sidebar);
+  color: var(--color-text);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.fileGalleryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fileGalleryHeader h3 {
+  font-size: 18px;
+  margin: 0 0 4px;
+}
+
+.fileGalleryHeader span {
+  font-size: 13px;
+  color: var(--color-deactive);
+}
+
+.fileGalleryHeader button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.fileGalleryBody {
+  padding: 18px 20px 22px;
+  overflow-y: auto;
+}
+
+.fileGalleryEmpty {
+  padding: 54px 20px;
+  color: var(--color-deactive);
+  text-align: center;
+  font-size: 14px;
+}
+
+.fileGallerySection + .fileGallerySection {
+  margin-top: 24px;
+}
+
+.fileGallerySectionTitle {
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--color-text);
+}
+
+.fileGalleryMediaGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 10px;
+}
+
+.fileGalleryMediaItem {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  text-decoration: none;
+  overflow: hidden;
+}
+
+.fileGalleryMediaItem img,
+.fileGalleryMediaItem video {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: block;
+  object-fit: cover;
+  background: #111;
+}
+
+.fileGalleryMediaItem span {
+  display: block;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileGalleryFileList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fileGalleryFileItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.fileGalleryFileItem:hover,
+.fileGalleryMediaItem:hover {
+  border-color: var(--color-active);
+}
+
+.fileGalleryFileIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: var(--color-active);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.fileGalleryFileInfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fileGalleryFileInfo strong,
+.fileGalleryFileInfo small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileGalleryFileInfo strong {
+  font-size: 14px;
+}
+
+.fileGalleryFileInfo small {
+  font-size: 12px;
+  color: var(--color-deactive);
+}
+
 .deleted {
   color: #888 !important;
   font-style: italic;
@@ -919,6 +1174,46 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.pendingFilePreview {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 8px 8px;
+  box-sizing: border-box;
+  background: var(--color-sidebar);
+  color: var(--color-text);
+}
+
+.pendingFileIcon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-input-bg);
+  color: var(--color-active);
+}
+
+.pendingFileName {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pendingRemove {

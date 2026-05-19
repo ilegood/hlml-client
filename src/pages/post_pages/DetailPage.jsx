@@ -91,7 +91,27 @@ export default function DetailPage() {
       navigate("/login");
       return;
     }
-    runPostAction(() => togglePostLike(id), "찜 처리에 실패했습니다.");
+
+    const previous = post;
+    const currentUserIdString = String(currentUserId);
+    setPost({
+      ...post,
+      likes: Math.max(0, (post.likes || 0) + (liked ? -1 : 1)),
+      likedBy: liked
+        ? (post.likedBy || []).filter(
+            (likedUserId) => String(likedUserId) !== currentUserIdString,
+          )
+        : [...(post.likedBy || []), currentUserIdString],
+    });
+
+    runPostAction(async () => {
+      try {
+        return await togglePostLike(id);
+      } catch (error) {
+        setPost(previous);
+        throw error;
+      }
+    }, "찜 처리에 실패했습니다.");
   };
 
   const handleJoinBtn = async () => {
@@ -129,6 +149,7 @@ export default function DetailPage() {
 
   const deleteComment = (idx, replyIdx = null) => {
     toast("정말 삭제할까요?", {
+      position: "bottom-center",
       action: {
         label: "삭제",
         onClick: async () => {
@@ -145,10 +166,10 @@ export default function DetailPage() {
           try {
             await deletePostComment(target.id);
             await refreshPost();
-            toast.success("삭제했습니다.");
+            toast.success("삭제했습니다.", { position: "bottom-center" });
           } catch (err) {
             console.error("Failed to delete comment:", err);
-            toast.error("삭제에 실패했습니다.");
+            toast.error("삭제에 실패했습니다.", { position: "bottom-center" });
           }
         },
       },
