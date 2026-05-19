@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
+import { ChatMessageContent, getMessagePreviewText } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
@@ -920,7 +920,7 @@ export default function ChatRoomDetailPage() {
                       <span className={styles.replyContent}>
                         {parentMsg.isDeleted
                           ? "삭제된 메시지"
-                          : parentMsg.content}
+                          : getMessagePreviewText(parentMsg.content, displayName(parentMsg.nickname))}
                       </span>
                     </div>
                   )}
@@ -1148,8 +1148,8 @@ export default function ChatRoomDetailPage() {
             </div>
             <div className={styles.contextText}>
               {replyTo
-                ? replyTo.content
-                : messages.find((m) => m.id === editId)?.content}
+                ? getMessagePreviewText(replyTo.content, displayName(replyTo.nickname))
+                : getMessagePreviewText(messages.find((m) => m.id === editId)?.content, name)}
             </div>
           </div>
           <button

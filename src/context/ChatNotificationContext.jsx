@@ -95,6 +95,13 @@ export const ChatNotificationProvider = ({ children }) => {
       refresh();
     });
 
+    socket.on("entrance_alarm", ({ roomTitle, message }) => {
+      toast(`${roomTitle}`, {
+        description: message,
+        duration: 5000,
+      });
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;

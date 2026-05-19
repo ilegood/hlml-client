@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
+import { ChatMessageContent, getMessagePreviewText } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 
@@ -740,7 +740,7 @@ export default function DMDetailPage() {
                       <span className={styles.replyContent}>
                         {parentMsg.isDeleted
                           ? "삭제된 메시지"
-                          : parentMsg.content}
+                          : getMessagePreviewText(parentMsg.content, parentMsg.nickname)}
                       </span>
                     </div>
                   )}
@@ -968,8 +968,8 @@ export default function DMDetailPage() {
             </div>
             <div className={styles.contextText}>
               {replyTo
-                ? replyTo.content
-                : messages.find((m) => m.id === editId)?.content}
+                ? getMessagePreviewText(replyTo.content, replyTo.nickname)
+                : getMessagePreviewText(messages.find((m) => m.id === editId)?.content, name)}
             </div>
           </div>
           <button

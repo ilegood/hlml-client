@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getImageUrl } from "../../api/instance";
 import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
 
-const parseMessagePayload = (content) => {
+export const parseMessagePayload = (content) => {
   if (!content || typeof content !== "string") return null;
 
   try {
@@ -23,6 +23,26 @@ const parseMessagePayload = (content) => {
   }
 
   return null;
+};
+
+export const getMessagePreviewText = (content, nickname) => {
+  const payload = parseMessagePayload(content);
+  if (!payload) return content;
+
+  if (payload.attachments.length > 0) {
+    const hasImage = payload.attachments.some((a) =>
+      a.mimeType?.startsWith("image/"),
+    );
+    const hasVideo = payload.attachments.some((a) =>
+      a.mimeType?.startsWith("video/"),
+    );
+
+    if (hasImage) return `${nickname}님의 이미지`;
+    if (hasVideo) return `${nickname}님의 동영상`;
+    return `${nickname}님의 파일`;
+  }
+
+  return payload.text || "";
 };
 
 const countHangul = (value) =>
