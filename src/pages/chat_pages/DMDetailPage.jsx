@@ -115,6 +115,7 @@ export default function DMDetailPage() {
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const pendingFilesRef = useRef([]);
+  const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
   const targetNicknameRef = useRef("");
 
@@ -476,6 +477,7 @@ export default function DMDetailPage() {
   const handleSend = useCallback(
     async (e) => {
       if (e) e.preventDefault();
+      if (sendingRef.current) return;
       if ((!input.trim() && pendingFiles.length === 0) || !socketRef.current)
         return;
 
@@ -489,6 +491,7 @@ export default function DMDetailPage() {
         });
         setEditId(null);
       } else {
+        sendingRef.current = true;
         setSending(true);
         let clientTempId = null;
         try {
@@ -568,9 +571,11 @@ export default function DMDetailPage() {
           toast.error(
             error?.response?.data?.message || "파일 업로드에 실패했습니다.",
           );
+          sendingRef.current = false;
           setSending(false);
           return;
         }
+        sendingRef.current = false;
         setSending(false);
       }
       setInput("");

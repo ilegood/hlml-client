@@ -154,6 +154,7 @@ export default function ChatRoomDetailPage() {
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const pendingFilesRef = useRef([]);
+  const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
   const appointmentReminder = (notifications?.reminders || []).find(
     (item) => String(item.roomId) === String(roomId),
@@ -528,6 +529,7 @@ export default function ChatRoomDetailPage() {
   const handleSend = useCallback(
     async (e) => {
       if (e) e.preventDefault();
+      if (sendingRef.current) return;
       if ((!input.trim() && pendingFiles.length === 0) || !socketRef.current)
         return;
       if (!socketRef.current.connected) {
@@ -545,6 +547,7 @@ export default function ChatRoomDetailPage() {
         });
         setEditId(null);
       } else {
+        sendingRef.current = true;
         setSending(true);
         let clientTempId = null;
         try {
@@ -624,9 +627,11 @@ export default function ChatRoomDetailPage() {
           toast.error(
             error?.response?.data?.message || "파일 업로드에 실패했습니다.",
           );
+          sendingRef.current = false;
           setSending(false);
           return;
         }
+        sendingRef.current = false;
         setSending(false);
       }
       setInput("");
