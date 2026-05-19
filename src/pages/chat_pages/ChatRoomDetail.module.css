@@ -389,6 +389,33 @@
   white-space: pre-wrap;
 }
 
+.pendingMessage {
+  opacity: 0.62;
+}
+
+.pendingMessage::after {
+  content: " 전송 중";
+  display: inline-block;
+  margin-left: 8px;
+  color: var(--color-deactive);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.failedMessage {
+  opacity: 0.85;
+  color: #ef4444;
+}
+
+.failedMessage::after {
+  content: " 전송 실패";
+  display: inline-block;
+  margin-left: 8px;
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 900;
+}
+
 .attachmentWrap {
   display: inline-flex;
   flex-direction: column;
@@ -985,23 +1012,49 @@
 /* ── Emoji picker ── */
 .emojiPickerPopup {
   position: absolute;
-  top: calc(100% + 8px);
+  bottom: calc(100% + 8px);
   right: 0;
-  z-index: 1000;
+  z-index: 6000;
+  max-width: min(352px, calc(100vw - 28px));
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   border-radius: 10px;
   overflow: hidden;
   animation: popIn 0.12s ease-out;
+  transform-origin: bottom right;
+}
+
+.emojiPickerPopup :global(em-emoji-picker) {
+  width: min(352px, calc(100vw - 28px));
+  max-width: calc(100vw - 28px);
 }
 
 @keyframes popIn {
   from {
     opacity: 0;
-    transform: scale(0.9) translateY(-4px);
+    transform: scale(0.9) translateY(4px);
   }
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@media (max-width: 520px) {
+  .emojiPickerPopup {
+    right: 50%;
+    transform: translateX(50%);
+    transform-origin: bottom center;
+  }
+
+  @keyframes popIn {
+    from {
+      opacity: 0;
+      transform: translateX(50%) scale(0.9) translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(50%) scale(1) translateY(0);
+    }
   }
 }
 

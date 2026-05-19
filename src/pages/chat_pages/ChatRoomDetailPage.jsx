@@ -69,6 +69,9 @@ const createPendingFileId = (file) =>
     crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`
   }`;
 
+const createClientMessageId = () =>
+  `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
+
 const formatAppointmentDateTime = (date, time) => {
   const dateText = date
     ? new Date(date).toLocaleDateString("ko-KR", {
@@ -215,6 +218,26 @@ export default function ChatRoomDetailPage() {
       setMessages((prev) => {
         // 중복 방지 (이미 목록에 있는 메시지면 무시)
         if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+        if (msg.clientTempId) {
+          const pendingIndex = prev.findIndex(
+            (m) => m.clientTempId === msg.clientTempId,
+          );
+          if (pendingIndex !== -1) {
+            return prev.map((m, index) =>
+              index === pendingIndex
+                ? {
+                    ...m,
+                    ...msg,
+                    isPending: false,
+                    isFailed: false,
+                    isEdited: msg.is_edited === 1 || msg.isEdited,
+                    isDeleted: msg.is_deleted === 1 || msg.isDeleted,
+                    time: msg.created_at || msg.time || m.time,
+                  }
+                : m,
+            );
+          }
+        }
 
         return [
           ...prev,
@@ -523,11 +546,46 @@ export default function ChatRoomDetailPage() {
         setEditId(null);
       } else {
         setSending(true);
+        let clientTempId = null;
         try {
+          clientTempId = createClientMessageId();
+          const isUploadingMessage = pendingFiles.length > 0;
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: clientTempId,
+              clientTempId,
+              roomId,
+              userId,
+              nickname: name,
+              profileImg,
+              content: isUploadingMessage ? "파일 업로드 중..." : input.trim(),
+              isSystem: false,
+              isPending: true,
+              isUploading: isUploadingMessage,
+              isFailed: false,
+              parentId: replyTo?.id || null,
+              reactions: [],
+              readCount: 0,
+              time: new Date().toISOString(),
+            },
+          ]);
+          setTimeout(
+            () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+            0,
+          );
           const content = await buildMessageContent();
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.clientTempId === clientTempId
+                ? { ...m, content, isUploading: false }
+                : m,
+            ),
+          );
           socketRef.current.emit(
             "send_message",
             {
+              clientTempId,
               roomId,
               userId,
               nickname: name,
@@ -538,12 +596,30 @@ export default function ChatRoomDetailPage() {
               time: new Date().toISOString(),
             },
             (res) => {
-              if (!res?.ok) toast.error("메시지 전송에 실패했습니다.");
+              if (!res?.ok) {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.clientTempId === clientTempId
+                      ? { ...m, isPending: false, isFailed: true }
+                      : m,
+                  ),
+                );
+                toast.error("메시지 전송에 실패했습니다.");
+              }
             },
           );
           setReplyTo(null);
           clearPendingFiles();
         } catch (error) {
+          if (clientTempId) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.clientTempId === clientTempId
+                  ? { ...m, isPending: false, isUploading: false, isFailed: true }
+                  : m,
+              ),
+            );
+          }
           console.error("Failed to upload chat file:", error);
           toast.error(
             error?.response?.data?.message || "파일 업로드에 실패했습니다.",
@@ -949,7 +1025,11 @@ export default function ChatRoomDetailPage() {
 
                   {/* 메시지 본문 */}
                   <div
-                    className={`${styles.msgBubble} ${msg.isDeleted ? styles.deleted : ""}`}
+                    className={`${styles.msgBubble} ${
+                      msg.isDeleted ? styles.deleted : ""
+                    } ${msg.isPending ? styles.pendingMessage : ""} ${
+                      msg.isFailed ? styles.failedMessage : ""
+                    }`}
                   >
                     <ChatMessageContent content={msg.content} />
                     {msg.isEdited && !msg.isDeleted && (
@@ -986,7 +1066,10 @@ export default function ChatRoomDetailPage() {
                 </div>
 
                 {/* ── Action toolbar (항상 오른쪽 끝) ── */}
-                {hoveredMsgId === msg.id && !msg.isDeleted && (
+                {hoveredMsgId === msg.id &&
+                  !msg.isDeleted &&
+                  !msg.isPending &&
+                  !msg.isFailed && (
                   <div
                     className={styles.msgActions}
                     onClick={(e) => e.stopPropagation()}

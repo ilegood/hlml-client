@@ -39,6 +39,36 @@ const updateRoomUnread = (rooms, roomId, reason) => {
 const countUnread = (rooms) =>
   rooms.reduce((sum, room) => sum + Number(room.unreadCount || 0), 0);
 
+const updateUnreadNotifications = (items, roomId, reason) => {
+  const roomKey = String(roomId);
+  let found = false;
+  const nextItems = items
+    .map((item) => {
+      if (String(item.roomKey || item.roomId) !== roomKey) return item;
+
+      found = true;
+      const current = Number(item.count || 0);
+      return {
+        ...item,
+        count: reason === "read" ? 0 : current + 1,
+      };
+    })
+    .filter((item) => Number(item.count || 0) > 0);
+
+  if (!found && reason === "message") {
+    nextItems.push({
+      id: `unread:${roomKey}`,
+      type: roomKey.startsWith("dm_") ? "dm" : "group",
+      roomId: roomKey.startsWith("dm_") ? roomKey.slice(3) : roomKey,
+      roomKey,
+      title: "새 메시지",
+      count: 1,
+    });
+  }
+
+  return nextItems;
+};
+
 const formatReminderTime = (date, time) => {
   if (!date || !time) return "";
   return `${String(date).slice(0, 10)} ${String(time).slice(0, 5)}`;
@@ -96,6 +126,10 @@ export const ChatNotificationProvider = ({ children }) => {
         },
       };
     });
+    setNotifications((current) => ({
+      ...current,
+      unread: updateUnreadNotifications(current.unread || [], roomId, reason),
+    }));
   }, []);
 
   const refresh = useCallback(async ({ quiet = true } = {}) => {

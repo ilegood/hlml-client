@@ -85,15 +85,6 @@ const ChatRoomsPage = () => {
     };
   }, [fetchChatRooms]);
 
-  useEffect(() => {
-    setChatRooms((prev) =>
-      prev.map((room) => ({
-        ...room,
-        unreadCount: unreadByRoomId.get(String(room.post_id || room.id)) || 0,
-      })),
-    );
-  }, [unreadByRoomId]);
-
   const handleDeleteKickedRoom = async (postId) => {
     if (!window.confirm("이 채팅방을 목록에서 삭제하시겠습니까?")) return;
 
@@ -117,15 +108,21 @@ const ChatRoomsPage = () => {
         {loading ? (
           <div className={styles.empty}>채팅방을 불러오는 중...</div>
         ) : chatRooms.length > 0 ? (
-          chatRooms.map((room) => (
-            <ChatRoomItem
-              key={room.id}
-              room={room}
-              onDelete={
-                room.isKicked ? () => handleDeleteKickedRoom(room.id) : null
-              }
-            />
-          ))
+          chatRooms.map((room) => {
+            const roomId = String(room.post_id || room.id);
+            return (
+              <ChatRoomItem
+                key={room.id}
+                room={{
+                  ...room,
+                  unreadCount: unreadByRoomId.get(roomId) || 0,
+                }}
+                onDelete={
+                  room.isKicked ? () => handleDeleteKickedRoom(room.id) : null
+                }
+              />
+            );
+          })
         ) : (
           <div className={styles.empty}>
             {userId
