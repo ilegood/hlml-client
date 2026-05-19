@@ -10,7 +10,7 @@ const loadReactions = () => {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
-  } catch {}
+  } catch { /* empty */ }
   return DEFAULT_REACTIONS;
 };
 
