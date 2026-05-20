@@ -49,6 +49,42 @@
   color: var(--color-text);
   margin-bottom: 8px;
   white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.commentImg {
+  display: block;
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 12px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+.commentTextCollapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.seeMoreBtn {
+  background: none;
+  border: none;
+  color: var(--color-active);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0;
+  margin-bottom: 8px;
+  cursor: pointer;
+  display: block;
+}
+
+.seeMoreBtn:hover {
+  text-decoration: underline;
 }
 
 .commentActions {
