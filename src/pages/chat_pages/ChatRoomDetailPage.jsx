@@ -13,6 +13,7 @@ import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import ReactionCustomizerModal from "../../components/modals/ReactionCustomizerModal";
+import ConfirmModal from "../../components/modals/ConfirmModal";
 import ChatMessageItem from "../../components/chat_components/ChatMessageItem";
 import ChatInputArea from "../../components/chat_components/ChatInputArea";
 import { useFileUpload } from "../../hooks/useFileUpload";
@@ -61,6 +62,7 @@ export default function ChatRoomDetailPage() {
   const [blockWarning, setBlockWarning] = useState(null);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
   const [showCustomizer, setShowCustomizer] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const { reactions, saveReactions } = useCustomReactions();
 
   const socketRef = useRef(null);
@@ -362,8 +364,10 @@ export default function ChatRoomDetailPage() {
     setShowMembers(!showMembers);
   };
   const cancelContext = () => { setReplyTo(null); setEditId(null); setInput(""); };
-  const handleLeave = async () => {
-    if (!window.confirm("정말로 이 채팅방에서 나가시겠습니까?")) return;
+  const handleLeave = () => setShowLeaveConfirm(true);
+
+  const confirmLeave = async () => {
+    setShowLeaveConfirm(false);
     try {
       socketRef.current?.emit("leave_room", { roomId, nickname: name, userId });
       await leavePost(roomId);
@@ -501,6 +505,18 @@ export default function ChatRoomDetailPage() {
 
       {selectedProfileId && (
         <UserProfileModal userId={selectedProfileId} currentUserId={userId} onClose={() => setSelectedProfileId(null)} />
+      )}
+
+      {showLeaveConfirm && (
+        <ConfirmModal
+          title="채팅방 나가기"
+          message="정말로 이 채팅방에서 나가시겠습니까?"
+          confirmLabel="나가기"
+          cancelLabel="취소"
+          danger
+          onConfirm={confirmLeave}
+          onCancel={() => setShowLeaveConfirm(false)}
+        />
       )}
     </div>
   );
