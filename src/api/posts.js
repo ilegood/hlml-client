@@ -122,8 +122,13 @@ const toPostFormData = (data) => {
   return formData;
 };
 
-export const getPosts = async () => {
-  const res = await instance.get(API_URL);
+export const getPosts = async (options = {}) => {
+  const params = new URLSearchParams();
+  if (options.visibleOnly) params.set("visibleOnly", "1");
+
+  const res = await instance.get(
+    params.toString() ? `${API_URL}?${params.toString()}` : API_URL,
+  );
   return res.data.map(normalizePost);
 };
 

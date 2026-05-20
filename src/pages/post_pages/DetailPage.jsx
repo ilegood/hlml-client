@@ -447,7 +447,7 @@ export default function DetailPage() {
           targetCommentId={targetComment?.id}
           targetUserId={targetComment ? targetComment.userId : post.user_id}
           targetName={targetComment ? targetComment.authorNickname : null}
-          targetContent={targetComment ? targetComment.text : null}
+          targetContent={targetComment ? targetComment.text : post.content}
         />
       )}
     </main>

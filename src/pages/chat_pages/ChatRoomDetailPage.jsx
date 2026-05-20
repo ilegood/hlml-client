@@ -156,6 +156,20 @@ export default function ChatRoomDetailPage() {
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const resizeInput = useCallback(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(textarea.scrollHeight, 160);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY = textarea.scrollHeight > 160 ? "auto" : "hidden";
+  }, []);
+
+  useEffect(() => {
+    resizeInput();
+  }, [input, resizeInput]);
   const pendingFilesRef = useRef([]);
   const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
@@ -790,6 +804,7 @@ export default function ChatRoomDetailPage() {
     const next = !notificationsMuted;
     setNotificationsMuted(next);
     localStorage.setItem(`chat-muted:${roomId}`, next ? "1" : "0");
+    window.dispatchEvent(new Event("chat:refresh-unread"));
     toast.success(next ? "채팅방 알림을 껐습니다." : "채팅방 알림을 켰습니다.");
   };
 
@@ -1377,11 +1392,13 @@ export default function ChatRoomDetailPage() {
           >
             +
           </button>
-          <input
+          <textarea
             ref={inputRef}
             className={styles.input}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onInput={resizeInput}
+            onCompositionEnd={resizeInput}
             onPaste={handlePaste}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -1396,6 +1413,7 @@ export default function ChatRoomDetailPage() {
                   ? `@${displayName(replyTo.nickname)}님에게 답장...`
                   : `#${roomTitle || roomId}에 메시지 보내기`
             }
+            rows={1}
           />
           <div className={styles.inputActions}>
             <button

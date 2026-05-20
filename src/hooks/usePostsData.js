@@ -10,7 +10,7 @@ export const usePostsData = () => {
 
   const fetchPosts = useCallback(async () => {
     try {
-      setPosts(await getPosts());
+      setPosts(await getPosts({ visibleOnly: true }));
     } catch (err) {
       console.error("Failed to fetch posts:", err);
     }

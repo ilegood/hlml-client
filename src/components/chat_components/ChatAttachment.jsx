@@ -1,8 +1,9 @@
 import { Component, useCallback, useEffect, useState } from "react";
-import { getImageUrl } from "../../api/instance";
+import instance, { getImageUrl } from "../../api/instance";
 import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
 
 const URL_PATTERN = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
+const MARKDOWN_LINK_PATTERN = /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|www\.[^\s)]+)\)/gi;
 const TRAILING_PUNCTUATION = /[)\],.!?…]+$/;
 
 const parseMessagePayload = (content) => {
@@ -94,15 +95,43 @@ const getHostname = (value) => {
   }
 };
 
+const stripCodeBlocks = (value) =>
+  String(value || "")
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`[^`]*`/g, " ");
+
+const extractUrls = (text) => {
+  const raw = stripCodeBlocks(text);
+  URL_PATTERN.lastIndex = 0;
+  const urls = [];
+  const seen = new Set();
+  let match;
+
+  while ((match = URL_PATTERN.exec(raw))) {
+    let url = match[0];
+    const trailing = url.match(TRAILING_PUNCTUATION)?.[0] || "";
+    if (trailing) url = url.slice(0, -trailing.length);
+
+    const normalized = normalizeUrl(url);
+    if (normalized && !seen.has(normalized)) {
+      seen.add(normalized);
+      urls.push(normalized);
+    }
+  }
+
+  return urls;
+};
+
 const getYouTubeVideoId = (value) => {
   try {
     const url = new URL(normalizeUrl(value));
     const host = url.hostname.toLowerCase();
     if (host === "youtu.be") {
-      return url.pathname.split("/").filter(Boolean)[0] || "";
+      const videoId = url.pathname.split("/").filter(Boolean)[0] || "";
+      return /^[\w-]{6,}$/.test(videoId) ? videoId : "";
     }
 
-    if (host.includes("youtube.com")) {
+    if (host.includes("youtube.com") || host.includes("youtube-nocookie.com")) {
       if (url.pathname === "/watch") return url.searchParams.get("v") || "";
       const pathParts = url.pathname.split("/").filter(Boolean);
       const videoIndex = pathParts.findIndex((part) =>
@@ -118,14 +147,8 @@ const getYouTubeVideoId = (value) => {
 };
 
 const getYouTubePreview = (text) => {
-  const raw = String(text || "");
-  URL_PATTERN.lastIndex = 0;
-  const match = URL_PATTERN.exec(raw);
-  if (!match) return null;
-
-  let url = match[0];
-  const trailing = url.match(TRAILING_PUNCTUATION)?.[0] || "";
-  if (trailing) url = url.slice(0, -trailing.length);
+  const url = extractUrls(text)[0];
+  if (!url) return null;
 
   const hostname = getHostname(url);
   if (
@@ -133,6 +156,9 @@ const getYouTubePreview = (text) => {
       "youtube.com",
       "www.youtube.com",
       "m.youtube.com",
+      "music.youtube.com",
+      "youtube-nocookie.com",
+      "www.youtube-nocookie.com",
       "youtu.be",
     ].includes(hostname)
   ) {
@@ -143,12 +169,90 @@ const getYouTubePreview = (text) => {
   if (!videoId) return null;
 
   return {
-    url: normalizeUrl(url),
+    url,
     videoId,
   };
 };
 
-const renderTextWithLinks = (value) => {
+const getLinkPreview = (text) => {
+  const youtubePreview = getYouTubePreview(text);
+  if (youtubePreview) {
+    return {
+      type: "youtube",
+      ...youtubePreview,
+    };
+  }
+
+  const url = extractUrls(text)[0];
+  if (!url) return null;
+
+  const hostname = getHostname(url);
+  const path = (() => {
+    try {
+      return new URL(url).pathname;
+    } catch {
+      return "";
+    }
+  })();
+
+  const isMap =
+    hostname === "naver.me" ||
+    hostname === "map.naver.com" ||
+    hostname.endsWith(".map.naver.com") ||
+    hostname === "map.kakao.com" ||
+    hostname.endsWith(".map.kakao.com") ||
+    hostname === "place.map.kakao.com" ||
+    hostname === "m.map.kakao.com" ||
+    hostname === "maps.google.com" ||
+    hostname === "maps.app.goo.gl" ||
+    (hostname === "goo.gl" && path.startsWith("/maps")) ||
+    (hostname.endsWith("google.com") && path.startsWith("/maps")) ||
+    (hostname.endsWith("google.co.kr") && path.startsWith("/maps"));
+
+  if (isMap) {
+    return {
+      type: "map",
+      url,
+      domain: hostname,
+      title: "네이버 지도",
+    };
+  }
+
+  if (hostname === "blog.naver.com" || hostname === "m.blog.naver.com") {
+    return {
+      type: "blog",
+      url,
+      domain: "blog.naver.com",
+      title: "네이버 블로그",
+    };
+  }
+
+  if (hostname === "cafe.naver.com" || hostname === "m.cafe.naver.com") {
+    return {
+      type: "cafe",
+      url,
+      domain: "cafe.naver.com",
+      title: "네이버 카페",
+    };
+  }
+
+  if (hostname === "search.naver.com") {
+    return {
+      type: "link",
+      url,
+      domain: hostname,
+      title: "네이버 검색",
+    };
+  }
+
+  return {
+    type: "link",
+    url,
+    domain: hostname,
+    title: hostname,
+  };
+};
+const renderPlainTextWithLinks = (value, keyPrefix = "plain") => {
   const text = String(value || "");
   if (!text) return "";
 
@@ -175,7 +279,7 @@ const renderTextWithLinks = (value) => {
     const href = url.startsWith("http") ? url : `https://${url}`;
     nodes.push(
       <a
-        key={`${start}-${url}`}
+        key={`${keyPrefix}-${start}-${url}`}
         className={styles.messageLink}
         href={href}
         target="_blank"
@@ -197,6 +301,55 @@ const renderTextWithLinks = (value) => {
   }
 
   return nodes.length > 0 ? nodes : text;
+};
+
+const renderTextWithLinks = (value) => {
+  const text = String(value || "");
+  if (!text) return "";
+
+  MARKDOWN_LINK_PATTERN.lastIndex = 0;
+  const nodes = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = MARKDOWN_LINK_PATTERN.exec(text))) {
+    const [fullMatch, label, rawUrl] = match;
+    const start = match.index;
+    const end = start + fullMatch.length;
+
+    if (start > lastIndex) {
+      nodes.push(
+        ...[].concat(
+          renderPlainTextWithLinks(text.slice(lastIndex, start), `before-${start}`),
+        ),
+      );
+    }
+
+    const href = normalizeUrl(rawUrl);
+    nodes.push(
+      <a
+        key={`markdown-${start}-${href}`}
+        className={styles.messageLink}
+        href={href}
+        target="_blank"
+        rel="noreferrer noopener"
+      >
+        {label}
+      </a>,
+    );
+
+    lastIndex = end;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(
+      ...[].concat(
+        renderPlainTextWithLinks(text.slice(lastIndex), `after-${lastIndex}`),
+      ),
+    );
+  }
+
+  return nodes.length > 0 ? nodes : renderPlainTextWithLinks(text);
 };
 
 function YouTubePreview({ url, videoId }) {
@@ -251,6 +404,92 @@ function YouTubePreview({ url, videoId }) {
   );
 }
 
+function LinkPreviewCard({ preview }) {
+  const [meta, setMeta] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadMeta = async () => {
+      setIsLoading(true);
+      try {
+        const { data } = await instance.get(
+          `/chat/link-preview?url=${encodeURIComponent(preview.url)}`,
+        );
+        if (!cancelled) setMeta(data || null);
+      } catch {
+        if (!cancelled) setMeta(null);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    loadMeta();
+    return () => {
+      cancelled = true;
+    };
+  }, [preview.url]);
+
+  const displayUrl = meta?.url || preview.url;
+  const displayDomain = (() => {
+    try {
+      return new URL(displayUrl).hostname.toLowerCase();
+    } catch {
+      return preview.domain || "";
+    }
+  })();
+  const isNaverType = preview.type === "map" || preview.type === "blog" || preview.type === "cafe";
+  const mapServiceName = (() => {
+    if (displayDomain.includes("kakao")) return "카카오맵";
+    if (displayDomain.includes("google")) return "Google Maps";
+    if (displayDomain === "naver.me" || displayDomain.includes("map.naver")) return "네이버 지도";
+    return "지도";
+  })();
+  const title = (() => {
+    if (preview.type === "blog") return "네이버 블로그";
+    if (preview.type === "cafe") return "네이버 카페";
+    if (preview.type === "map") {
+      const metaTitle = String(meta?.title || "").trim();
+      const weakMapTitle =
+        !metaTitle ||
+        /^(place|map|지도|naver\s*map|kakao\s*map|google\s*maps)$/i.test(metaTitle);
+      return weakMapTitle ? mapServiceName : metaTitle;
+    }
+    return meta?.title || preview.title || displayUrl;
+  })();  const subtitle = isNaverType ? "" : meta?.subtitle || meta?.description || "";
+  const siteLabel = displayDomain;
+
+  return (
+    <a
+      className={styles.linkPreview}
+      href={preview.url}
+      target="_blank"
+      rel="noreferrer noopener"
+    >
+      {isLoading ? (
+        <div className={styles.linkPreviewThumbSkeleton} />
+      ) : meta?.image ? (
+        <div className={styles.linkPreviewThumb}>
+          <img src={meta.image} alt="" />
+        </div>
+      ) : (
+        <div className={styles.linkPreviewIcon}>
+          <span aria-hidden="true">N</span>
+        </div>
+      )}
+      <div className={styles.linkPreviewMeta}>
+        <strong className={styles.linkPreviewTitle}>
+          {isLoading ? preview.title : title}
+        </strong>
+        {subtitle && subtitle !== title && (
+          <span className={styles.linkPreviewSubtitle}>{subtitle}</span>
+        )}
+        <span className={styles.linkPreviewUrl}>{siteLabel}</span>
+      </div>
+    </a>
+  );
+}
 class ChatMessageContentErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -501,7 +740,7 @@ function MediaGrid({ attachments }) {
 
 function ChatMessageContentBody({ content }) {
   const payload = parseMessagePayload(content);
-  const youtubePreview = getYouTubePreview(payload ? payload.text : content);
+  const linkPreview = getLinkPreview(payload ? payload.text : content);
 
   if (!payload) {
     if (isSingleEmoji(content)) {
@@ -510,15 +749,18 @@ function ChatMessageContentBody({ content }) {
 
     const text = String(content || "");
     const shouldHideLinkText =
-      youtubePreview && text.trim() === youtubePreview.url;
+      linkPreview && normalizeUrl(text.trim()) === linkPreview.url;
 
     return (
       <div className={styles.messagePayload}>
-        {youtubePreview && (
+        {linkPreview?.type === "youtube" && (
           <YouTubePreview
-            url={youtubePreview.url}
-            videoId={youtubePreview.videoId}
+            url={linkPreview.url}
+            videoId={linkPreview.videoId}
           />
+        )}
+        {linkPreview && linkPreview.type !== "youtube" && (
+          <LinkPreviewCard preview={linkPreview} />
         )}
         {!shouldHideLinkText && (
           <div className={styles.payloadText}>
@@ -534,15 +776,18 @@ function ChatMessageContentBody({ content }) {
     (attachment) => !isMedia(attachment),
   );
   const shouldHideLinkText =
-    youtubePreview && payload.text.trim() === youtubePreview.url;
+    linkPreview && normalizeUrl(payload.text.trim()) === linkPreview.url;
 
   return (
     <div className={styles.messagePayload}>
-      {youtubePreview && (
+      {linkPreview?.type === "youtube" && (
         <YouTubePreview
-          url={youtubePreview.url}
-          videoId={youtubePreview.videoId}
+          url={linkPreview.url}
+          videoId={linkPreview.videoId}
         />
+      )}
+      {linkPreview && linkPreview.type !== "youtube" && (
+        <LinkPreviewCard preview={linkPreview} />
       )}
       {payload.text && (
         <div

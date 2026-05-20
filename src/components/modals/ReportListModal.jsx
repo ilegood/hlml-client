@@ -344,6 +344,23 @@ const formatReportDate = (value) => {
   });
 };
 
+const getReportTypeLabel = (report) => {
+  if (report.reportType === "post") return "게시글";
+  if (report.reportType === "comment") return "댓글";
+  return "사용자";
+};
+
+const getReportSummary = (report) => {
+  const typeLabel = getReportTypeLabel(report);
+  if (report.reportType === "post") {
+    return `${typeLabel} 신고 접수완료`;
+  }
+  if (report.reportType === "comment") {
+    return `${typeLabel} 신고 접수완료`;
+  }
+  return `${report.targetName} 신고 접수완료`;
+};
+
 export default function ReportListModal({ onClose, onChanged }) {
   const { token } = useAuth();
   const [view, setView] = useState("list");
@@ -506,7 +523,13 @@ export default function ReportListModal({ onClose, onChanged }) {
                       </div>
                       <span className="status-badge">접수완료</span>
                     </div>
-                    <div className="summary">{report.targetName} 신고 접수완료</div>
+                    <div className="summary">{getReportSummary(report)}</div>
+                    {report.targetTitle && (
+                      <div className="reason">게시글: {report.targetTitle}</div>
+                    )}
+                    {report.targetExcerpt && (
+                      <div className="content">"{report.targetExcerpt}"</div>
+                    )}
                     {report.reportCount !== undefined && (
                       <div className="reason">
                         누적 신고 횟수 {report.reportCount}회

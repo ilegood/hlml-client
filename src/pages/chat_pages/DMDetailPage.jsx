@@ -117,6 +117,20 @@ export default function DMDetailPage() {
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const resizeInput = useCallback(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(textarea.scrollHeight, 160);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY = textarea.scrollHeight > 160 ? "auto" : "hidden";
+  }, []);
+
+  useEffect(() => {
+    resizeInput();
+  }, [input, resizeInput]);
   const pendingFilesRef = useRef([]);
   const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
@@ -1186,11 +1200,13 @@ export default function DMDetailPage() {
           >
             +
           </button>
-          <input
+          <textarea
             ref={inputRef}
             className={styles.input}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onInput={resizeInput}
+            onCompositionEnd={resizeInput}
             onPaste={handlePaste}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -1205,6 +1221,7 @@ export default function DMDetailPage() {
                   ? `@${replyTo.nickname}님에게 답장...`
                   : `${targetNickname}님에게 메시지 보내기`
             }
+            rows={1}
           />
           <div className={styles.inputActions}>
             <button

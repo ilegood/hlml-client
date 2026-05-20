@@ -98,6 +98,8 @@ export default function ReportModal({
         targetUserId,
         targetPostId,
         targetCommentId,
+        targetTitle,
+        targetContent,
         reason,
         content: content.trim(),
       });

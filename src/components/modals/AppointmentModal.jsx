@@ -1,101 +1,130 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/auth";
 import { getPosts } from "../../api/posts";
 import styles from "./AppointmentModal.module.css";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
+const CALENDAR_CELL_COUNT = 42;
+
+const toDateKey = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") return value.slice(0, 10);
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+};
+
+const toLocalDateKey = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+
+const formatTime = (value) => {
+  if (!value) return "시간 미정";
+  return String(value).slice(0, 5);
+};
 
 export default function AppointmentModal({ onClose }) {
   const { userId } = useAuth();
   const [appointments, setAppointments] = useState([]);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(() => new Date());
+  const [selectedDay, setSelectedDay] = useState(() => new Date());
   const [hoveredDay, setHoveredDay] = useState(null);
 
   const today = new Date();
+  const minMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const maxMonth = new Date(today.getFullYear(), today.getMonth() + 12, 1);
   const currentUserId = userId ? String(userId) : null;
-
-  const toDateKey = (value) => {
-    if (!value) return "";
-    if (typeof value === "string") return value.slice(0, 10);
-
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
-  };
-
-  const formatTime = (value) => {
-    if (!value) return "시간 미정";
-    return String(value).slice(0, 5);
-  };
 
   useEffect(() => {
     const fetchAppts = async () => {
       try {
         const allPosts = await getPosts();
         const filtered = allPosts.filter(
-          (p) =>
-            (currentUserId !== null && String(p.user_id) === currentUserId) ||
-            (currentUserId !== null &&
-              Array.isArray(p.joinedUserIds) &&
-              p.joinedUserIds.includes(currentUserId)),
+          (post) =>
+            currentUserId !== null &&
+            (String(post.user_id) === currentUserId ||
+              (Array.isArray(post.joinedUserIds) &&
+                post.joinedUserIds.includes(currentUserId))),
         );
         setAppointments(filtered);
       } catch (err) {
         console.error("Failed to fetch appointments:", err);
       }
     };
+
     fetchAppts();
   }, [currentUserId]);
 
   const viewYear = currentMonth.getFullYear();
   const viewMonth = currentMonth.getMonth();
-
   const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const prevMonthLastDay = new Date(viewYear, viewMonth, 0).getDate();
 
+  const calendarDays = Array.from({ length: CALENDAR_CELL_COUNT }, (_, index) => {
+    const dayNumber = index - firstDayOfMonth + 1;
+
+    if (dayNumber < 1) {
+      const day = prevMonthLastDay + dayNumber;
+      return {
+        key: `prev-${index}`,
+        day,
+        date: new Date(viewYear, viewMonth - 1, day),
+        isCurrentMonth: false,
+      };
+    }
+
+    if (dayNumber > daysInMonth) {
+      const day = dayNumber - daysInMonth;
+      return {
+        key: `next-${index}`,
+        day,
+        date: new Date(viewYear, viewMonth + 1, day),
+        isCurrentMonth: false,
+      };
+    }
+
+    return {
+      key: `current-${dayNumber}`,
+      day: dayNumber,
+      date: new Date(viewYear, viewMonth, dayNumber),
+      isCurrentMonth: true,
+    };
+  });
+
+  const getDayAppts = (date) => {
+    const dateStr = toLocalDateKey(date);
+    return appointments.filter((appointment) => toDateKey(appointment.date) === dateStr);
+  };
+
+  const isToday = (date) => toLocalDateKey(date) === toLocalDateKey(today);
+  const isSelected = (date) =>
+    toLocalDateKey(date) === toLocalDateKey(selectedDay);
+
   const handlePrevMonth = () => {
     const prev = new Date(viewYear, viewMonth - 1, 1);
-    if (prev >= new Date(today.getFullYear(), today.getMonth(), 1)) {
-      setCurrentMonth(prev);
-    }
+    if (prev >= minMonth) setCurrentMonth(prev);
   };
 
   const handleNextMonth = () => {
     const next = new Date(viewYear, viewMonth + 1, 1);
-    const limit = new Date(today.getFullYear(), today.getMonth() + 12, 1);
-    if (next < limit) setCurrentMonth(next);
+    if (next <= maxMonth) setCurrentMonth(next);
   };
-
-  const isToday = (d) =>
-    d === today.getDate() &&
-    viewMonth === today.getMonth() &&
-    viewYear === today.getFullYear();
-  const isSelected = (d) =>
-    d === selectedDay.getDate() &&
-    viewMonth === selectedDay.getMonth() &&
-    viewYear === selectedDay.getFullYear();
-
-  const getDayAppts = (d) => {
-    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    return appointments.filter((a) => toDateKey(a.date) === dateStr);
-  };
-
-  const selectedDateStr = `${selectedDay.getFullYear()}년 ${selectedDay.getMonth() + 1}월 ${selectedDay.getDate()}일`;
-  const selectedDateAppts = appointments.filter((a) => {
-    return (
-      toDateKey(a.date) ===
-      `${selectedDay.getFullYear()}-${String(selectedDay.getMonth() + 1).padStart(2, "0")}-${String(selectedDay.getDate()).padStart(2, "0")}`
-    );
-  });
 
   const isPrevDisabled =
-    viewMonth === today.getMonth() && viewYear === today.getFullYear();
+    viewMonth === minMonth.getMonth() && viewYear === minMonth.getFullYear();
+  const isNextDisabled =
+    viewMonth === maxMonth.getMonth() && viewYear === maxMonth.getFullYear();
+
+  const selectedDateStr = `${selectedDay.getFullYear()}년 ${
+    selectedDay.getMonth() + 1
+  }월 ${selectedDay.getDate()}일`;
+  const selectedDateAppts = getDayAppts(selectedDay);
 
   return (
     <div className={styles.overlay} onMouseDown={onClose}>
       <div className={styles.modalContent} onMouseDown={(e) => e.stopPropagation()}>
-        {/* ── Header ── */}
         <div className={styles.header}>
           <h2>내 약속 관리</h2>
           <button className={styles.closeBtn} onClick={onClose}>
@@ -113,71 +142,94 @@ export default function AppointmentModal({ onClose }) {
           </button>
         </div>
 
-        {/* ── Calendar ── */}
         <div className={styles.calendarContainer}>
           <div className={styles.calHeader}>
             <button
               className={styles.navBtn}
               onClick={handlePrevMonth}
               disabled={isPrevDisabled}
+              aria-label="이전 달"
+              title="이전 달"
             >
-              〈
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
             </button>
             <span>
               {viewYear}년 {viewMonth + 1}월
             </span>
-            <button className={styles.navBtn} onClick={handleNextMonth}>
-              〉
+            <button
+              className={styles.navBtn}
+              onClick={handleNextMonth}
+              disabled={isNextDisabled}
+              aria-label="다음 달"
+              title="다음 달"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
             </button>
           </div>
 
           <div className={styles.daysGrid}>
-            {DAY_LABELS.map((d) => (
-              <div key={d} className={styles.dayLabel}>
-                {d}
+            {DAY_LABELS.map((day) => (
+              <div key={day} className={styles.dayLabel}>
+                {day}
               </div>
             ))}
 
-            {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-              <div
-                key={`prev-${i}`}
-                className={`${styles.dayCell} ${styles.otherMonth}`}
-              >
-                {prevMonthLastDay - firstDayOfMonth + i + 1}
-              </div>
-            ))}
-
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => {
-              const hasAppt = getDayAppts(d).length > 0;
-              const dayAppts = hasAppt ? getDayAppts(d) : [];
+            {calendarDays.map(({ key, day, date, isCurrentMonth }) => {
+              const dayAppts = isCurrentMonth ? getDayAppts(date) : [];
+              const hasAppt = dayAppts.length > 0;
               const cellClass = [
                 styles.dayCell,
-                isToday(d) ? styles.today : "",
-                isSelected(d) ? styles.selected : "",
+                !isCurrentMonth ? styles.otherMonth : "",
+                isCurrentMonth && isToday(date) ? styles.today : "",
+                isCurrentMonth && isSelected(date) ? styles.selected : "",
               ]
                 .filter(Boolean)
                 .join(" ");
 
               return (
                 <div
-                  key={d}
+                  key={key}
                   className={cellClass}
-                  onClick={() =>
-                    setSelectedDay(new Date(viewYear, viewMonth, d))
-                  }
-                  onMouseEnter={() => setHoveredDay(d)}
+                  onClick={() => {
+                    if (isCurrentMonth) setSelectedDay(date);
+                  }}
+                  onMouseEnter={() => setHoveredDay(isCurrentMonth ? key : null)}
                   onMouseLeave={() => setHoveredDay(null)}
                 >
-                  {d}
+                  {day}
                   {hasAppt && <div className={styles.dot} />}
-                  {hoveredDay === d && hasAppt && (
+                  {hoveredDay === key && hasAppt && (
                     <div className={styles.dotPopup}>
-                      {dayAppts.map((appt, idx) => (
+                      {dayAppts.map((appt) => (
                         <div
-                          key={idx}
+                          key={appt.id}
                           className={styles.dotPopupItem}
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          onClick={(event) => {
+                            event.stopPropagation();
                             window.location.href = `/detail/${appt.id}`;
                           }}
                         >
@@ -197,13 +249,12 @@ export default function AppointmentModal({ onClose }) {
           </div>
         </div>
 
-        {/* ── Appointment List ── */}
         <div className={styles.apptList}>
           <h3>{selectedDateStr} 약속</h3>
           {selectedDateAppts.length > 0 ? (
-            selectedDateAppts.map((appt, idx) => (
+            selectedDateAppts.map((appt) => (
               <div
-                key={idx}
+                key={appt.id}
                 className={styles.apptItem}
                 onClick={() => (window.location.href = `/detail/${appt.id}`)}
               >
