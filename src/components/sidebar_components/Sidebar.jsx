@@ -125,10 +125,10 @@ const Sidebar = () => {
                         onClick={() => openNotificationTarget(item)}
                       >
                         <span className={styles.notificationMain}>
-                          {item.title}
+                          "{item.title}"의 약속이 30분 남았습니다
                         </span>
                         <span className={styles.notificationSub}>
-                          출발은 하신거죠?
+                          서둘러 주세요!
                         </span>
                       </button>
                     ))}

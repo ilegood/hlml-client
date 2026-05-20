@@ -96,11 +96,12 @@ export const ChatNotificationProvider = ({ children }) => {
 
   const showAppointmentReminder = useCallback(
     (item) => {
-      const key = `appointment-reminder:${userId}:${item.roomId}:${item.date}:${item.time}`;
+      const minutes = item.remainingMinutes || 30;
+      const key = `appointment-reminder:${userId}:${item.roomId}:${item.date}:${item.time}:${minutes}`;
       if (localStorage.getItem(key)) return false;
 
       localStorage.setItem(key, "1");
-      toast(`${item.title} 약속이 30분 이내에 시작됩니다.`, {
+      toast(`${item.title}의 약속이 ${minutes}분 남았습니다.`, {
         description: formatReminderTime(item.date, item.time),
       });
       return true;

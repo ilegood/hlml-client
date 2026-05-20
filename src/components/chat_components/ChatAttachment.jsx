@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-/* eslint-disable react-refresh/only-export-components */
-import { useCallback, useEffect, useState } from "react";
-import { getImageUrl } from "../../api/instance";
-import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
-
-export const parseMessagePayload = (content) => {
-=======
 import { Component, useCallback, useEffect, useState } from "react";
 import { getImageUrl } from "../../api/instance";
 import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
@@ -14,7 +6,6 @@ const URL_PATTERN = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
 const TRAILING_PUNCTUATION = /[)\],.!?…]+$/;
 
 const parseMessagePayload = (content) => {
->>>>>>> bird
   if (!content || typeof content !== "string") return null;
 
   try {
