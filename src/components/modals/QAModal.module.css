@@ -93,6 +93,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -104,16 +105,20 @@
   color: var(--color-text);
   display: flex;
   gap: 10px;
+  min-width: 0;
+  line-height: 1.4;
 }
 
 .qBadge {
   color: var(--color-active);
   font-weight: 900;
+  flex: 0 0 auto;
 }
 
 .arrow {
   color: var(--color-deactive);
   transition: transform 0.3s ease;
+  flex: 0 0 auto;
 }
 
 .qaItem.active .arrow {
@@ -139,6 +144,7 @@
   line-height: 1.6;
   color: var(--color-text);
   opacity: 0.9;
+  word-break: keep-all;
 }
 
 /* 회원탈퇴 관련 스타일 */

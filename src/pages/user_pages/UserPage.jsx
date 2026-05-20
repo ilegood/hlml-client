@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getImageUrl } from "../../api/instance";
-import { getPosts } from "../../api/posts";
+import instance, { getImageUrl } from "../../api/instance";
 import ProfileEditModal from "../../components/modals/ProfileEditModal";
 import AppointmentModal from "../../components/modals/AppointmentModal";
 import BlockedListModal from "../../components/modals/BlockedListModal";
@@ -31,43 +30,26 @@ export default function UserPage() {
     if (!token) navigate("/login");
   }, [navigate]);
 
-  useEffect(() => {
-    const loadStats = async () => {
-      const userId = localStorage.getItem("user_id");
-      const nickname = localStorage.getItem("name");
-      if (!userId && !nickname) return;
+  const loadStats = useCallback(async () => {
+    const userId = localStorage.getItem("user_id");
+    const nickname = localStorage.getItem("name");
+    if (!userId && !nickname) return;
 
-      try {
-        const posts = await getPosts();
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const myPosts = posts.filter(
-          (post) =>
-            String(post.user_id) === String(userId) ||
-            post.author === nickname ||
-            post.authorNickname === nickname,
-        );
-        const pastAppointments = myPosts.filter((post) => {
-          if (!post.date) return false;
-          const appointmentDate = new Date(post.date);
-          if (Number.isNaN(appointmentDate.getTime())) return false;
-          appointmentDate.setHours(0, 0, 0, 0);
-          return appointmentDate < today;
-        });
-
-        setStats({
-          posts: myPosts.length,
-          appointments: pastAppointments.length,
-          reports: 0,
-        });
-      } catch (error) {
-        console.error("Failed to load user stats:", error);
-      }
-    };
-
-    loadStats();
+    try {
+      const { data } = await instance.get("/users/me/stats");
+      setStats({
+        posts: Number(data.posts) || 0,
+        appointments: Number(data.appointments) || 0,
+        reports: Number(data.reports) || 0,
+      });
+    } catch (error) {
+      console.error("Failed to load user stats:", error);
+    }
   }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
 
   const refreshUserInfo = () => {
     setUserInfo({
@@ -129,7 +111,10 @@ export default function UserPage() {
         <BlockedListModal onClose={() => setActiveModal(null)} />
       )}
       {activeModal === "report" && (
-        <ReportListModal onClose={() => setActiveModal(null)} />
+        <ReportListModal
+          onClose={() => setActiveModal(null)}
+          onChanged={loadStats}
+        />
       )}
       {activeModal === "qa" && <QAModal onClose={() => setActiveModal(null)} />}
 
