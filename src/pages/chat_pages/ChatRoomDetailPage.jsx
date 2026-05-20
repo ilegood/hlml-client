@@ -63,6 +63,7 @@ export default function ChatRoomDetailPage() {
   const [selectedProfileId, setSelectedProfileId] = useState(null);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
   const { reactions, saveReactions } = useCustomReactions();
 
   const socketRef = useRef(null);
@@ -252,6 +253,21 @@ export default function ChatRoomDetailPage() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!appointmentReminder?.date) return;
+    const d = new Date(appointmentReminder.date);
+    if (appointmentReminder.time) {
+      const parts = String(appointmentReminder.time).split(":");
+      d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+    }
+    const target = d.getTime();
+
+    const tick = () => setRemainingSeconds(Math.max(0, Math.floor((target - Date.now()) / 1000)));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [appointmentReminder]);
+
   const handleEmojiSelect = (emoji) => {
     const start = inputRef.current.selectionStart;
     const end = inputRef.current.selectionEnd;
@@ -421,11 +437,20 @@ export default function ChatRoomDetailPage() {
 
       {appointmentReminder && (
         <div className={styles.appointmentReminderBar}>
-          <div className={styles.appointmentReminderIcon}>30</div>
+          <div className={`${styles.appointmentReminderIcon} ${remainingSeconds > 0 ? styles.reminderShake : ""}`}>
+            <span className={styles.clockIcon}>⏰</span>
+            {remainingSeconds > 0 && (
+              <span className={styles.timerText}>
+                {`${String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:${String(remainingSeconds % 60).padStart(2, "0")}`}
+              </span>
+            )}
+          </div>
           <div className={styles.appointmentReminderText}>
             <strong>{appointmentReminder.title || roomTitle || "약속"}</strong>
             <span>
-              약속이 30분 이내에 시작됩니다.
+              {remainingSeconds > 0
+                ? `약속까지 ${Math.ceil(remainingSeconds / 60)}분 남음`
+                : "약속 시간이 되었습니다!"}
               {formatAppointmentDateTime(appointmentReminder.date, appointmentReminder.time) && ` ${formatAppointmentDateTime(appointmentReminder.date, appointmentReminder.time)}`}
               {appointmentReminder.place && ` · ${appointmentReminder.place}`}
             </span>

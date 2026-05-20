@@ -103,14 +103,18 @@ const Sidebar = () => {
             >
               <img src={messageImg} alt="notifications" />
               <span className={styles.label}>알림</span>
-              <Badge count={(summary?.totalUnread || 0) + reminderItems.length} />
+              <Badge
+                count={(summary?.totalUnread || 0) + reminderItems.length}
+              />
             </button>
 
             {showNotifications && (
               <div className={styles.notificationPanel}>
                 <div className={styles.notificationTitle}>알림 센터</div>
                 {reminderItems.length === 0 && unreadItems.length === 0 ? (
-                  <div className={styles.notificationEmpty}>새 알림이 없습니다.</div>
+                  <div className={styles.notificationEmpty}>
+                    새 알림이 없습니다.
+                  </div>
                 ) : (
                   <>
                     {reminderItems.map((item) => (
@@ -124,7 +128,7 @@ const Sidebar = () => {
                           {item.title}
                         </span>
                         <span className={styles.notificationSub}>
-                          약속이 30분 이내에 시작됩니다.
+                          출발은 하신거죠?
                         </span>
                       </button>
                     ))}

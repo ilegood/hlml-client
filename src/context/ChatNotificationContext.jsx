@@ -1,5 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { io } from "socket.io-client";
 import { toast } from "sonner";
 import { getChatNotifications, getUnreadSummary } from "../api/chat";
@@ -86,86 +94,103 @@ export const ChatNotificationProvider = ({ children }) => {
   const socketRef = useRef(null);
   const refreshTimerRef = useRef(null);
 
-  const showAppointmentReminder = useCallback((item) => {
-    const key = `appointment-reminder:${userId}:${item.roomId}:${item.date}:${item.time}`;
-    if (localStorage.getItem(key)) return false;
+  const showAppointmentReminder = useCallback(
+    (item) => {
+      const key = `appointment-reminder:${userId}:${item.roomId}:${item.date}:${item.time}`;
+      if (localStorage.getItem(key)) return false;
 
-    localStorage.setItem(key, "1");
-    toast(`${item.title} 약속이 30분 이내에 시작됩니다.`, {
-      description: formatReminderTime(item.date, item.time),
-    });
-    return true;
-  }, [userId]);
-
-  const applyUnreadEvent = useCallback(({ roomId, reason = "message" } = {}) => {
-    if (!roomId) return;
-
-    setSummary((current) => {
-      const roomKey = String(roomId);
-      const isDm = roomKey.startsWith("dm_");
-      const normalizedRoomId = isDm ? roomKey.slice(3) : roomKey;
-      const currentRooms = current?.rooms || { groups: [], dms: [] };
-      const nextGroups = isDm
-        ? currentRooms.groups || []
-        : updateRoomUnread(currentRooms.groups || [], normalizedRoomId, reason);
-      const nextDms = isDm
-        ? updateRoomUnread(currentRooms.dms || [], normalizedRoomId, reason)
-        : currentRooms.dms || [];
-      const groupUnread = countUnread(nextGroups);
-      const dmUnread = countUnread(nextDms);
-
-      return {
-        ...emptySummary,
-        ...current,
-        groupUnread,
-        dmUnread,
-        totalUnread: groupUnread + dmUnread,
-        rooms: {
-          groups: nextGroups,
-          dms: nextDms,
-        },
-      };
-    });
-    setNotifications((current) => ({
-      ...current,
-      unread: updateUnreadNotifications(current.unread || [], roomId, reason),
-    }));
-  }, []);
-
-  const refresh = useCallback(async ({ quiet = true } = {}) => {
-    if (!token || !userId) {
-      setSummary(emptySummary);
-      setNotifications({ unread: [], reminders: [], deletionWarnings: [] });
-      return;
-    }
-
-    try {
-      if (!quiet) setLoading(true);
-      const [nextSummary, nextNotifications] = await Promise.all([
-        getUnreadSummary(),
-        getChatNotifications(),
-      ]);
-      setSummary(nextSummary || emptySummary);
-      setNotifications(
-        nextNotifications || { unread: [], reminders: [], deletionWarnings: [] },
-      );
-
-      (nextNotifications?.reminders || []).forEach(showAppointmentReminder);
-
-      (nextNotifications?.deletionWarnings || []).forEach((item) => {
-        const key = `room-delete-warning:${userId}:${item.roomId}:${item.deletesAt}`;
-        if (localStorage.getItem(key)) return;
-        localStorage.setItem(key, "1");
-        toast.warning(`${item.title || "채팅방"}이 30분 뒤 삭제됩니다.`, {
-          description: item.message,
-        });
+      localStorage.setItem(key, "1");
+      toast(`${item.title} 약속이 30분 이내에 시작됩니다.`, {
+        description: formatReminderTime(item.date, item.time),
       });
-    } catch (error) {
-      console.error("Failed to refresh chat notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [showAppointmentReminder, token, userId]);
+      return true;
+    },
+    [userId],
+  );
+
+  const applyUnreadEvent = useCallback(
+    ({ roomId, reason = "message" } = {}) => {
+      if (!roomId) return;
+
+      setSummary((current) => {
+        const roomKey = String(roomId);
+        const isDm = roomKey.startsWith("dm_");
+        const normalizedRoomId = isDm ? roomKey.slice(3) : roomKey;
+        const currentRooms = current?.rooms || { groups: [], dms: [] };
+        const nextGroups = isDm
+          ? currentRooms.groups || []
+          : updateRoomUnread(
+              currentRooms.groups || [],
+              normalizedRoomId,
+              reason,
+            );
+        const nextDms = isDm
+          ? updateRoomUnread(currentRooms.dms || [], normalizedRoomId, reason)
+          : currentRooms.dms || [];
+        const groupUnread = countUnread(nextGroups);
+        const dmUnread = countUnread(nextDms);
+
+        return {
+          ...emptySummary,
+          ...current,
+          groupUnread,
+          dmUnread,
+          totalUnread: groupUnread + dmUnread,
+          rooms: {
+            groups: nextGroups,
+            dms: nextDms,
+          },
+        };
+      });
+      setNotifications((current) => ({
+        ...current,
+        unread: updateUnreadNotifications(current.unread || [], roomId, reason),
+      }));
+    },
+    [],
+  );
+
+  const refresh = useCallback(
+    async ({ quiet = true } = {}) => {
+      if (!token || !userId) {
+        setSummary(emptySummary);
+        setNotifications({ unread: [], reminders: [], deletionWarnings: [] });
+        return;
+      }
+
+      try {
+        if (!quiet) setLoading(true);
+        const [nextSummary, nextNotifications] = await Promise.all([
+          getUnreadSummary(),
+          getChatNotifications(),
+        ]);
+        setSummary(nextSummary || emptySummary);
+        setNotifications(
+          nextNotifications || {
+            unread: [],
+            reminders: [],
+            deletionWarnings: [],
+          },
+        );
+
+        (nextNotifications?.reminders || []).forEach(showAppointmentReminder);
+
+        (nextNotifications?.deletionWarnings || []).forEach((item) => {
+          const key = `room-delete-warning:${userId}:${item.roomId}:${item.deletesAt}`;
+          if (localStorage.getItem(key)) return;
+          localStorage.setItem(key, "1");
+          toast.warning(`${item.title || "채팅방"}이 30분 뒤 삭제됩니다.`, {
+            description: item.message,
+          });
+        });
+      } catch (error) {
+        console.error("Failed to refresh chat notifications:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [showAppointmentReminder, token, userId],
+  );
 
   useEffect(() => {
     refresh({ quiet: false });

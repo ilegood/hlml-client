@@ -195,11 +195,41 @@
   background: var(--color-active);
   color: white;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: 14px;
   font-weight: 900;
   flex-shrink: 0;
+  gap: 1px;
+}
+
+.clockIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.timerText {
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.3px;
+}
+
+.reminderShake {
+  animation: reminderShake 1s ease-in-out infinite;
+}
+
+@keyframes reminderShake {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-15deg); }
+  20% { transform: rotate(12deg); }
+  30% { transform: rotate(-10deg); }
+  40% { transform: rotate(8deg); }
+  50% { transform: rotate(-5deg); }
+  60% { transform: rotate(3deg); }
+  70% { transform: rotate(-2deg); }
+  80%, 90% { transform: rotate(0deg); }
 }
 
 .appointmentReminderText {
@@ -498,7 +528,7 @@
   max-height: 320px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
-  background: #000;
+  background: transparent;
   object-fit: contain;
 }
 
@@ -610,7 +640,7 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background: #111;
+  background: var(--color-input-bg);
   color: #fff;
   border: none;
   padding: 0;
@@ -688,7 +718,7 @@
   max-height: calc(100vh - 140px);
   border-radius: 8px;
   object-fit: contain;
-  background: #000;
+  background: transparent;
 }
 
 .lightboxMeta {
@@ -877,7 +907,7 @@
   aspect-ratio: 1 / 1;
   display: block;
   object-fit: cover;
-  background: #111;
+  background: transparent;
 }
 
 .fileGalleryMediaItem span {
@@ -1297,7 +1327,7 @@
   border: 1px solid var(--color-border);
   border-radius: 6px;
   overflow: hidden;
-  background: #111;
+  background: var(--color-input-bg);
 }
 
 .pendingThumb {
