@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 
 const STORAGE_KEY = "customReactions";
-const DEFAULT_REACTIONS = ["👍", "❤️", "😂"];
+const MAX_REACTIONS = 5;
+const DEFAULT_REACTIONS = ["👍", "❤️", "😂", "😮", "😢"];
 
 const loadReactions = () => {
   try {
@@ -18,8 +19,9 @@ export const useCustomReactions = () => {
   const [reactions, setReactions] = useState(loadReactions);
 
   const saveReactions = useCallback((newReactions) => {
-    setReactions(newReactions);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newReactions));
+    const trimmed = newReactions.slice(0, MAX_REACTIONS);
+    setReactions(trimmed);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
   }, []);
 
   const resetReactions = useCallback(() => {
