@@ -49,7 +49,7 @@ function InlineEdit({ value, onSave, onCancel }) {
 }
 
 // ── ReplyItem ──────────────────────────────────────────────
-export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
+export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete, onReport }) {
   const [isEditing, setIsEditing] = useState(false);
   const { userId } = useAuth();
 
@@ -82,7 +82,7 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
           <>
             <div className={styles.commentText}>{reply.text}</div>
             <div className={styles.commentActions}>
-              {isAuthor && (
+              {isAuthor ? (
                 <>
                   <button
                     className={styles.cmtActBtn}
@@ -97,6 +97,13 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
                     삭제
                   </button>
                 </>
+              ) : (
+                <button
+                  className={`${styles.cmtActBtn} ${styles.danger}`}
+                  onClick={() => onReport?.(reply)}
+                >
+                  신고
+                </button>
               )}
             </div>
           </>
@@ -107,7 +114,7 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
 }
 
 // ── CommentItem ────────────────────────────────────────────
-export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
+export function CommentItem({ comment, commentIdx, onUpdate, onDelete, onReport }) {
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -165,7 +172,7 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
                 </svg>
                 답글
               </button>
-              {isAuthor && (
+              {isAuthor ? (
                 <>
                   <button
                     className={styles.cmtActBtn}
@@ -180,6 +187,13 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
                     삭제
                   </button>
                 </>
+              ) : (
+                <button
+                  className={`${styles.cmtActBtn} ${styles.danger}`}
+                  onClick={() => onReport?.(comment)}
+                >
+                  신고
+                </button>
               )}
             </div>
           </>
@@ -196,10 +210,12 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
               replyIdx={ri}
               onUpdate={onUpdate}
               onDelete={onDelete}
+              onReport={onReport}
             />
           ))}
         </div>
       )}
+
 
       {replyOpen && (
         <div className={styles.replyInputWrap}>

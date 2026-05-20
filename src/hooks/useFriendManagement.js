@@ -114,7 +114,10 @@ export const useFriendManagement = () => {
     }
   };
 
-  const handleReport = () => {
+  const [reportedFriend, setReportedFriend] = useState(null);
+
+  const handleReport = (friend) => {
+    setReportedFriend(friend);
     setIsReportModalOpen(true);
     setActiveMenuId(null);
   };
@@ -187,6 +190,8 @@ export const useFriendManagement = () => {
     setRequests,
     selectedFriend,
     setSelectedFriend,
+    reportedFriend,
+    setReportedFriend,
     searchQuery,
     setSearchQuery,
     isAddModalOpen,

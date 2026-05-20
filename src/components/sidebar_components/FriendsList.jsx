@@ -151,7 +151,7 @@ const FriendsList = () => {
                           </button>
                           <button
                             className={styles.danger}
-                            onClick={handleReport}
+                            onClick={() => handleReport(friend)}
                           >
                             신고하기
                           </button>
@@ -232,7 +232,11 @@ const FriendsList = () => {
         <AddFriendModal onClose={() => setIsAddModalOpen(false)} />
       )}
       {isReportModalOpen && (
-        <ReportModal onClose={() => setIsReportModalOpen(false)} />
+        <ReportModal 
+          onClose={() => setIsReportModalOpen(false)} 
+          targetUserId={reportedFriend?.id}
+          targetName={reportedFriend?.name}
+        />
       )}
     </div>
   );

@@ -21,6 +21,7 @@ import {
 } from "../../api/posts";
 import { CommentItem } from "../../components/post_components/CommentItem";
 import MapPreview from "../../components/post_components/MapPreview";
+import ReportModal from "../../components/modals/ReportModal";
 import styles from "./DetailPage.module.css";
 
 export default function DetailPage() {
@@ -30,6 +31,8 @@ export default function DetailPage() {
   const [post, setPost] = useState(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [targetComment, setTargetComment] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -231,6 +234,27 @@ export default function DetailPage() {
     });
   };
 
+  const handleReport = () => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
+    setTargetComment(null);
+    setIsReportModalOpen(true);
+    setShowMoreMenu(false);
+  };
+
+  const handleCommentReport = (comment) => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
+    setTargetComment(comment);
+    setIsReportModalOpen(true);
+  };
+
   const joinDisabled = !token || (!joined && (isFull || isClosed || !post.user_id));
 
   return (
@@ -242,26 +266,30 @@ export default function DetailPage() {
           </svg>
         </button>
         <div className={styles.moreMenuWrap}>
-          {isAuthor && (
-            <>
-              <button className={styles.moreBtn} onClick={() => setShowMoreMenu(!showMoreMenu)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="5" r="1.5" />
-                  <circle cx="12" cy="12" r="1.5" />
-                  <circle cx="12" cy="19" r="1.5" />
-                </svg>
-              </button>
-              {showMoreMenu && (
-                <div className={styles.moreMenu}>
+          <button className={styles.moreBtn} onClick={() => setShowMoreMenu(!showMoreMenu)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="5" r="1.5" />
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="12" cy="19" r="1.5" />
+            </svg>
+          </button>
+          {showMoreMenu && (
+            <div className={styles.moreMenu}>
+              {isAuthor ? (
+                <>
                   <div className={styles.moreItem} onClick={() => navigate(`/edit/${id}`)}>
                     수정
                   </div>
                   <div className={`${styles.moreItem} ${styles.delete}`} onClick={handleDelete}>
                     삭제
                   </div>
+                </>
+              ) : (
+                <div className={`${styles.moreItem} ${styles.delete}`} onClick={handleReport}>
+                  신고하기
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -269,6 +297,8 @@ export default function DetailPage() {
       {post.image && <img className={styles.detailImg} src={post.image} alt="" />}
 
       <div className={styles.detailBody}>
+        {/* ... (rest of the body) */}
+
         <div className={styles.statusRow}>
           <span className={`${styles.statusBadge} ${statusBadgeClass}`}>
             {STATUS_EMOJI[status]} {status}
@@ -387,6 +417,7 @@ export default function DetailPage() {
                 commentIdx={index}
                 onDelete={deleteComment}
                 onUpdate={updateComment}
+                onReport={handleCommentReport}
               />
             ))
           )}
@@ -405,6 +436,20 @@ export default function DetailPage() {
           </button>
         </div>
       </div>
+      {isReportModalOpen && (
+        <ReportModal
+          onClose={() => {
+            setIsReportModalOpen(false);
+            setTargetComment(null);
+          }}
+          targetPostId={targetComment ? null : id}
+          targetTitle={targetComment ? null : post.title}
+          targetCommentId={targetComment?.id}
+          targetUserId={targetComment ? targetComment.userId : post.user_id}
+          targetName={targetComment ? targetComment.authorNickname : null}
+          targetContent={targetComment ? targetComment.text : null}
+        />
+      )}
     </main>
   );
 }
