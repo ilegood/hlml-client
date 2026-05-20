@@ -3,6 +3,7 @@ import styles from "./ChatMembersModal.module.css";
 import { getImageUrl } from "../api/instance";
 import borderImg from "../assets/border.png";
 import UserProfileModal from "./modals/UserProfileModal";
+import ReportModal from "./modals/ReportModal";
 
 export default function ChatMembersModal({
   isOpen,
@@ -13,6 +14,7 @@ export default function ChatMembersModal({
   currentUserId,
 }) {
   const [selectedProfileId, setSelectedProfileId] = useState(null);
+  const [reportTarget, setReportTarget] = useState(null);
 
   if (!isOpen) return null;
 
@@ -70,6 +72,17 @@ export default function ChatMembersModal({
                       강퇴
                     </button>
                   )}
+                  {Number(member.user_id) !== Number(currentUserId) && (
+                    <button
+                      className={styles.reportBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setReportTarget(member);
+                      }}
+                    >
+                      신고
+                    </button>
+                  )}
                 </li>
               );
             })}
@@ -82,6 +95,13 @@ export default function ChatMembersModal({
           userId={selectedProfileId}
           currentUserId={currentUserId}
           onClose={() => setSelectedProfileId(null)}
+        />
+      )}
+
+      {reportTarget && (
+        <ReportModal
+          targetUser={reportTarget}
+          onClose={() => setReportTarget(null)}
         />
       )}
     </>
