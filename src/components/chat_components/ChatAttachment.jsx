@@ -1,9 +1,20 @@
+<<<<<<< HEAD
 /* eslint-disable react-refresh/only-export-components */
 import { useCallback, useEffect, useState } from "react";
 import { getImageUrl } from "../../api/instance";
 import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
 
 export const parseMessagePayload = (content) => {
+=======
+import { Component, useCallback, useEffect, useState } from "react";
+import { getImageUrl } from "../../api/instance";
+import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
+
+const URL_PATTERN = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
+const TRAILING_PUNCTUATION = /[)\],.!?…]+$/;
+
+const parseMessagePayload = (content) => {
+>>>>>>> bird
   if (!content || typeof content !== "string") return null;
 
   try {
@@ -97,6 +108,231 @@ const isSingleEmoji = (value) => {
     !/[0-9A-Za-z\uAC00-\uD7A3]/u.test(text)
   );
 };
+
+const normalizeUrl = (value) => {
+  const url = String(value || "").trim();
+  if (!url) return "";
+  return url.startsWith("http") ? url : `https://${url}`;
+};
+
+const getHostname = (value) => {
+  try {
+    return new URL(normalizeUrl(value)).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+};
+
+const getYouTubeVideoId = (value) => {
+  try {
+    const url = new URL(normalizeUrl(value));
+    const host = url.hostname.toLowerCase();
+    if (host === "youtu.be") {
+      return url.pathname.split("/").filter(Boolean)[0] || "";
+    }
+
+    if (host.includes("youtube.com")) {
+      if (url.pathname === "/watch") return url.searchParams.get("v") || "";
+      const pathParts = url.pathname.split("/").filter(Boolean);
+      const videoIndex = pathParts.findIndex((part) =>
+        ["shorts", "embed", "live"].includes(part),
+      );
+      if (videoIndex !== -1) return pathParts[videoIndex + 1] || "";
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+};
+
+const getYouTubePreview = (text) => {
+  const raw = String(text || "");
+  URL_PATTERN.lastIndex = 0;
+  const match = URL_PATTERN.exec(raw);
+  if (!match) return null;
+
+  let url = match[0];
+  const trailing = url.match(TRAILING_PUNCTUATION)?.[0] || "";
+  if (trailing) url = url.slice(0, -trailing.length);
+
+  const hostname = getHostname(url);
+  if (
+    ![
+      "youtube.com",
+      "www.youtube.com",
+      "m.youtube.com",
+      "youtu.be",
+    ].includes(hostname)
+  ) {
+    return null;
+  }
+
+  const videoId = getYouTubeVideoId(url);
+  if (!videoId) return null;
+
+  return {
+    url: normalizeUrl(url),
+    videoId,
+  };
+};
+
+const renderTextWithLinks = (value) => {
+  const text = String(value || "");
+  if (!text) return "";
+
+  URL_PATTERN.lastIndex = 0;
+  const nodes = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = URL_PATTERN.exec(text))) {
+    let url = match[0];
+    let start = match.index;
+    let end = start + url.length;
+    const trailing = url.match(TRAILING_PUNCTUATION)?.[0] || "";
+
+    if (trailing) {
+      url = url.slice(0, -trailing.length);
+      end -= trailing.length;
+    }
+
+    if (start > lastIndex) {
+      nodes.push(text.slice(lastIndex, start));
+    }
+
+    const href = url.startsWith("http") ? url : `https://${url}`;
+    nodes.push(
+      <a
+        key={`${start}-${url}`}
+        className={styles.messageLink}
+        href={href}
+        target="_blank"
+        rel="noreferrer noopener"
+      >
+        {url}
+      </a>,
+    );
+
+    if (trailing) {
+      nodes.push(trailing);
+    }
+
+    lastIndex = end;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+
+  return nodes.length > 0 ? nodes : text;
+};
+
+function YouTubePreview({ url, videoId }) {
+  const [title, setTitle] = useState("YouTube 동영상");
+  const [thumbnailUrl, setThumbnailUrl] = useState(
+    `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPreview = async () => {
+      try {
+        const response = await fetch(
+          `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`,
+        );
+        if (!response.ok) return;
+        const data = await response.json();
+        if (cancelled) return;
+
+        setTitle(data.title || "YouTube 동영상");
+        if (data.thumbnail_url) {
+          setThumbnailUrl(data.thumbnail_url);
+        }
+      } catch {
+        // Fallback preview stays in place.
+      }
+    };
+
+    loadPreview();
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  return (
+    <a
+      className={styles.youtubePreview}
+      href={url}
+      target="_blank"
+      rel="noreferrer noopener"
+    >
+      <div className={styles.youtubeThumb}>
+        <img src={thumbnailUrl} alt={title} />
+        <span className={styles.youtubePlayBadge}>▶</span>
+      </div>
+      <div className={styles.youtubeMeta}>
+        <span className={styles.youtubeDomain}>youtube.com</span>
+        <strong className={styles.youtubeTitle}>{title}</strong>
+      </div>
+    </a>
+  );
+}
+
+class ChatMessageContentErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.error("Chat message render failed:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className={styles.payloadText}>
+          {String(this.props.fallbackText || "")}
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export class MessageRowErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.error("Chat message row render failed:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className={styles.msgBubble}>
+          {String(this.props.fallbackText || "메시지를 표시할 수 없습니다.")}
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 export default function ChatAttachment({ attachment }) {
   const filename = repairFilename(attachment.name) || "파일 다운로드";
@@ -292,13 +528,33 @@ function MediaGrid({ attachments }) {
   );
 }
 
-export function ChatMessageContent({ content }) {
+function ChatMessageContentBody({ content }) {
   const payload = parseMessagePayload(content);
+  const youtubePreview = getYouTubePreview(payload ? payload.text : content);
+
   if (!payload) {
-    return isSingleEmoji(content) ? (
-      <span className={styles.emojiOnly}>{content.trim()}</span>
-    ) : (
-      content
+    if (isSingleEmoji(content)) {
+      return <span className={styles.emojiOnly}>{String(content || "").trim()}</span>;
+    }
+
+    const text = String(content || "");
+    const shouldHideLinkText =
+      youtubePreview && text.trim() === youtubePreview.url;
+
+    return (
+      <div className={styles.messagePayload}>
+        {youtubePreview && (
+          <YouTubePreview
+            url={youtubePreview.url}
+            videoId={youtubePreview.videoId}
+          />
+        )}
+        {!shouldHideLinkText && (
+          <div className={styles.payloadText}>
+            {renderTextWithLinks(content)}
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -306,9 +562,17 @@ export function ChatMessageContent({ content }) {
   const fileAttachments = payload.attachments.filter(
     (attachment) => !isMedia(attachment),
   );
+  const shouldHideLinkText =
+    youtubePreview && payload.text.trim() === youtubePreview.url;
 
   return (
     <div className={styles.messagePayload}>
+      {youtubePreview && (
+        <YouTubePreview
+          url={youtubePreview.url}
+          videoId={youtubePreview.videoId}
+        />
+      )}
       {payload.text && (
         <div
           className={`${styles.payloadText} ${
@@ -319,7 +583,7 @@ export function ChatMessageContent({ content }) {
               : ""
           }`}
         >
-          {payload.text}
+          {!shouldHideLinkText && renderTextWithLinks(payload.text)}
         </div>
       )}
       {mediaAttachments.length > 0 && (
@@ -336,5 +600,13 @@ export function ChatMessageContent({ content }) {
         </div>
       )}
     </div>
+  );
+}
+
+export function ChatMessageContent({ content }) {
+  return (
+    <ChatMessageContentErrorBoundary fallbackText={content}>
+      <ChatMessageContentBody content={content} />
+    </ChatMessageContentErrorBoundary>
   );
 }

@@ -4,6 +4,8 @@ import { normalizeStatus } from "./homeConstants";
 const API_URL = "/posts";
 const BASE_URL = "http://localhost:4000";
 
+const MYSQL_DATETIME_RE = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/;
+
 const formatDateValue = (value) => {
   if (!value) return "";
   if (typeof value === "string") return value.slice(0, 10);
@@ -16,6 +18,26 @@ const formatTimeValue = (value) => {
   if (!value) return "";
   return String(value).slice(0, 8);
 };
+
+const normalizeDateTimeValue = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value !== "string") return value;
+
+  if (MYSQL_DATETIME_RE.test(value)) {
+    return `${value.replace(" ", "T")}Z`;
+  }
+
+  return value;
+};
+
+const normalizeComment = (comment) => ({
+  ...comment,
+  createdAt: normalizeDateTimeValue(comment.createdAt ?? comment.created_at),
+  replies: Array.isArray(comment.replies)
+    ? comment.replies.map(normalizeComment)
+    : [],
+});
 
 const parseCategories = (categories) => {
   if (!categories) return {};
@@ -37,7 +59,7 @@ const normalizePost = (post) => ({
   ...post,
   id: post.post_id,
   status: normalizeStatus(post.status),
-  createdAt: post.created_at,
+  createdAt: normalizeDateTimeValue(post.created_at),
   image: normalizeImageUrl(post.image),
   latitude: post.latitude ? Number(post.latitude) : null,
   longitude: post.longitude ? Number(post.longitude) : null,
@@ -51,7 +73,9 @@ const normalizePost = (post) => ({
     ? post.participantDetails
     : [],
   authorDetails: post.authorDetails || null,
-  comments: Array.isArray(post.comments) ? post.comments : [],
+  comments: Array.isArray(post.comments)
+    ? post.comments.map(normalizeComment)
+    : [],
   likes: post.likes || 0,
   participants: post.participants || 1,
 });
