@@ -23,6 +23,10 @@ import {
   displayName,
   createClientMessageId,
 } from "../../utils/chatHelpers";
+import {
+  SettingsIcon, NotificationIcon, FolderIcon,
+  LocationIcon, ProfileIcon, LogoutIcon,
+} from "../../components/HeaderIcons";
 
 export default function ChatRoomDetailPage() {
   const { roomId } = useParams();
@@ -402,12 +406,12 @@ export default function ChatRoomDetailPage() {
         <div className={styles.headerDivider} />
         <span className={styles.headerDesc}>{roomTitle ? `${roomTitle} 채팅방입니다.` : ""}</span>
         <div className={styles.headerActions}>
-          {name === roomAuthor && <button className={styles.headerIconBtn} title="방 설정 변경" onClick={() => setShowSettings(true)}>⚙️</button>}
-          <button className={styles.headerIconBtn} title={notificationsMuted ? "채팅 알림 켜기" : "채팅 알림 끄기"} onClick={toggleNotifications}>{notificationsMuted ? "🔕" : "🔔"}</button>
-          <button className={styles.headerIconBtn} title="파일 모아보기" onClick={() => setShowFileGallery(true)}>📎</button>
-          <button className={styles.headerIconBtn} title="지도보기" onClick={openRoomMap}>🗺️</button>
-          <button className={styles.headerIconBtn} title="멤버보기" onClick={toggleMembers}>👥</button>
-          <button className={styles.headerIconBtn} title="나가기" onClick={handleLeave}>🚪</button>
+          {name === roomAuthor && <button className={styles.headerIconBtn} title="방 설정 변경" onClick={() => setShowSettings(true)}><SettingsIcon className={styles.iconRotate} /></button>}
+          <button className={styles.headerIconBtn} title={notificationsMuted ? "채팅 알림 켜기" : "채팅 알림 끄기"} onClick={toggleNotifications}><NotificationIcon className={styles.iconSwing} /></button>
+          <button className={styles.headerIconBtn} title="파일 모아보기" onClick={() => setShowFileGallery(true)}><FolderIcon className={styles.iconBounce} /></button>
+          <button className={styles.headerIconBtn} title="지도보기" onClick={openRoomMap}><LocationIcon className={styles.iconPulse} /></button>
+          <button className={styles.headerIconBtn} title="멤버보기" onClick={toggleMembers}><ProfileIcon className={styles.iconShake} /></button>
+          <button className={styles.headerIconBtn} title="나가기" onClick={handleLeave}><LogoutIcon className={styles.iconSlide} /></button>
         </div>
       </div>
 

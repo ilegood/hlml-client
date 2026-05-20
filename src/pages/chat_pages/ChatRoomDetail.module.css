@@ -106,6 +106,74 @@
   font-weight: 600;
 }
 
+.headerIconBtn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  pointer-events: none;
+}
+
+.headerIconBtn:hover .iconRotate {
+  animation: animRotate 0.6s ease;
+}
+
+.headerIconBtn:hover .iconSwing {
+  animation: animSwing 0.5s ease;
+}
+
+.headerIconBtn:hover .iconBounce {
+  animation: animBounce 0.5s ease;
+}
+
+.headerIconBtn:hover .iconPulse {
+  animation: animPulse 0.6s ease;
+}
+
+.headerIconBtn:hover .iconShake {
+  animation: animShake 0.5s ease;
+}
+
+.headerIconBtn:hover .iconSlide {
+  animation: animSlide 0.5s ease;
+}
+
+@keyframes animRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes animSwing {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-20deg); }
+  50% { transform: rotate(15deg); }
+  75% { transform: rotate(-10deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes animBounce {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-5px); }
+  50% { transform: translateY(0); }
+  70% { transform: translateY(-3px); }
+}
+
+@keyframes animPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+@keyframes animShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+}
+
+@keyframes animSlide {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(6px); }
+}
+
 /* ── Message list ── */
 .appointmentReminderBar {
   display: flex;
