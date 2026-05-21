@@ -48,7 +48,9 @@ function renderTextWithLinks(text) {
               displayImageUrl = `https://encrypted-tbn0.gstatic.com/images?q=tbn:${tbnid}`;
             }
           }
-        } catch (e) {}
+        } catch {
+          // If URL parsing fails, just skip image detection
+        }
       }
       // 3. Instagram/Social media lookaside often don't have extensions but are images
       else if (part.includes('lookaside.instagram.com')) {

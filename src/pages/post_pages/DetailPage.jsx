@@ -35,6 +35,7 @@ export default function DetailPage() {
   const [commentImagePreview, setCommentImagePreview] = useState(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [targetComment, setTargetComment] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [needsContentTruncation, setNeedsContentTruncation] = useState(false);
   const contentRef = useRef(null);
@@ -179,6 +180,13 @@ export default function DetailPage() {
     handleFile(e.target.files[0]);
   };
 
+  const handlePaste = (e) => {
+    const file = e.clipboardData?.files[0];
+    if (file && file.type.startsWith("image/")) {
+      handleFile(file);
+    }
+  };
+
   const onDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -200,21 +208,26 @@ export default function DetailPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const addComment = () => {
+  const addComment = async () => {
     if (!token) {
       toast.error("로그인이 필요한 서비스입니다.");
       navigate("/login");
       return;
     }
     if (!commentText.trim() && !commentImage) return;
-    
-    runPostAction(() => createComment(id, { 
-      content: commentText.trim(),
-      image: commentImage
-    }));
-    
-    setCommentText("");
-    removeImage();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await runPostAction(() => createComment(id, {
+        content: commentText.trim(),
+        image: commentImage
+      }));
+      setCommentText("");
+      removeImage();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const deleteComment = (idx, replyIdx = null) => {
@@ -546,9 +559,14 @@ export default function DetailPage() {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addComment()}
+              onPaste={handlePaste}
             />
-            <button className={styles.commentSubmit} onClick={addComment}>
-              등록
+            <button 
+              className={styles.commentSubmit} 
+              onClick={addComment}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "등록 중..." : "등록"}
             </button>
           </div>
         </div>

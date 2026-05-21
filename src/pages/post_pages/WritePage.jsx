@@ -248,8 +248,10 @@ export default function WritePage() {
   const [image, setImage] = useState(null);
   const [existingImage, setExistingImage] = useState("");
   const [isLoading, setIsLoading] = useState(isEdit);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
+
   const [calendarMonth, setCalendarMonth] = useState(() =>
     createDateFromKey(todayString()),
   );
@@ -344,6 +346,8 @@ export default function WritePage() {
       return;
     }
 
+    if (isSubmitting) return;
+
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("content", content.trim());
@@ -365,6 +369,7 @@ export default function WritePage() {
       formData.append("existingImage", "");
     }
 
+    setIsSubmitting(true);
     try {
       if (isEdit) {
         await updatePost(id, formData);
@@ -378,6 +383,8 @@ export default function WritePage() {
     } catch (err) {
       console.error("Failed to save post:", err);
       toast.error(err.response?.data?.message || "저장에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -525,8 +532,12 @@ export default function WritePage() {
           />
         </div>
 
-        <button className={styles.submitBtn} onClick={handleSubmit}>
-          {isEdit ? "수정 완료" : "등록하기"}
+        <button 
+          className={styles.submitBtn} 
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (isEdit ? "수정 중..." : "등록 중...") : (isEdit ? "수정 완료" : "등록하기")}
         </button>
       </div>
 
