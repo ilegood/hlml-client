@@ -115,9 +115,10 @@ export const useFriendManagement = () => {
     }
   };
 
-  const handleReport = () => {
-    const friendToReport = friends.find((f) => f.id === activeMenuId);
-    setReportTarget(friendToReport);
+  const [reportedFriend, setReportedFriend] = useState(null);
+
+  const handleReport = (friend) => {
+    setReportedFriend(friend);
     setIsReportModalOpen(true);
     setActiveMenuId(null);
   };
@@ -171,7 +172,9 @@ export const useFriendManagement = () => {
 
   const handleStartDM = async () => {
     try {
-      const res = await instance.post("/chat/dm", { targetId: selectedFriend.id });
+      const res = await instance.post("/chat/dm", {
+        targetId: selectedFriend.id,
+      });
       navigate(`/dms/${res.data.roomId}`);
       setIsOpen(false);
       setSelectedFriend(null);
@@ -190,6 +193,8 @@ export const useFriendManagement = () => {
     setRequests,
     selectedFriend,
     setSelectedFriend,
+    reportedFriend,
+    setReportedFriend,
     searchQuery,
     setSearchQuery,
     isAddModalOpen,

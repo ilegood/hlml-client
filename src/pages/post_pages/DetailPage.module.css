@@ -206,8 +206,33 @@
   font-size: 16px;
   line-height: 1.8;
   color: var(--color-text);
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.contentCollapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.seeMoreBtn {
+  background: none;
+  border: none;
+  color: var(--color-active);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0;
+  margin-bottom: 20px;
+  cursor: pointer;
+  display: block;
+}
+
+.seeMoreBtn:hover {
+  text-decoration: underline;
 }
 
 .detailMetaRow {
@@ -477,10 +502,74 @@
 }
 
 /* ── Comment Input ── */
+.commentInputArea {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 30px;
+  padding: 10px;
+  border-radius: 16px;
+  transition: all 0.2s;
+}
+
+.commentInputArea.dragging {
+  background: var(--color-input-focus-bg);
+  outline: 2px dashed var(--color-active);
+  outline-offset: -2px;
+}
+
+.previewWrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid var(--color-border);
+}
+
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.removeImgBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 .commentInputRow {
   display: flex;
   gap: 10px;
-  margin-top: 30px;
+}
+
+.imageBtn {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-input-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-deactive);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.imageBtn:hover {
+  border-color: var(--color-active);
+  color: var(--color-active);
 }
 
 .commentInput {

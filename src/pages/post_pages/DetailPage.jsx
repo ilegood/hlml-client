@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
@@ -21,6 +21,7 @@ import {
 } from "../../api/posts";
 import { CommentItem } from "../../components/post_components/CommentItem";
 import MapPreview from "../../components/post_components/MapPreview";
+import ReportModal from "../../components/modals/ReportModal";
 import styles from "./DetailPage.module.css";
 
 export default function DetailPage() {
@@ -30,6 +31,16 @@ export default function DetailPage() {
   const [post, setPost] = useState(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [commentImage, setCommentImage] = useState(null);
+  const [commentImagePreview, setCommentImagePreview] = useState(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [targetComment, setTargetComment] = useState(null);
+  const [isContentExpanded, setIsContentExpanded] = useState(false);
+  const [needsContentTruncation, setNeedsContentTruncation] = useState(false);
+  const contentRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -41,6 +52,14 @@ export default function DetailPage() {
     };
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      setNeedsContentTruncation(
+        contentRef.current.scrollHeight > contentRef.current.offsetHeight
+      );
+    }
+  }, [post?.content]);
 
   if (!post) {
     return (
@@ -136,15 +155,66 @@ export default function DetailPage() {
     }
   };
 
+  const handleFile = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("이미지 파일만 업로드 가능합니다.");
+      return;
+    }
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("5MB 이하의 이미지만 가능합니다.");
+      return;
+    }
+
+    setCommentImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCommentImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageChange = (e) => {
+    handleFile(e.target.files[0]);
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFile(e.dataTransfer.files[0]);
+  };
+
+  const removeImage = () => {
+    setCommentImage(null);
+    setCommentImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const addComment = () => {
     if (!token) {
       toast.error("로그인이 필요한 서비스입니다.");
       navigate("/login");
       return;
     }
-    if (!commentText.trim()) return;
-    runPostAction(() => createComment(id, { content: commentText.trim() }));
+    if (!commentText.trim() && !commentImage) return;
+    
+    runPostAction(() => createComment(id, { 
+      content: commentText.trim(),
+      image: commentImage
+    }));
+    
     setCommentText("");
+    removeImage();
   };
 
   const deleteComment = (idx, replyIdx = null) => {
@@ -182,6 +252,7 @@ export default function DetailPage() {
     editText,
     replyIdx = null,
     replyEditText = null,
+    image = null,
   ) => {
     const comment = post.comments?.[idx];
     if (!comment) return;
@@ -193,10 +264,11 @@ export default function DetailPage() {
         return null;
       }
 
-      if (replyText) {
+      if (replyText || image) {
         return createComment(id, {
           content: replyText,
           parent_id: comment.id,
+          image: image
         });
       }
 
@@ -231,6 +303,27 @@ export default function DetailPage() {
     });
   };
 
+  const handleReport = () => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
+    setTargetComment(null);
+    setIsReportModalOpen(true);
+    setShowMoreMenu(false);
+  };
+
+  const handleCommentReport = (comment) => {
+    if (!token) {
+      toast.error("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
+    setTargetComment(comment);
+    setIsReportModalOpen(true);
+  };
+
   const joinDisabled = !token || (!joined && (isFull || isClosed || !post.user_id));
 
   return (
@@ -242,26 +335,30 @@ export default function DetailPage() {
           </svg>
         </button>
         <div className={styles.moreMenuWrap}>
-          {isAuthor && (
-            <>
-              <button className={styles.moreBtn} onClick={() => setShowMoreMenu(!showMoreMenu)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="5" r="1.5" />
-                  <circle cx="12" cy="12" r="1.5" />
-                  <circle cx="12" cy="19" r="1.5" />
-                </svg>
-              </button>
-              {showMoreMenu && (
-                <div className={styles.moreMenu}>
+          <button className={styles.moreBtn} onClick={() => setShowMoreMenu(!showMoreMenu)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="5" r="1.5" />
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="12" cy="19" r="1.5" />
+            </svg>
+          </button>
+          {showMoreMenu && (
+            <div className={styles.moreMenu}>
+              {isAuthor ? (
+                <>
                   <div className={styles.moreItem} onClick={() => navigate(`/edit/${id}`)}>
                     수정
                   </div>
                   <div className={`${styles.moreItem} ${styles.delete}`} onClick={handleDelete}>
                     삭제
                   </div>
+                </>
+              ) : (
+                <div className={`${styles.moreItem} ${styles.delete}`} onClick={handleReport}>
+                  신고하기
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -269,6 +366,8 @@ export default function DetailPage() {
       {post.image && <img className={styles.detailImg} src={post.image} alt="" />}
 
       <div className={styles.detailBody}>
+        {/* ... (rest of the body) */}
+
         <div className={styles.statusRow}>
           <span className={`${styles.statusBadge} ${statusBadgeClass}`}>
             {STATUS_EMOJI[status]} {status}
@@ -332,7 +431,20 @@ export default function DetailPage() {
           </div>
         </div>
 
-        <p className={styles.detailContent}>{post.content}</p>
+        <p 
+          ref={contentRef}
+          className={`${styles.detailContent} ${!isContentExpanded ? styles.contentCollapsed : ""}`}
+        >
+          {post.content}
+        </p>
+        {needsContentTruncation && (
+          <button 
+            className={styles.seeMoreBtn} 
+            onClick={() => setIsContentExpanded(!isContentExpanded)}
+          >
+            {isContentExpanded ? "간략히 보기" : "더보기"}
+          </button>
+        )}
 
         <div className={styles.detailMetaRow}>
           <span className={styles.detailAuthor}>
@@ -387,24 +499,74 @@ export default function DetailPage() {
                 commentIdx={index}
                 onDelete={deleteComment}
                 onUpdate={updateComment}
+                onReport={handleCommentReport}
               />
             ))
           )}
         </div>
 
-        <div className={styles.commentInputRow}>
-          <input
-            className={styles.commentInput}
-            placeholder="댓글을 입력하세요."
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addComment()}
-          />
-          <button className={styles.commentSubmit} onClick={addComment}>
-            등록
-          </button>
+        <div 
+          className={`${styles.commentInputArea} ${isDragging ? styles.dragging : ""}`}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+        >
+          {commentImagePreview && (
+            <div className={styles.previewWrap}>
+              <img src={commentImagePreview} alt="preview" className={styles.previewImg} />
+              <button className={styles.removeImgBtn} onClick={removeImage}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          )}
+          <div className={styles.commentInputRow}>
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              ref={fileInputRef}
+              onChange={handleImageChange}
+            />
+            <button 
+              className={styles.imageBtn} 
+              onClick={() => fileInputRef.current.click()}
+              title="이미지 첨부"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </button>
+            <input
+              className={styles.commentInput}
+              placeholder={isDragging ? "여기에 이미지를 놓으세요" : "댓글을 입력하세요."}
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addComment()}
+            />
+            <button className={styles.commentSubmit} onClick={addComment}>
+              등록
+            </button>
+          </div>
         </div>
       </div>
+      {isReportModalOpen && (
+        <ReportModal
+          onClose={() => {
+            setIsReportModalOpen(false);
+            setTargetComment(null);
+          }}
+          targetPostId={targetComment ? null : id}
+          targetTitle={targetComment ? null : post.title}
+          targetCommentId={targetComment?.id}
+          targetUserId={targetComment ? targetComment.userId : post.user_id}
+          targetName={targetComment ? targetComment.authorNickname : null}
+          targetContent={targetComment ? targetComment.text : null}
+        />
+      )}
     </main>
   );
 }

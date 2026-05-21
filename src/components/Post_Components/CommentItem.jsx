@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { getTimeAgo } from "../../api/homeConstants";
 import { useAuth } from "../../context/auth";
 import styles from "./CommentItem.module.css";
@@ -16,6 +16,74 @@ const ArrowIcon = () => (
     <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
   </svg>
 );
+
+// ── Helpers ───────────────────────────────────────────────
+function renderTextWithLinks(text) {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const imageRegex = /\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i;
+  const parts = text.split(urlRegex);
+
+  return parts.map((part, i) => {
+    if (part.match(urlRegex)) {
+      let displayImageUrl = null;
+      
+      // 1. Direct image link (with optional query params)
+      if (imageRegex.test(part)) {
+        displayImageUrl = part;
+      } 
+      // 2. Google Image Search Result handling
+      else if (part.includes('google.com/imgres') || part.includes('google.com/search')) {
+        try {
+          const url = new URL(part);
+          // Case A: Direct result page with imgurl
+          const imgUrlParam = url.searchParams.get('imgurl');
+          if (imgUrlParam) {
+            displayImageUrl = imgUrlParam;
+          } 
+          // Case B: Search results page with thumbnail ID (tbnid)
+          else {
+            const tbnid = url.searchParams.get('tbnid');
+            if (tbnid) {
+              displayImageUrl = `https://encrypted-tbn0.gstatic.com/images?q=tbn:${tbnid}`;
+            }
+          }
+        } catch (e) {}
+      }
+      // 3. Instagram/Social media lookaside often don't have extensions but are images
+      else if (part.includes('lookaside.instagram.com')) {
+        displayImageUrl = part;
+      }
+
+      return (
+        <div key={i} style={{ display: 'inline' }}>
+          <a 
+            href={part} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ color: 'var(--color-active)', textDecoration: 'underline' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+          {displayImageUrl && (
+            <img 
+              src={displayImageUrl} 
+              alt="comment attachment" 
+              className={styles.commentImg}
+              onClick={(e) => e.stopPropagation()}
+              onError={(e) => {
+                // If image fails to load, hide it
+                e.target.style.display = 'none';
+              }}
+            />
+          )}
+        </div>
+      );
+    }
+    return part;
+  });
+}
 
 // ── InlineEdit — 수정 폼 (공통) ────────────────────────────
 function InlineEdit({ value, onSave, onCancel }) {
@@ -49,11 +117,20 @@ function InlineEdit({ value, onSave, onCancel }) {
 }
 
 // ── ReplyItem ──────────────────────────────────────────────
-export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
+export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete, onReport }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [needsTruncation, setNeedsTruncation] = useState(false);
+  const textRef = useRef(null);
   const { userId } = useAuth();
 
   const isAuthor = String(reply.userId) === String(userId);
+
+  useEffect(() => {
+    if (textRef.current) {
+      setNeedsTruncation(textRef.current.scrollHeight > textRef.current.offsetHeight);
+    }
+  }, [reply.text]);
 
   return (
     <div className={styles.replyItemRow}>
@@ -80,9 +157,30 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
           />
         ) : (
           <>
-            <div className={styles.commentText}>{reply.text}</div>
+            <div 
+              ref={textRef}
+              className={`${styles.commentText} ${!isExpanded ? styles.commentTextCollapsed : ""}`}
+            >
+              {renderTextWithLinks(reply.text)}
+            </div>
+            {reply.image && (
+              <img 
+                src={reply.image} 
+                alt="comment" 
+                className={styles.commentImg} 
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+            {needsTruncation && (
+              <button 
+                className={styles.seeMoreBtn} 
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                {isExpanded ? "간략히 보기" : "더보기"}
+              </button>
+            )}
             <div className={styles.commentActions}>
-              {isAuthor && (
+              {isAuthor ? (
                 <>
                   <button
                     className={styles.cmtActBtn}
@@ -97,6 +195,13 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
                     삭제
                   </button>
                 </>
+              ) : (
+                <button
+                  className={`${styles.cmtActBtn} ${styles.danger}`}
+                  onClick={() => onReport?.(reply)}
+                >
+                  신고
+                </button>
               )}
             </div>
           </>
@@ -107,13 +212,22 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete }) {
 }
 
 // ── CommentItem ────────────────────────────────────────────
-export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
+export function CommentItem({ comment, commentIdx, onUpdate, onDelete, onReport }) {
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [needsTruncation, setNeedsTruncation] = useState(false);
+  const textRef = useRef(null);
   const { userId } = useAuth();
 
   const isAuthor = String(comment.userId) === String(userId);
+
+  useEffect(() => {
+    if (textRef.current) {
+      setNeedsTruncation(textRef.current.scrollHeight > textRef.current.offsetHeight);
+    }
+  }, [comment.text]);
 
   const submitReply = () => {
     if (!replyText.trim()) return;
@@ -146,7 +260,28 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
           />
         ) : (
           <>
-            <div className={styles.commentText}>{comment.text}</div>
+            <div 
+              ref={textRef}
+              className={`${styles.commentText} ${!isExpanded ? styles.commentTextCollapsed : ""}`}
+            >
+              {renderTextWithLinks(comment.text)}
+            </div>
+            {comment.image && (
+              <img 
+                src={comment.image} 
+                alt="comment" 
+                className={styles.commentImg} 
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+            {needsTruncation && (
+              <button 
+                className={styles.seeMoreBtn} 
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                {isExpanded ? "간략히 보기" : "더보기"}
+              </button>
+            )}
             <div className={styles.commentActions}>
               <button
                 className={styles.cmtActBtn}
@@ -165,7 +300,7 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
                 </svg>
                 답글
               </button>
-              {isAuthor && (
+              {isAuthor ? (
                 <>
                   <button
                     className={styles.cmtActBtn}
@@ -180,11 +315,19 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
                     삭제
                   </button>
                 </>
+              ) : (
+                <button
+                  className={`${styles.cmtActBtn} ${styles.danger}`}
+                  onClick={() => onReport?.(comment)}
+                >
+                  신고
+                </button>
               )}
             </div>
           </>
         )}
       </div>
+
 
       {(comment.replies || []).length > 0 && (
         <div className={styles.repliesWrap}>
@@ -196,10 +339,12 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete }) {
               replyIdx={ri}
               onUpdate={onUpdate}
               onDelete={onDelete}
+              onReport={onReport}
             />
           ))}
         </div>
       )}
+
 
       {replyOpen && (
         <div className={styles.replyInputWrap}>
