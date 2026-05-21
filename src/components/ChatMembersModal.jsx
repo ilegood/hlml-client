@@ -71,7 +71,7 @@ export default function ChatMembersModal({
                           <img
                             src={getImageUrl(member.profile_img)}
                             alt={nickname}
-                            style={{ backgroundColor: "white" }}
+                            style={{ backgroundColor: "transparent" }}
                           />
                         ) : (
                           <span className={styles.defaultAvatar}>

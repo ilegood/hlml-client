@@ -30,9 +30,8 @@ function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
         className={styles.msgAvatar}
         style={{ width: size, height: size, fontSize: size * 0.3 }}
       >
-        {url ? <img src={url} alt={label} style={{ backgroundColor: "white" }} /> : label.slice(0, 2)}
-      </div>
-    </div>
+        {url ? <img src={url} alt={label} style={{ backgroundColor: "transparent" }} /> : label.slice(0, 2)}
+      </div>    </div>
   );
 }
 

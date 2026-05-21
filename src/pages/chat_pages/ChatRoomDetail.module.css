@@ -29,7 +29,6 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--color-input-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -628,9 +627,7 @@
   transform: translateY(0);
 }
 
-.youtubeThumb,
-.linkPreviewThumb,
-.linkPreviewThumbSkeleton {
+.youtubeThumb {
   position: relative;
   width: 128px;
   min-width: 128px;
@@ -642,7 +639,6 @@
 }
 
 .youtubeThumb {
-  background: #111;
 }
 
 .youtubeThumb img,
@@ -835,7 +831,6 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background: #111;
   color: #fff;
   border: none;
   padding: 0;
@@ -913,7 +908,6 @@
   max-height: calc(100vh - 140px);
   border-radius: 8px;
   object-fit: contain;
-  background: #000;
 }
 
 .lightboxMeta {
@@ -1884,6 +1878,10 @@
   border-radius: 6px;
   background: var(--color-active);
   color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+f;
   cursor: pointer;
   font-weight: 700;
 }

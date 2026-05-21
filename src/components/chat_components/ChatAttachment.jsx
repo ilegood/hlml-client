@@ -462,7 +462,8 @@ function LinkPreviewCard({ preview }) {
       return weakMapTitle ? mapServiceName : metaTitle;
     }
     return meta?.title || preview.title || displayUrl;
-  })();  const subtitle = isNaverType ? "" : meta?.subtitle || meta?.description || "";
+  })();
+  const subtitle = isNaverType ? "" : meta?.subtitle || meta?.description || "";
   const siteLabel = displayDomain;
 
   return (
