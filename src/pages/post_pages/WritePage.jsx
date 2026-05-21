@@ -248,6 +248,7 @@ export default function WritePage() {
   const [image, setImage] = useState(null);
   const [existingImage, setExistingImage] = useState("");
   const [isLoading, setIsLoading] = useState(isEdit);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() =>
@@ -321,6 +322,8 @@ export default function WritePage() {
   };
 
   const handleSubmit = async () => {
+    if (isSaving) return;
+
     if (!title.trim() || !content.trim()) {
       toast.error("제목과 내용을 입력해주세요.");
       return;
@@ -366,6 +369,7 @@ export default function WritePage() {
     }
 
     try {
+      setIsSaving(true);
       if (isEdit) {
         await updatePost(id, formData);
         toast.success("게시글을 수정했습니다.");
@@ -378,6 +382,8 @@ export default function WritePage() {
     } catch (err) {
       console.error("Failed to save post:", err);
       toast.error(err.response?.data?.message || "저장에 실패했습니다.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -525,7 +531,12 @@ export default function WritePage() {
           />
         </div>
 
-        <button className={styles.submitBtn} onClick={handleSubmit}>
+        <button
+          className={`${styles.submitBtn} ${isSaving ? styles.savingBtn : ""}`}
+          onClick={handleSubmit}
+          disabled={isSaving}
+          data-saving-label={image?.file ? "이미지 업로드 중..." : "저장 중..."}
+        >
           {isEdit ? "수정 완료" : "등록하기"}
         </button>
       </div>

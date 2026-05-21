@@ -107,6 +107,88 @@
 }
 
 /* ── Message list ── */
+.appointmentCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  margin: 12px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-sidebar);
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+
+.appointmentCardMain,
+.appointmentCardMeta > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.appointmentCardLabel,
+.appointmentCardMeta span {
+  color: var(--color-deactive);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.appointmentCardMain strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+}
+
+.appointmentCardMain span,
+.appointmentCardMeta strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.appointmentCardMeta {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1.5fr 0.8fr 0.8fr;
+  gap: 12px;
+}
+
+.appointmentCardMapBtn {
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-active);
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.appointmentCardMapBtn:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 900px) {
+  .appointmentCard {
+    grid-template-columns: 1fr;
+  }
+
+  .appointmentCardMeta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .appointmentCardMapBtn {
+    width: 100%;
+  }
+}
+
 .appointmentReminderBar {
   display: flex;
   align-items: center;
@@ -218,6 +300,12 @@
   padding: 4px 8px;
   align-self: center;
   margin: 4px 0;
+}
+
+.systemMsgMap {
+  width: 100%;
+  max-width: 764px;
+  margin: 8px auto 0;
 }
 
 .deletionWarningMsg {
@@ -1407,6 +1495,7 @@
 
 .pendingAttachments {
   display: flex;
+  align-items: center;
   gap: 8px;
   overflow-x: auto;
   padding: 8px;
@@ -1414,6 +1503,21 @@
   border-bottom: none;
   border-radius: 8px 8px 0 0;
   background: var(--color-input-bg);
+}
+
+.uploadStatus {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  flex: 0 0 auto;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-sidebar);
+  color: var(--color-active);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .pendingItem {
@@ -1490,6 +1594,11 @@
   align-items: center;
   justify-content: center;
   font-size: 16px;
+}
+
+.pendingRemove:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .attachMenu {
@@ -1671,12 +1780,14 @@
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   color: var(--color-text);
-  width: 36px;
+  min-width: 36px;
   height: 36px;
-  border-radius: 50%;
+  padding: 0 12px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 100;
@@ -1686,6 +1797,12 @@
 
 .scrollToBottom:hover {
   background: var(--color-input-bg);
+}
+
+.scrollToBottom span {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 @keyframes fadeIn {

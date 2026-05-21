@@ -49,6 +49,7 @@ const Sidebar = () => {
     localStorage.getItem("theme") === "dark",
   );
   const hoverCloseTimer = useRef(null);
+  const notificationRef = useRef(null);
 
   useEffect(() => {
     if (isDark) {
@@ -90,6 +91,21 @@ const Sidebar = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!showNotifications) return;
+
+    const handlePointerDown = (event) => {
+      if (notificationRef.current?.contains(event.target)) return;
+      setShowNotifications(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [showNotifications]);
+
   const toggleTheme = () => {
     setIsDark((prev) => !prev);
   };
@@ -145,7 +161,7 @@ const Sidebar = () => {
         </Link>
 
         {token && (
-          <div className={styles.notificationWrap}>
+          <div className={styles.notificationWrap} ref={notificationRef}>
             <button
               type="button"
               className={styles.itemWrap}

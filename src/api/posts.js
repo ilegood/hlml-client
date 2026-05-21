@@ -1,8 +1,7 @@
-import instance from "./instance";
+import instance, { BASE_URL } from "./instance";
 import { normalizeStatus } from "./homeConstants";
 
 const API_URL = "/posts";
-const BASE_URL = "http://localhost:4000";
 
 const MYSQL_DATETIME_RE = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/;
 
@@ -34,6 +33,7 @@ const normalizeDateTimeValue = (value) => {
 const normalizeComment = (comment) => ({
   ...comment,
   createdAt: normalizeDateTimeValue(comment.createdAt ?? comment.created_at),
+  image: normalizeImageUrl(comment.image),
   replies: Array.isArray(comment.replies)
     ? comment.replies.map(normalizeComment)
     : [],
@@ -144,7 +144,10 @@ export const createPost = async (formData) => {
 
 export const updatePost = async (id, data) => {
   const res = await instance.patch(`${API_URL}/${id}`, toPostFormData(data));
-  return res.data;
+  return {
+    ...res.data,
+    post: res.data?.post ? normalizePost(res.data.post) : undefined,
+  };
 };
 
 export const deletePost = async (id) => {
@@ -182,8 +185,19 @@ export const deletePostBan = async (id) => {
   return res.data;
 };
 
+const toCommentFormData = (data) => {
+  if (data instanceof FormData) return data;
+  const formData = new FormData();
+  // content must be sent even if empty string to satisfy NOT NULL constraint
+  formData.append("content", data.content || "");
+  if (data.parent_id) formData.append("parent_id", data.parent_id);
+  if (data.image) formData.append("image", data.image);
+  return formData;
+};
+
 export const createComment = async (postId, data) => {
-  const res = await instance.post(`${API_URL}/${postId}/comments`, data);
+  const payload = data.image ? toCommentFormData(data) : data;
+  const res = await instance.post(`${API_URL}/${postId}/comments`, payload);
   return normalizePost(res.data);
 };
 

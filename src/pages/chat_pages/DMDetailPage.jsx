@@ -15,6 +15,7 @@ import {
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import { formatChatPreview } from "../../utils/chatPreview";
+import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 const formatTime = (isoString) => {
@@ -61,11 +62,6 @@ const isCompact = (prev, curr) => {
   return diff >= 0 && diff < 2 * 60 * 1000;
 };
 
-const createPendingFileId = (file) =>
-  `${file.name}-${file.size}-${file.lastModified}-${
-    crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`
-  }`;
-
 const createClientMessageId = () =>
   `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
 
@@ -102,10 +98,7 @@ export default function DMDetailPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(null);
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
-  const [pendingFiles, setPendingFiles] = useState([]);
   const [showFileGallery, setShowFileGallery] = useState(false);
-  const [showAttachMenu, setShowAttachMenu] = useState(false);
-  const [fileAccept, setFileAccept] = useState("");
   const [notificationsMuted, setNotificationsMuted] = useState(
     () => localStorage.getItem(`dm-muted:${roomId}`) === "1",
   );
@@ -117,6 +110,16 @@ export default function DMDetailPage() {
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const {
+    pendingFiles,
+    showAttachMenu,
+    setShowAttachMenu,
+    fileAccept,
+    clearPendingFiles,
+    addPendingFiles,
+    openFilePicker,
+    removePendingFile,
+  } = usePendingChatFiles({ inputRef, fileInputRef });
 
   const resizeInput = useCallback(() => {
     const textarea = inputRef.current;
@@ -131,7 +134,6 @@ export default function DMDetailPage() {
   useEffect(() => {
     resizeInput();
   }, [input, resizeInput]);
-  const pendingFilesRef = useRef([]);
   const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
   const targetNicknameRef = useRef("");
@@ -139,20 +141,8 @@ export default function DMDetailPage() {
   const socketRoomId = `dm_${roomId}`;
 
   useEffect(() => {
-    pendingFilesRef.current = pendingFiles;
-  }, [pendingFiles]);
-
-  useEffect(() => {
     notificationsMutedRef.current = notificationsMuted;
   }, [notificationsMuted]);
-
-  useEffect(() => {
-    return () => {
-      pendingFilesRef.current.forEach((item) =>
-        URL.revokeObjectURL(item.previewUrl),
-      );
-    };
-  }, []);
 
   useEffect(() => {
     const preventBrowserDrop = (event) => {
@@ -427,47 +417,6 @@ export default function DMDetailPage() {
       toast.error("대화 나가기에 실패했습니다.");
     }
   };
-
-  const clearPendingFiles = useCallback(() => {
-    setPendingFiles((prev) => {
-      prev.forEach((item) => URL.revokeObjectURL(item.previewUrl));
-      return [];
-    });
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
-
-  const addPendingFiles = useCallback((fileList) => {
-    const files = Array.from(fileList || []);
-    if (files.length === 0) return;
-
-    setPendingFiles((prev) => [
-      ...prev,
-      ...files.map((file) => ({
-        id: createPendingFileId(file),
-        file,
-        previewUrl: URL.createObjectURL(file),
-      })),
-    ]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    window.setTimeout(() => inputRef.current?.focus(), 0);
-  }, []);
-
-  const openFilePicker = useCallback((accept) => {
-    setFileAccept(accept);
-    setShowAttachMenu(false);
-    window.setTimeout(() => fileInputRef.current?.click(), 0);
-  }, []);
-
-  const removePendingFile = useCallback((id) => {
-    setPendingFiles((prev) => {
-      const next = [];
-      prev.forEach((item) => {
-        if (item.id === id) URL.revokeObjectURL(item.previewUrl);
-        else next.push(item);
-      });
-      return next;
-    });
-  }, []);
 
   const buildMessageContent = useCallback(async () => {
     const text = input.trim();
@@ -1043,17 +992,19 @@ export default function DMDetailPage() {
           className={styles.scrollToBottom}
           onClick={scrollToBottom}
           title="최신 메시지 보기"
+          aria-label="맨 밑으로 내려가기"
         >
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.5"
+            strokeWidth="2.4"
           >
             <polyline points="6 9 12 15 18 9" />
           </svg>
+          <span>맨 밑으로</span>
         </button>
       )}
 
@@ -1164,12 +1115,20 @@ export default function DMDetailPage() {
                   type="button"
                   className={styles.pendingRemove}
                   title="첨부 삭제"
+                  disabled={sending}
                   onClick={() => removePendingFile(item.id)}
                 >
                   ×
                 </button>
               </div>
             ))}
+            {sending && (
+              <div className={styles.uploadStatus} role="status">
+                {pendingFiles.some((item) => item.file.type.startsWith("image/"))
+                  ? "이미지 업로드 중..."
+                  : "파일 업로드 중..."}
+              </div>
+            )}
           </div>
         )}
         <div className={styles.inputBox}>

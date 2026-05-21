@@ -18,11 +18,13 @@ import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
+import MapPreview from "../../components/post_components/MapPreview";
 import borderImg from "../../assets/border.png";
 import { formatChatPreview } from "../../utils/chatPreview";
+import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
-// ... (helper functions - formatTime, formatDate, isSameDay, isCompact, createPendingFileId, formatAppointmentDateTime, displayName, Avatar)
+// ... (helper functions - formatTime, formatDate, isSameDay, isCompact, formatAppointmentDateTime, displayName, Avatar)
 
 const formatTime = (isoString) => {
   if (!isoString) return "";
@@ -67,11 +69,6 @@ const isCompact = (prev, curr) => {
   return diff < 2 * 60 * 1000;
 };
 
-const createPendingFileId = (file) =>
-  `${file.name}-${file.size}-${file.lastModified}-${
-    crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`
-  }`;
-
 const createClientMessageId = () =>
   `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
 
@@ -84,6 +81,28 @@ const formatAppointmentDateTime = (date, time) => {
     : "";
   const timeText = time ? String(time).slice(0, 5) : "";
   return [dateText, timeText].filter(Boolean).join(" ");
+};
+
+const normalizeRoomAppointment = (info = {}) => ({
+  date: info.date || "",
+  time: info.time || "",
+  place: info.place || "",
+  latitude: info.latitude ? Number(info.latitude) : null,
+  longitude: info.longitude ? Number(info.longitude) : null,
+  capacity: Number(info.capacity) || 0,
+  participants: Number(info.participants) || 0,
+  status: info.status || "",
+});
+
+const parseSystemMessagePayload = (content) => {
+  if (!content || typeof content !== "string") return null;
+
+  try {
+    const parsed = JSON.parse(content);
+    return parsed?.kind === "appointment_change" ? parsed : null;
+  } catch {
+    return null;
+  }
 };
 
 const displayName = (nickname) => nickname || "이름 없음";
@@ -130,6 +149,9 @@ export default function ChatRoomDetailPage() {
   const [roomImage, setRoomImage] = useState("");
   const [roomAuthor, setRoomAuthor] = useState("");
   const [roomLocation, setRoomLocation] = useState(null);
+  const [roomAppointment, setRoomAppointment] = useState(() =>
+    normalizeRoomAppointment(),
+  );
 
   const [showSettings, setShowSettings] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
@@ -140,10 +162,7 @@ export default function ChatRoomDetailPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(null);
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
-  const [pendingFiles, setPendingFiles] = useState([]);
   const [showFileGallery, setShowFileGallery] = useState(false);
-  const [showAttachMenu, setShowAttachMenu] = useState(false);
-  const [fileAccept, setFileAccept] = useState("");
   const [notificationsMuted, setNotificationsMuted] = useState(
     () => localStorage.getItem(`chat-muted:${roomId}`) === "1",
   );
@@ -156,6 +175,16 @@ export default function ChatRoomDetailPage() {
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const {
+    pendingFiles,
+    showAttachMenu,
+    setShowAttachMenu,
+    fileAccept,
+    clearPendingFiles,
+    addPendingFiles,
+    openFilePicker,
+    removePendingFile,
+  } = usePendingChatFiles({ inputRef, fileInputRef });
 
   const resizeInput = useCallback(() => {
     const textarea = inputRef.current;
@@ -170,7 +199,6 @@ export default function ChatRoomDetailPage() {
   useEffect(() => {
     resizeInput();
   }, [input, resizeInput]);
-  const pendingFilesRef = useRef([]);
   const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
   const appointmentReminder = (notifications?.reminders || []).find(
@@ -178,20 +206,8 @@ export default function ChatRoomDetailPage() {
   );
 
   useEffect(() => {
-    pendingFilesRef.current = pendingFiles;
-  }, [pendingFiles]);
-
-  useEffect(() => {
     notificationsMutedRef.current = notificationsMuted;
   }, [notificationsMuted]);
-
-  useEffect(() => {
-    return () => {
-      pendingFilesRef.current.forEach((item) =>
-        URL.revokeObjectURL(item.previewUrl),
-      );
-    };
-  }, []);
 
   useEffect(() => {
     const preventBrowserDrop = (event) => {
@@ -290,7 +306,8 @@ export default function ChatRoomDetailPage() {
       }
     });
 
-    socket.on("room_info", ({ title, image, author, place, latitude, longitude }) => {
+    socket.on("room_info", (info) => {
+      const { title, image, author, place, latitude, longitude } = info;
       setRoomTitle(title);
       setRoomImage(image);
       setRoomAuthor(author);
@@ -299,6 +316,7 @@ export default function ChatRoomDetailPage() {
         latitude: latitude ? Number(latitude) : null,
         longitude: longitude ? Number(longitude) : null,
       });
+      setRoomAppointment(normalizeRoomAppointment(info));
     });
 
     socket.on("load_messages", (rawMessages) => {
@@ -479,47 +497,6 @@ export default function ChatRoomDetailPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
   // ── Actions ─────────────────────────────────────────────────────────────────
-
-  const clearPendingFiles = useCallback(() => {
-    setPendingFiles((prev) => {
-      prev.forEach((item) => URL.revokeObjectURL(item.previewUrl));
-      return [];
-    });
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
-
-  const addPendingFiles = useCallback((fileList) => {
-    const files = Array.from(fileList || []);
-    if (files.length === 0) return;
-
-    setPendingFiles((prev) => [
-      ...prev,
-      ...files.map((file) => ({
-        id: createPendingFileId(file),
-        file,
-        previewUrl: URL.createObjectURL(file),
-      })),
-    ]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    window.setTimeout(() => inputRef.current?.focus(), 0);
-  }, [fileInputRef, inputRef]); // Add dependencies
-
-  const openFilePicker = useCallback((accept) => {
-    setFileAccept(accept);
-    setShowAttachMenu(false);
-    window.setTimeout(() => fileInputRef.current?.click(), 0);
-  }, [setFileAccept, setShowAttachMenu]);
-
-  const removePendingFile = useCallback((id) => {
-    setPendingFiles((prev) => {
-      const next = [];
-      prev.forEach((item) => {
-        if (item.id === id) URL.revokeObjectURL(item.previewUrl);
-        else next.push(item);
-      });
-      return next;
-    });
-  }, []);
 
   const buildMessageContent = useCallback(async () => {
     const text = input.trim();
@@ -893,6 +870,7 @@ export default function ChatRoomDetailPage() {
           <button
             className={styles.headerIconBtn}
             title="지도보기"
+            style={{ display: "none" }}
             onClick={openRoomMap}
           >
             🗺️
@@ -913,6 +891,37 @@ export default function ChatRoomDetailPage() {
           </button>
         </div>
       </div>
+
+      <section className={styles.appointmentCard}>
+        <div className={styles.appointmentCardMain}>
+          <div className={styles.appointmentCardLabel}>약속 정보</div>
+          <strong>{roomTitle || `채팅방 ${roomId}`}</strong>
+          <span>
+            {formatAppointmentDateTime(roomAppointment.date, roomAppointment.time) ||
+              "날짜와 시간이 정해지지 않았습니다."}
+          </span>
+        </div>
+        <div className={styles.appointmentCardMeta}>
+          <div>
+            <span>장소</span>
+            <strong>{roomAppointment.place || "미정"}</strong>
+          </div>
+          <div>
+            <span>참석</span>
+            <strong>
+              {roomAppointment.participants || 0}
+              {roomAppointment.capacity ? ` / ${roomAppointment.capacity}` : ""}명
+            </strong>
+          </div>
+          <div>
+            <span>상태</span>
+            <strong>{roomAppointment.status || "확인 중"}</strong>
+          </div>
+        </div>
+        <button type="button" className={styles.appointmentCardMapBtn} onClick={openRoomMap}>
+          위치 보기
+        </button>
+      </section>
 
       {appointmentReminder && (
         <div className={styles.appointmentReminderBar}>
@@ -962,6 +971,14 @@ export default function ChatRoomDetailPage() {
           }, {});
 
           if (msg.isSystem) {
+            const systemPayload = parseSystemMessagePayload(msg.content);
+            const systemText = systemPayload?.text || msg.content;
+            const hasMap =
+              systemPayload?.kind === "appointment_change" &&
+              systemPayload.showMap &&
+              Number.isFinite(systemPayload.latitude) &&
+              Number.isFinite(systemPayload.longitude);
+
             return (
               <div key={msg.id || idx}>
                 {showDateDivider && (
@@ -971,7 +988,23 @@ export default function ChatRoomDetailPage() {
                     </span>
                   </div>
                 )}
-                <div className={msg.isDeletionWarning ? styles.deletionWarningMsg : styles.systemMsg}>{msg.content}</div>
+                <div
+                  className={
+                    msg.isDeletionWarning
+                      ? styles.deletionWarningMsg
+                      : styles.systemMsg
+                  }
+                >
+                  <span>{systemText}</span>
+                  {hasMap && (
+                    <div className={styles.systemMsgMap}>
+                      <MapPreview
+                        latitude={systemPayload.latitude}
+                        longitude={systemPayload.longitude}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             );
           }
@@ -1235,17 +1268,19 @@ export default function ChatRoomDetailPage() {
           className={styles.scrollToBottom}
           onClick={scrollToBottom}
           title="최신 메시지 보기"
+          aria-label="맨 밑으로 내려가기"
         >
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.5"
+            strokeWidth="2.4"
           >
             <polyline points="6 9 12 15 18 9" />
           </svg>
+          <span>맨 밑으로</span>
         </button>
       )}
 
@@ -1356,12 +1391,20 @@ export default function ChatRoomDetailPage() {
                   type="button"
                   className={styles.pendingRemove}
                   title="첨부 삭제"
+                  disabled={sending}
                   onClick={() => removePendingFile(item.id)}
                 >
                   ×
                 </button>
               </div>
             ))}
+            {sending && (
+              <div className={styles.uploadStatus} role="status">
+                {pendingFiles.some((item) => item.file.type.startsWith("image/"))
+                  ? "이미지 업로드 중..."
+                  : "파일 업로드 중..."}
+              </div>
+            )}
           </div>
         )}
         <div className={styles.inputBox}>
@@ -1467,7 +1510,17 @@ export default function ChatRoomDetailPage() {
         <RoomSettingsModal
           roomId={roomId}
           onClose={() => setShowSettings(false)}
-          onUpdate={() => {
+          onUpdate={(updatedPost) => {
+            if (updatedPost) {
+              setRoomTitle(updatedPost.title || roomTitle);
+              setRoomImage(updatedPost.image || "");
+              setRoomLocation({
+                place: updatedPost.place || "",
+                latitude: updatedPost.latitude ? Number(updatedPost.latitude) : null,
+                longitude: updatedPost.longitude ? Number(updatedPost.longitude) : null,
+              });
+              setRoomAppointment(normalizeRoomAppointment(updatedPost));
+            }
             socketRef.current?.emit("join_room", {
               roomId,
               nickname: name,

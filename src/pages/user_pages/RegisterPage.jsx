@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import instance from "../../api/instance";
 import styles from "./RegisterPage.module.css";
 
 const currentYear = new Date().getFullYear();
-const years  = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => currentYear - i);
+const years = Array.from(
+  { length: currentYear - 1900 + 1 },
+  (_, i) => currentYear - i,
+);
 const months = Array.from({ length: 12 }, (_, i) => i + 1);
-const days   = Array.from({ length: 31 }, (_, i) => i + 1);
+const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
 const INITIAL_FORM = {
   nickname: "",
@@ -38,14 +42,17 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.nickname)    return toast.error("닉네임을 입력해주세요.");
-    if (!form.email)       return toast.error("이메일 주소를 입력해주세요.");
-    if (!form.password)    return toast.error("비밀번호를 입력해주세요.");
-    if (!form.pw_check)    return toast.error("비밀번호 확인을 입력해주세요.");
-    if (form.password !== form.pw_check) return toast.error("비밀번호가 일치하지 않습니다.");
+    if (!form.nickname) return toast.error("닉네임을 입력해주세요.");
+    if (!form.email) return toast.error("이메일 주소를 입력해주세요.");
+    if (!form.password) return toast.error("비밀번호를 입력해주세요.");
+    if (!form.pw_check) return toast.error("비밀번호 확인을 입력해주세요.");
+    if (form.password !== form.pw_check) {
+      return toast.error("비밀번호가 일치하지 않습니다.");
+    }
     if (!form.phone_number) return toast.error("휴대전화 번호를 입력해주세요.");
-    if (!form.birthday.year || !form.birthday.month || !form.birthday.day)
+    if (!form.birthday.year || !form.birthday.month || !form.birthday.day) {
       return toast.error("생년월일을 모두 선택해주세요.");
+    }
     if (!form.gender) return toast.error("성별을 선택해주세요.");
 
     const body = {
@@ -58,21 +65,13 @@ const RegisterPage = () => {
     };
 
     try {
-      const res = await fetch("http://localhost:4000/users/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        toast.success("회원가입 완료! 로그인해 주세요.");
-        navigate("/login");
-      } else {
-        toast.error(data.message || "회원가입 중 오류가 발생했습니다.");
-      }
-    } catch {
-      toast.error("서버와 통신 중 오류가 발생했습니다.");
+      await instance.post("/users/register", body);
+      toast.success("회원가입이 완료되었습니다. 로그인해주세요.");
+      navigate("/login");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "서버와 통신 중 오류가 발생했습니다.",
+      );
     }
   };
 
@@ -80,8 +79,6 @@ const RegisterPage = () => {
     <div className={styles.page}>
       <form onSubmit={handleSubmit}>
         <div className={styles.container}>
-
-          {/* 닉네임 */}
           <label className={styles.label}>
             닉네임
             <input
@@ -94,7 +91,6 @@ const RegisterPage = () => {
             />
           </label>
 
-          {/* 이메일 */}
           <label className={styles.label}>
             이메일 주소
             <input
@@ -107,7 +103,6 @@ const RegisterPage = () => {
             />
           </label>
 
-          {/* 비밀번호 */}
           <label className={styles.label}>
             비밀번호
             <input
@@ -120,7 +115,6 @@ const RegisterPage = () => {
             />
           </label>
 
-          {/* 비밀번호 확인 */}
           <label className={styles.label}>
             비밀번호 확인
             <input
@@ -133,7 +127,6 @@ const RegisterPage = () => {
             />
           </label>
 
-          {/* 휴대전화 */}
           <label className={styles.label}>
             휴대전화
             <input
@@ -146,45 +139,72 @@ const RegisterPage = () => {
             />
           </label>
 
-          {/* 생년월일 */}
           <label className={styles.label}>
             생년월일
             <div className={styles.birthWrap}>
-              <select className={styles.select} name="year" value={form.birthday.year} onChange={handleBirthChange}>
+              <select
+                className={styles.select}
+                name="year"
+                value={form.birthday.year}
+                onChange={handleBirthChange}
+              >
                 <option value="">년</option>
-                {years.map((y) => <option key={y} value={y}>{y}</option>)}
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
               </select>
-              <select className={styles.select} name="month" value={form.birthday.month} onChange={handleBirthChange}>
+              <select
+                className={styles.select}
+                name="month"
+                value={form.birthday.month}
+                onChange={handleBirthChange}
+              >
                 <option value="">월</option>
-                {months.map((m) => <option key={m} value={m}>{m}</option>)}
+                {months.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
               </select>
-              <select className={styles.select} name="day" value={form.birthday.day} onChange={handleBirthChange}>
+              <select
+                className={styles.select}
+                name="day"
+                value={form.birthday.day}
+                onChange={handleBirthChange}
+              >
                 <option value="">일</option>
-                {days.map((d) => <option key={d} value={d}>{d}</option>)}
+                {days.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
               </select>
             </div>
           </label>
 
-          {/* 성별 */}
           <fieldset className={styles.genderField}>
             <legend className={styles.genderLabel}>성별</legend>
             <div className={styles.genderWrap}>
-              {["남", "여"].map((g) => (
-                <label key={g} className={styles.genderOption}>
+              {[
+                { label: "남성", value: "male" },
+                { label: "여성", value: "female" },
+              ].map((gender) => (
+                <label key={gender.value} className={styles.genderOption}>
                   <input
                     type="radio"
                     name="gender"
-                    value={g}
-                    checked={form.gender === g}
+                    value={gender.value}
+                    checked={form.gender === gender.value}
                     onChange={handleChange}
                   />
-                  {g}
+                  {gender.label}
                 </label>
               ))}
             </div>
           </fieldset>
 
-          {/* 버튼 */}
           <div className={styles.buttonWrap}>
             <button
               type="button"

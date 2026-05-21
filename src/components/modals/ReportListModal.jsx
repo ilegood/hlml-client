@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { toast } from "sonner";
 import instance, { getImageUrl } from "../../api/instance";
@@ -387,7 +387,7 @@ export default function ReportListModal({ onClose, onChanged }) {
     [targetProfileImg, targetReportCount, targetUser, targetUserId],
   );
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -397,11 +397,11 @@ export default function ReportListModal({ onClose, onChanged }) {
       console.error("Report list load failed:", err);
       toast.error("신고 내역을 불러오지 못했습니다.");
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchReports();
-  }, [token]);
+  }, [fetchReports]);
 
   useEffect(() => {
     const searchUsers = async () => {
