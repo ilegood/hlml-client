@@ -2,7 +2,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import styled from "styled-components";
 import instance, { getImageUrl } from "../../api/instance";
-import instance from "../../api/instance";
 
 const ModalWrapper = styled.div`
   position: fixed;
@@ -93,18 +92,6 @@ const ModalWrapper = styled.div`
   }
 `;
 
-export default function ReportModal({ onClose, targetUser }) {
-  const [reason, setReason] = useState("");
-  const [content, setContent] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async () => {
-    if (!reason || reason === "신고 사유를 선택해주세요") {
-    &:disabled { background: var(--color-deactive); cursor: not-allowed; }
-    &:hover:not(:disabled) { opacity: 0.9; }
-  }
-`;
-
 const REASON_PLACEHOLDER = "신고 사유를 선택해주세요";
 
 export default function ReportModal({ 
@@ -114,7 +101,8 @@ export default function ReportModal({
   targetCommentId,
   targetName,
   targetTitle,
-  targetContent
+  targetContent,
+  targetUser,
 }) {
   const [reason, setReason] = useState(REASON_PLACEHOLDER);
   const [content, setContent] = useState("");
@@ -130,14 +118,10 @@ export default function ReportModal({
       return;
     }
 
-    setSubmitting(true);
-    try {
-      await instance.post("/reports", {
-        targetUserId: targetUser.user_id,
     setLoading(true);
     try {
       await instance.post("/reports", {
-        targetUserId,
+        targetUserId: targetUserId || targetUser?.user_id,
         targetPostId,
         targetCommentId,
         reason,
@@ -146,10 +130,6 @@ export default function ReportModal({
       toast.success("신고가 접수되었습니다.");
       onClose();
     } catch (err) {
-      const msg = err?.response?.data?.message || "신고 접수에 실패했습니다.";
-      toast.error(msg);
-    } finally {
-      setSubmitting(false);
       console.error("Report failed:", err);
       toast.error(err.response?.data?.message || "신고 접수에 실패했습니다.");
     } finally {
@@ -240,8 +220,8 @@ export default function ReportModal({
           />
         </div>
 
-        <button className="submit-btn" disabled={submitting} onClick={handleSubmit}>
-          {submitting ? "제출 중..." : "신고 제출"}
+        <button className="submit-btn" disabled={loading} onClick={handleSubmit}>
+          {loading ? "제출 중..." : "신고 제출"}
         </button>
       </div>
     </ModalWrapper>
