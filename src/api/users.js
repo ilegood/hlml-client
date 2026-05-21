@@ -1,9 +1,5 @@
 import instance from "./instance";
 
-export const register = async (form) => {
-  await instance.post("/users/register", form);
-};
-
 export const login = async (form) => {
   const { data } = await instance.post("/users/login", form);
   return data;

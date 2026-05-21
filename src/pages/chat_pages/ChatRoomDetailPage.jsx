@@ -5,7 +5,7 @@ import { AuthContext } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
 import { getRoomBlockWarning } from "../../api/chat";
-import { leavePost, getPost } from "../../api/posts";
+import { leavePost, getPost, togglePostJoin } from "../../api/posts";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
@@ -18,11 +18,9 @@ import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
-import ReactionCustomizerModal from "../../components/modals/ReactionCustomizerModal";
-import ChatMessageItem from "../../components/chat_components/ChatMessageItem";
 import ChatInputArea from "../../components/chat_components/ChatInputArea";
 import { useFileUpload } from "../../hooks/useFileUpload";
-import { useCustomReactions } from "../../hooks/useCustomReactions";
+
 import { formatChatPreview } from "../../utils/chatPreview";
 import {
   formatAppointmentDateTime,
@@ -51,7 +49,7 @@ function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
         className={styles.msgAvatar}
         style={{ width: size, height: size, fontSize: size * 0.3 }}
       >
-        {url ? <img src={url} alt={label} /> : label.slice(0, 2)}
+        {url ? <img src={url} alt={label} style={{ backgroundColor: "white" }} /> : label.slice(0, 2)}
       </div>
     </div>
   );
@@ -89,8 +87,10 @@ export default function ChatRoomDetailPage() {
   const [sending, setSending] = useState(false);
   const [blockWarning, setBlockWarning] = useState(null);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
-  const [showCustomizer, setShowCustomizer] = useState(false);
-  const { reactions, saveReactions } = useCustomReactions();
+  const [postData, setPostData] = useState(null);
+  const [isParticipant, setIsParticipant] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [loadingPost, setLoadingPost] = useState(true);
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
@@ -142,6 +142,8 @@ export default function ChatRoomDetailPage() {
       navigate("/login");
       return;
     }
+
+    if (!isParticipant) return;
 
     socketRef.current = io(BASE_URL, {
       auth: { token: localStorage.getItem("token") },
@@ -328,7 +330,7 @@ export default function ChatRoomDetailPage() {
     });
 
     return () => socket.disconnect();
-  }, [roomId, userId, name, navigate]);
+  }, [roomId, userId, name, navigate, isParticipant]);
 
   useEffect(() => {
     if (!userId || !roomId) return;
@@ -351,6 +353,27 @@ export default function ChatRoomDetailPage() {
       }
     };
     loadBlockWarning();
+  }, [roomId, userId]);
+
+  // ── Participation check ──
+  useEffect(() => {
+    if (!userId || !roomId) return;
+    const checkParticipation = async () => {
+      try {
+        setLoadingPost(true);
+        const post = await getPost(roomId);
+        setPostData(post);
+        const isAuthor = String(post.user_id) === String(userId);
+        const hasJoined = (post.joinedUserIds || []).map(String).includes(String(userId));
+        setIsParticipant(isAuthor || hasJoined);
+      } catch (err) {
+        console.error("Failed to fetch post:", err);
+        setPostData(null);
+      } finally {
+        setLoadingPost(false);
+      }
+    };
+    checkParticipation();
   }, [roomId, userId]);
 
   useEffect(() => {
@@ -451,7 +474,7 @@ export default function ChatRoomDetailPage() {
               0,
             );
           }
-          const content = await buildMessageContent();
+          const content = await buildMessageContent(input, pendingFiles);
           if (clientTempId) {
             setMessages((prev) =>
               prev.map((m) =>
@@ -603,22 +626,44 @@ export default function ChatRoomDetailPage() {
     }
     setShowMembers(!showMembers);
   };
+  const handleJoinChat = async () => {
+    if (joining) return;
+    setJoining(true);
+    try {
+      const updated = await togglePostJoin(roomId);
+      if (updated) setPostData(updated);
+      setIsParticipant(true);
+    } catch (err) {
+      console.error("Failed to join:", err);
+      toast.error(err.response?.data?.message || "참여 처리에 실패했습니다.");
+    } finally {
+      setJoining(false);
+    }
+  };
+
   const cancelContext = () => {
     setReplyTo(null);
     setEditId(null);
     setInput("");
   };
-  const handleLeave = async () => {
-    if (!window.confirm("정말로 이 채팅방에서 나가시겠습니까?")) return;
-    try {
-      socketRef.current?.emit("leave_room", { roomId, nickname: name, userId });
-      await leavePost(roomId);
-      toast.success("채팅방에서 나갔습니다.");
-      navigate("/chat-rooms");
-    } catch (err) {
-      console.error("Failed to leave room:", err);
-      toast.error("방 나가기에 실패했습니다.");
-    }
+  const handleLeave = () => {
+    toast("정말로 이 채팅방에서 나가시겠습니까?", {
+      action: {
+        label: "나가기",
+        onClick: async () => {
+          try {
+            socketRef.current?.emit("leave_room", { roomId, nickname: name, userId });
+            await leavePost(roomId);
+            toast.success("채팅방에서 나갔습니다.");
+            navigate("/chat-rooms");
+          } catch (err) {
+            console.error("Failed to leave room:", err);
+            toast.error("방 나가기에 실패했습니다.");
+          }
+        },
+      },
+      duration: 5000,
+    });
   };
   const toggleNotifications = () => {
     const next = !notificationsMuted;
@@ -638,6 +683,112 @@ export default function ChatRoomDetailPage() {
     }
     toast.error("연결된 장소 정보가 없습니다.");
   };
+
+  const isFull = postData && (postData.participants || 1) >= (postData.capacity || 999);
+
+  if (loadingPost) {
+    return (
+      <div className={styles.chatWrap}>
+        <div className={styles.warningOverlay}>
+          <div className={styles.warningModal}>
+            <p style={{ textAlign: "center" }}>로딩 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!postData) {
+    return (
+      <div className={styles.chatWrap}>
+        <div className={styles.warningOverlay}>
+          <div className={styles.warningModal}>
+            <h3>게시글을 찾을 수 없습니다.</h3>
+            <p>존재하지 않거나 삭제된 게시글입니다.</p>
+            <button type="button" onClick={() => navigate(-1)}>뒤로 가기</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isParticipant) {
+    return (
+      <div className={styles.chatWrap}>
+        <div className={styles.warningOverlay}>
+          <div className={styles.warningModal}>
+            <h2 style={{ marginTop: 0 }}>{postData.title}</h2>
+            {(postData.date || postData.time) && (
+              <p style={{ margin: "4px 0", color: "#888" }}>
+                📅 {postData.date || ""} {postData.time?.slice(0, 5) || ""}
+              </p>
+            )}
+            {postData.place && (
+              <p style={{ margin: "4px 0", color: "#888" }}>📍 {postData.place}</p>
+            )}
+            <p style={{ margin: "4px 0", color: "#888" }}>
+              👥 {postData.participants || 1}/{postData.capacity || "∞"}
+            </p>
+            {postData.content && (
+              <p
+                style={{
+                  margin: "12px 0",
+                  padding: "10px",
+                  background: "var(--color-input-bg)",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  lineHeight: "1.5",
+                  maxHeight: "80px",
+                  overflow: "hidden",
+                }}
+              >
+                {postData.content}
+              </p>
+            )}
+            <hr style={{ border: "none", borderTop: "1px solid var(--color-border)", margin: "16px 0" }} />
+            <h3 style={{ margin: "0 0 16px" }}>참여하겠습니까?</h3>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                onClick={handleJoinChat}
+                disabled={joining || isFull}
+                style={{
+                  flex: 1,
+                  height: 40,
+                  border: "none",
+                  borderRadius: 6,
+                  background: isFull ? "#888" : "var(--color-active)",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  cursor: isFull ? "default" : "pointer",
+                }}
+              >
+                {joining ? "참여 중..." : isFull ? "정원이 가득 찼습니다" : "참여하기"}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                style={{
+                  flex: 1,
+                  height: 40,
+                  border: "1px solid var(--color-border)",
+                  borderRadius: 6,
+                  background: "transparent",
+                  color: "var(--color-text)",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  cursor: "pointer",
+                }}
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -673,7 +824,14 @@ export default function ChatRoomDetailPage() {
           {roomImage ? (
             <img src={getImageUrl(roomImage)} alt="room" />
           ) : (
-            <span className={styles.headerHashIcon}>#</span>
+            <span className={styles.headerHashIcon} style={{ fontSize: 22 }}>
+              {postData && (() => {
+                const CAT_MAP = { 게임:"🎮", 스터디:"📚", 운동:"🏃", 맛집:"🍽️", 여행:"✈️", 음악:"🎵", 영화:"🎬", 사진:"📷", 반려동물:"🐾", 독서:"📖", 언어:"💬", 취미:"🎨", 패션:"👗", 기타:"💡" };
+                const cats = postData.categories || {};
+                const key = Object.keys(cats).find(k => cats[k]);
+                return key && CAT_MAP[key] ? CAT_MAP[key] : "#";
+              })()}
+            </span>
           )}
         </div>
         <span className={styles.headerName}>
@@ -733,7 +891,7 @@ export default function ChatRoomDetailPage() {
 
       {appointmentReminder && (
         <div className={styles.appointmentReminderBar}>
-          <div className={styles.appointmentReminderIcon}>30</div>
+          <div className={styles.appointmentReminderIcon}>⏰</div>
           <div className={styles.appointmentReminderText}>
             <strong>{appointmentReminder.title || roomTitle || "약속"}</strong>
             <span>
@@ -775,6 +933,51 @@ export default function ChatRoomDetailPage() {
               acc[r.emoji].mine = true;
             return acc;
           }, {});
+
+          if (msg.isSystem) {
+            let systemText = msg.content;
+            let parsed = null;
+            try {
+              parsed = JSON.parse(msg.content);
+              if (parsed?.kind === "share_post") {
+                const sharer = parsed.sharerNickname || "알 수 없음";
+                const title = parsed.postTitle || "게시글";
+                systemText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
+              }
+            } catch { /* not JSON */ }
+
+            return (
+              <div key={msg.id || idx}>
+                {showDateDivider && (
+                  <div className={styles.dateDivider}>
+                    <span className={styles.dateDividerText}>{formatDate(msg.time)}</span>
+                  </div>
+                )}
+                <div className={styles.systemMsg}>{systemText}</div>
+                {parsed?.kind === "share_post" && (
+                  <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/chat-rooms/${parsed.postId}`)}
+                      style={{
+                        height: 32,
+                        padding: "0 16px",
+                        border: "none",
+                        borderRadius: 6,
+                        background: "var(--color-active)",
+                        color: "#fff",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: "pointer",
+                      }}
+                    >
+                      참여하기
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          }
 
           return (
             <div key={msg.id || idx}>
@@ -1015,7 +1218,7 @@ export default function ChatRoomDetailPage() {
                               <polyline points="3 6 5 6 21 6" />
                               <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                               <path d="M10 11v6M14 11v6" />
-                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 2 0 0 1 1 1v2" />
+                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
                             </svg>
                           </button>
                         </>
@@ -1116,17 +1319,6 @@ export default function ChatRoomDetailPage() {
           );
         }}
       />
-
-      {showCustomizer && (
-        <ReactionCustomizerModal
-          currentReactions={reactions}
-          onSave={(newReactions) => {
-            saveReactions(newReactions);
-            setShowCustomizer(false);
-          }}
-          onClose={() => setShowCustomizer(false)}
-        />
-      )}
 
       {selectedProfileId && (
         <UserProfileModal

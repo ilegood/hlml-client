@@ -1,8 +1,7 @@
-import instance from "./instance";
+import instance, { BASE_URL } from "./instance";
 import { normalizeStatus } from "./homeConstants";
 
 const API_URL = "/posts";
-const BASE_URL = "http://localhost:4000";
 
 const MYSQL_DATETIME_RE = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/;
 
@@ -128,11 +127,6 @@ export const getPosts = async () => {
   return res.data.map(normalizePost);
 };
 
-export const getMyChatRooms = async () => {
-  const res = await instance.get(`${API_URL}/my-rooms`);
-  return res.data.map(normalizePost);
-};
-
 export const getPost = async (id) => {
   const res = await instance.get(`${API_URL}/${id}`);
   return normalizePost(res.data);
@@ -150,16 +144,6 @@ export const updatePost = async (id, data) => {
 
 export const deletePost = async (id) => {
   const res = await instance.delete(`${API_URL}/${id}`);
-  return res.data;
-};
-
-export const hidePost = async (id) => {
-  const res = await instance.post(`${API_URL}/${id}/hide`);
-  return res.data;
-};
-
-export const updatePostJson = async (id, data) => {
-  const res = await instance.patch(`/posts/${id}/json`, data);
   return res.data;
 };
 

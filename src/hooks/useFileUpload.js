@@ -1,10 +1,8 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { uploadChatFile } from "../api/chat";
 import { createPendingFileId } from "../utils/chatHelpers";
 
 export const useFileUpload = ({ setPendingFiles, fileInputRef, inputRef }) => {
-  const pendingFilesRef = useRef([]);
-
   const clearPendingFiles = useCallback(() => {
     setPendingFiles((prev) => {
       prev.forEach((item) => URL.revokeObjectURL(item.previewUrl));
@@ -76,7 +74,6 @@ export const useFileUpload = ({ setPendingFiles, fileInputRef, inputRef }) => {
   };
 
   return {
-    pendingFilesRef,
     clearPendingFiles,
     addPendingFiles,
     removePendingFile,

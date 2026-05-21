@@ -24,9 +24,5 @@ export const useCustomReactions = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
   }, []);
 
-  const resetReactions = useCallback(() => {
-    saveReactions(DEFAULT_REACTIONS);
-  }, [saveReactions]);
-
-  return { reactions, saveReactions, resetReactions, DEFAULT_REACTIONS };
+  return { reactions, saveReactions };
 };

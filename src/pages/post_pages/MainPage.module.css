@@ -111,6 +111,31 @@
   flex-wrap: wrap;
 }
 
+.sortRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sortSelect {
+  padding: 5px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-sidebar);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.sortSelect:hover,
+.sortSelect:focus {
+  border-color: var(--color-active);
+}
+
 /* ── Card List ── */
 .cardList {
   display: grid;

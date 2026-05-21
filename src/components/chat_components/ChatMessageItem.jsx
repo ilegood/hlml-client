@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
@@ -29,7 +30,7 @@ function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
         className={styles.msgAvatar}
         style={{ width: size, height: size, fontSize: size * 0.3 }}
       >
-        {url ? <img src={url} alt={label} /> : label.slice(0, 2)}
+        {url ? <img src={url} alt={label} style={{ backgroundColor: "white" }} /> : label.slice(0, 2)}
       </div>
     </div>
   );
@@ -198,7 +199,20 @@ export default function ChatMessageItem({
       return acc;
     }, {});
 
+  const navigate = useNavigate();
+
   if (msg.isSystem) {
+    let systemText = msg.content;
+    let parsed = null;
+    try {
+      parsed = JSON.parse(msg.content);
+      if (parsed?.kind === "share_post") {
+        const sharer = parsed.sharerNickname || "알 수 없음";
+        const title = parsed.postTitle || "게시글";
+        systemText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
+      }
+    } catch { /* not JSON */ }
+
     return (
       <div key={msg.id || idx}>
         {showDateDivider && (
@@ -207,8 +221,29 @@ export default function ChatMessageItem({
           </div>
         )}
         <div className={msg.isDeletionWarning ? styles.deletionWarningMsg : styles.systemMsg}>
-          {msg.content}
+          {systemText}
         </div>
+        {parsed?.kind === "share_post" && (
+          <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
+            <button
+              type="button"
+              onClick={() => navigate(`/chat-rooms/${parsed.postId}`)}
+              style={{
+                height: 32,
+                padding: "0 16px",
+                border: "none",
+                borderRadius: 6,
+                background: "var(--color-active)",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+            >
+              참여하기
+            </button>
+          </div>
+        )}
       </div>
     );
   }

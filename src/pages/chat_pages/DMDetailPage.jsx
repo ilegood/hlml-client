@@ -380,7 +380,7 @@ export default function DMDetailPage() {
     <div className={styles.chatWrap} onDrop={(e) => handleDrop(e, addPendingFiles)} onDragOver={(e) => e.preventDefault()}>
       <div className={styles.header}>
         <div className={styles.headerThumb}>
-          {targetProfileImg ? <img src={getImageUrl(targetProfileImg)} alt="target" /> : <span className={styles.headerHashIcon}>👤</span>}
+          {targetProfileImg ? <img src={getImageUrl(targetProfileImg)} alt="target" style={{ backgroundColor: "white" }} /> : <span className={styles.headerHashIcon}>👤</span>}
         </div>
         <span className={styles.headerName}>{targetNickname || "사용자"}</span>
         <div className={styles.headerDivider} />

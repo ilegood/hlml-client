@@ -21,31 +21,16 @@ const parseMessagePayload = (content) => {
     if (parsed?.kind === "chat_attachment") {
       return { text: "", attachments: [parsed] };
     }
+    if (parsed?.kind === "share_post") {
+      const sharer = parsed.sharerNickname || "알 수 없음";
+      const title = parsed.postTitle || "게시글";
+      return { text: `${sharer}님이 "${title}" 게시글을 공유했습니다.`, attachments: [] };
+    }
   } catch {
     return null;
   }
 
   return null;
-};
-
-export const getMessagePreviewText = (content, nickname) => {
-  const payload = parseMessagePayload(content);
-  if (!payload) return content;
-
-  if (payload.attachments.length > 0) {
-    const hasImage = payload.attachments.some((a) =>
-      a.mimeType?.startsWith("image/"),
-    );
-    const hasVideo = payload.attachments.some((a) =>
-      a.mimeType?.startsWith("video/"),
-    );
-
-    if (hasImage) return `${nickname}님의 이미지`;
-    if (hasVideo) return `${nickname}님의 동영상`;
-    return `${nickname}님의 파일`;
-  }
-
-  return payload.text || "";
 };
 
 const countHangul = (value) =>
