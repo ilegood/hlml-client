@@ -2,7 +2,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import styled from "styled-components";
 import instance, { getImageUrl } from "../../api/instance";
-import instance from "../../api/instance";
 
 const ModalWrapper = styled.div`
   position: fixed;
@@ -32,10 +31,12 @@ const ModalWrapper = styled.div`
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 12px;
     background: var(--color-input-bg);
     border-radius: 12px;
     margin-bottom: 20px;
+    font-size: 14px;
+    border: 1px solid var(--color-border);
     img {
       width: 36px; height: 36px;
       border-radius: 50%;
@@ -54,13 +55,6 @@ const ModalWrapper = styled.div`
     .target-name {
       font-weight: 700; font-size: 14px;
     }
-    margin-bottom: 20px;
-    padding: 12px;
-    background: var(--color-input-bg);
-    border-radius: 12px;
-    font-size: 14px;
-    border: 1px solid var(--color-border);
-    
     strong { color: #eb4d4b; }
   }
 
@@ -89,9 +83,7 @@ const ModalWrapper = styled.div`
     font-size: 16px; font-weight: 800;
     cursor: pointer;
     &:hover:not(:disabled) { opacity: 0.9; }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
-    &:disabled { background: var(--color-deactive); cursor: not-allowed; }
-    &:hover:not(:disabled) { opacity: 0.9; }
+    &:disabled { opacity: 0.5; background: var(--color-deactive); cursor: not-allowed; }
   }
 `;
 
@@ -225,16 +217,8 @@ export default function ReportModal({
           />
         </div>
 
-        <button className="submit-btn" disabled={loading} onClick={handleSubmit}>
-          <textarea 
-            placeholder="구체적인 상황을 설명해주세요"
-            value={content}
-            onChange={e => setContent(e.target.value)}
-          />
-        </div>
-
-        <button 
-          className="submit-btn" 
+        <button
+          className="submit-btn"
           onClick={handleSubmit}
           disabled={loading}
         >

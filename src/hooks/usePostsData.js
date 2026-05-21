@@ -66,17 +66,6 @@ export const usePostsData = () => {
           return post.categories?.[key] === value;
         });
         return matchText && matchCat;
-  const filteredPosts = [...posts]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .filter((post) => {
-      const keyword = search.toLowerCase();
-      const matchText =
-        post.title.toLowerCase().includes(keyword) ||
-        post.content.toLowerCase().includes(keyword);
-      const matchCat = Object.entries(selCats).every(([key, value]) => {
-        if (!value) return true;
-        if (key === "인원") return post.capacity === parseInt(value, 10);
-        return post.categories?.[key] === value;
       });
   }, [posts, search, selCats, sortBy]);
 

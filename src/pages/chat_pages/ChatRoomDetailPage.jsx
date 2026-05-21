@@ -4,10 +4,8 @@ import { io } from "socket.io-client";
 import { AuthContext } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
-import { getRoomBlockWarning } from "../../api/chat";
-import { leavePost, getPost, togglePostJoin } from "../../api/posts";
 import { getRoomBlockWarning, uploadChatFile } from "../../api/chat";
-import { leavePost, getPost } from "../../api/posts";
+import { leavePost, getPost, togglePostJoin } from "../../api/posts";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
@@ -20,9 +18,6 @@ import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
-import ChatInputArea from "../../components/chat_components/ChatInputArea";
-import { useFileUpload } from "../../hooks/useFileUpload";
-
 import { formatChatPreview } from "../../utils/chatPreview";
 import {
   formatAppointmentDateTime,
@@ -35,79 +30,7 @@ import {
 } from "../../utils/chatHelpers";
 import borderImg from "../../assets/border.png";
 import MapPreview from "../../components/post_components/MapPreview";
-import borderImg from "../../assets/border.png";
-import { formatChatPreview } from "../../utils/chatPreview";
 import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
-
-// ── 헬퍼 ──────────────────────────────────────────────────────────────────────
-// ... (helper functions - formatTime, formatDate, isSameDay, isCompact, formatAppointmentDateTime, displayName, Avatar)
-const formatTime = (isoString) => {
-  if (!isoString) return "";
-  return new Date(isoString).toLocaleTimeString("ko-KR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  });
-};
-
-const formatDate = (isoString) => {
-  if (!isoString) return "";
-  const d = new Date(isoString);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-
-  if (d.toDateString() === today.toDateString()) return "오늘";
-  if (d.toDateString() === yesterday.toDateString()) return "어제";
-
-  const options = {
-    month: "long",
-    day: "numeric",
-  };
-  if (d.getFullYear() !== today.getFullYear()) {
-    options.year = "numeric";
-  }
-
-  return d.toLocaleDateString("ko-KR", options);
-};
-
-const isSameDay = (a, b) => {
-  if (!a || !b) return false;
-  const da = new Date(a),
-    db = new Date(b);
-  return (
-    da.getFullYear() === db.getFullYear() &&
-    da.getMonth() === db.getMonth() &&
-    da.getDate() === db.getDate()
-  );
-};
-
-// 같은 유저가 2분 이내에 연속 작성한 경우 compact 처리
-const isCompact = (prev, curr) => {
-  if (!prev || prev.isSystem || curr.isSystem) return false;
-  if (prev.userId !== curr.userId) return false;
-  const diff = new Date(curr.time) - new Date(prev.time);
-  return diff < 2 * 60 * 1000;
-};
-
-const createClientMessageId = () =>
-  `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
-
-const formatAppointmentDateTime = (date, time) => {
-  const now = new Date();
-  const apptDate = new Date(date);
-  const options = {
-    month: "long",
-    day: "numeric",
-  };
-  if (apptDate.getFullYear() !== now.getFullYear()) {
-    options.year = "numeric";
-  }
-
-  const dateText = date ? apptDate.toLocaleDateString("ko-KR", options) : "";
-  const timeText = time ? String(time).slice(0, 5) : "";
-  return [dateText, timeText].filter(Boolean).join(" ");
-};
 
 const normalizeRoomAppointment = (info = {}) => ({
   date: info.date || "",
@@ -130,8 +53,6 @@ const parseSystemMessagePayload = (content) => {
     return null;
   }
 };
-
-const displayName = (nickname) => nickname || "이름 없음";
 
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
@@ -236,11 +157,6 @@ export default function ChatRoomDetailPage() {
   useEffect(() => {
     notificationsMutedRef.current = notificationsMuted;
   }, [notificationsMuted]);
-
-  useEffect(() => {
-    const preventBrowserDrop = (event) => {
-      event.preventDefault();
-    };
 
   useEffect(() => {
     const preventBrowserDrop = (event) => {
@@ -423,12 +339,6 @@ export default function ChatRoomDetailPage() {
       toast.error(msg);
       navigate("/chat-rooms");
     });
-    });
-
-    socket.on("error_message", (msg) => {
-      toast.error(msg);
-      navigate("/chat-rooms");
-    });
 
     socket.on("user_kicked", ({ targetUserId }) => {
       if (Number(targetUserId) === Number(userId)) {
@@ -527,11 +437,6 @@ export default function ChatRoomDetailPage() {
     const start = inputRef.current.selectionStart;
     const end = inputRef.current.selectionEnd;
     const text = input;
-    setInput(
-      text.substring(0, start) +
-        emoji.native +
-        text.substring(end, text.length),
-    );
     const before = text.substring(0, start);
     const after = text.substring(end, text.length);
     setInput(before + emoji.native + after);
@@ -551,10 +456,6 @@ export default function ChatRoomDetailPage() {
   const handleScroll = () => {
     const container = messagesRef.current;
     if (!container) return;
-    setShowScrollBtn(
-      container.scrollHeight - container.scrollTop >
-        container.clientHeight + 200,
-    );
     const isUp =
       container.scrollHeight - container.scrollTop >
       container.clientHeight + 200;
@@ -696,7 +597,6 @@ export default function ChatRoomDetailPage() {
                       isUploading: false,
                       isFailed: true,
                     }
-                  ? { ...m, isPending: false, isUploading: false, isFailed: true }
                   : m,
               ),
             );
@@ -773,8 +673,6 @@ export default function ChatRoomDetailPage() {
     });
     setShowEmojiPicker(null);
   };
-
-  const getParentMsg = (parentId) => messages.find((m) => m.id === parentId);
 
   const scrollToMessage = (msgId) => {
     const el = document.getElementById(`msg-${msgId}`);
@@ -991,7 +889,7 @@ export default function ChatRoomDetailPage() {
   return (
     <div
       className={styles.chatWrap}
-      onDrop={(e) => handleDrop(e, addPendingFiles)}
+      onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
     >
       {blockWarning && (
@@ -1056,14 +954,15 @@ export default function ChatRoomDetailPage() {
           >
             📎
           </button>
-          <button
-            className={styles.headerIconBtn}
-            title="지도보기"
-            style={{ display: "none" }}
-            onClick={openRoomMap}
-          >
-            🗺️
-          </button>
+          {roomLocation?.latitude && (
+            <button
+              className={styles.headerIconBtn}
+              title="지도보기"
+              onClick={openRoomMap}
+            >
+              🗺️
+            </button>
+          )}
           <button
             className={styles.headerIconBtn}
             title="멤버보기"
@@ -1149,11 +1048,6 @@ export default function ChatRoomDetailPage() {
           const isMine = String(msg.userId) === String(userId);
           const parentMsg = msg.parentId ? messages.find((m) => m.id === msg.parentId) : null;
           const msgNickname = displayName(msg.nickname);
-          const msgNickname = displayName(msg.nickname);
-          const showDateDivider = !isSameDay(prevMsg?.time, msg.time);
-          const compact = !showDateDivider && isCompact(prevMsg, msg);
-          const isMine = String(msg.userId) === String(userId);
-          const parentMsg = msg.parentId ? getParentMsg(msg.parentId) : null;
 
           // 리액션 집계
           const reactionMap = (msg.reactions || []).reduce((acc, r) => {
@@ -1176,7 +1070,9 @@ export default function ChatRoomDetailPage() {
               }
             } catch { /* not JSON */ }
             const systemPayload = parseSystemMessagePayload(msg.content);
-            const systemText = systemPayload?.text || msg.content;
+            if (systemPayload?.kind === "appointment_change") {
+              systemText = systemPayload.text || msg.content;
+            }
             const hasMap =
               systemPayload?.kind === "appointment_change" &&
               systemPayload.showMap &&
@@ -1190,7 +1086,23 @@ export default function ChatRoomDetailPage() {
                     <span className={styles.dateDividerText}>{formatDate(msg.time)}</span>
                   </div>
                 )}
-                <div className={styles.systemMsg}>{systemText}</div>
+                <div
+                  className={
+                    msg.isDeletionWarning
+                      ? styles.deletionWarningMsg
+                      : styles.systemMsg
+                  }
+                >
+                  <span>{systemText}</span>
+                  {hasMap && (
+                    <div className={styles.systemMsgMap}>
+                      <MapPreview
+                        latitude={systemPayload.latitude}
+                        longitude={systemPayload.longitude}
+                      />
+                    </div>
+                  )}
+                </div>
                 {parsed?.kind === "share_post" && (
                   <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
                     <button
@@ -1212,28 +1124,6 @@ export default function ChatRoomDetailPage() {
                     </button>
                   </div>
                 )}
-                    <span className={styles.dateDividerText}>
-                      {formatDate(msg.time)}
-                    </span>
-                  </div>
-                )}
-                <div
-                  className={
-                    msg.isDeletionWarning
-                      ? styles.deletionWarningMsg
-                      : styles.systemMsg
-                  }
-                >
-                  <span>{systemText}</span>
-                  {hasMap && (
-                    <div className={styles.systemMsgMap}>
-                      <MapPreview
-                        latitude={systemPayload.latitude}
-                        longitude={systemPayload.longitude}
-                      />
-                    </div>
-                  )}
-                </div>
               </div>
             );
           }
@@ -1511,48 +1401,6 @@ export default function ChatRoomDetailPage() {
         </button>
       )}
 
-      <ChatInputArea
-        input={input}
-        setInput={setInput}
-        handleSend={handleSend}
-        sending={sending}
-        editId={editId}
-        replyTo={replyTo}
-        cancelContext={cancelContext}
-        pendingFiles={pendingFiles}
-        removePendingFile={removePendingFile}
-        addPendingFiles={addPendingFiles}
-        openFilePicker={openFilePicker}
-        handlePaste={handlePaste}
-        handleEmojiSelect={handleEmojiSelect}
-        inputRef={inputRef}
-        fileInputRef={fileInputRef}
-        fileAccept={fileAccept}
-        showAttachMenu={showAttachMenu}
-        setShowAttachMenu={setShowAttachMenu}
-        showMainEmojiPicker={showMainEmojiPicker}
-        setShowMainEmojiPicker={setShowMainEmojiPicker}
-        roomTitle={roomTitle}
-        roomId={roomId}
-        formatChatPreview={formatChatPreview}
-        messages={messages}
-      />
-          aria-label="맨 밑으로 내려가기"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-          <span>맨 밑으로</span>
-        </button>
-      )}
-
       {/* ── Reply / Edit context bar ── */}
       {(replyTo || editId) && (
         <div className={styles.inputContext}>
@@ -1823,7 +1671,6 @@ export default function ChatRoomDetailPage() {
             prev.filter(
               (member) => Number(member.user_id) !== Number(target.user_id),
             ),
-            prev.filter((member) => Number(member.user_id) !== Number(target.user_id)),
           );
         }}
       />
