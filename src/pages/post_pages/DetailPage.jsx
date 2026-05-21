@@ -459,7 +459,15 @@ export default function DetailPage() {
             작성자 {post.authorNickname || post.author || "이름 없음"}
           </span>
           <span className={styles.detailTime}>
-            {post.createdAt ? new Date(post.createdAt).toLocaleString("ko-KR") : ""}
+            {post.createdAt ? (() => {
+              const date = new Date(post.createdAt);
+              const now = new Date();
+              const options = { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+              if (date.getFullYear() !== now.getFullYear()) {
+                options.year = 'numeric';
+              }
+              return date.toLocaleString("ko-KR", options);
+            })() : ""}
           </span>
         </div>
 

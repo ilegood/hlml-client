@@ -53,9 +53,19 @@ const formatTime = (isoString) => {
     return date.toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
+      hourCycle: "h23",
     });
   }
-  return date.toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+
+  const options = {
+    month: "2-digit",
+    day: "2-digit",
+  };
+  if (date.getFullYear() !== now.getFullYear()) {
+    options.year = "numeric";
+  }
+
+  return date.toLocaleDateString("ko-KR", options);
 };
 
 const DMsPage = () => {

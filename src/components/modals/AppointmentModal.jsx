@@ -24,6 +24,12 @@ const formatTime = (value) => {
   return String(value).slice(0, 5);
 };
 
+const formatApptYear = (apptDateStr) => {
+  const currentYear = new Date().getFullYear();
+  const apptYear = new Date(apptDateStr).getFullYear();
+  return apptYear !== currentYear ? `${apptYear}년 ` : "";
+};
+
 export default function AppointmentModal({ onClose }) {
   const { userId } = useAuth();
   const [appointments, setAppointments] = useState([]);
@@ -258,7 +264,10 @@ export default function AppointmentModal({ onClose }) {
                 className={styles.apptItem}
                 onClick={() => (window.location.href = `/detail/${appt.id}`)}
               >
-                <div className={styles.timeTag}>{formatTime(appt.time)}</div>
+                <div className={styles.timeTag}>
+                  {formatApptYear(appt.date)}
+                  {formatTime(appt.time)}
+                </div>
                 <div className={styles.info}>
                   <div className={styles.infoTitle}>{appt.title}</div>
                   <div className={styles.infoPlace}>

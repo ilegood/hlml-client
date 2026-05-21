@@ -25,12 +25,12 @@ import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 // ... (helper functions - formatTime, formatDate, isSameDay, isCompact, formatAppointmentDateTime, displayName, Avatar)
-
 const formatTime = (isoString) => {
   if (!isoString) return "";
   return new Date(isoString).toLocaleTimeString("ko-KR", {
     hour: "2-digit",
     minute: "2-digit",
+    hourCycle: "h23",
   });
 };
 
@@ -43,11 +43,16 @@ const formatDate = (isoString) => {
 
   if (d.toDateString() === today.toDateString()) return "오늘";
   if (d.toDateString() === yesterday.toDateString()) return "어제";
-  return d.toLocaleDateString("ko-KR", {
-    year: "numeric",
+
+  const options = {
     month: "long",
     day: "numeric",
-  });
+  };
+  if (d.getFullYear() !== today.getFullYear()) {
+    options.year = "numeric";
+  }
+
+  return d.toLocaleDateString("ko-KR", options);
 };
 
 const isSameDay = (a, b) => {
@@ -73,12 +78,17 @@ const createClientMessageId = () =>
   `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
 
 const formatAppointmentDateTime = (date, time) => {
-  const dateText = date
-    ? new Date(date).toLocaleDateString("ko-KR", {
-        month: "long",
-        day: "numeric",
-      })
-    : "";
+  const now = new Date();
+  const apptDate = new Date(date);
+  const options = {
+    month: "long",
+    day: "numeric",
+  };
+  if (apptDate.getFullYear() !== now.getFullYear()) {
+    options.year = "numeric";
+  }
+
+  const dateText = date ? apptDate.toLocaleDateString("ko-KR", options) : "";
   const timeText = time ? String(time).slice(0, 5) : "";
   return [dateText, timeText].filter(Boolean).join(" ");
 };

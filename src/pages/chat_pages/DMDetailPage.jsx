@@ -23,6 +23,7 @@ const formatTime = (isoString) => {
   return new Date(isoString).toLocaleTimeString("ko-KR", {
     hour: "2-digit",
     minute: "2-digit",
+    hourCycle: "h23",
   });
 };
 
@@ -35,11 +36,16 @@ const formatDate = (isoString) => {
 
   if (date.toDateString() === today.toDateString()) return "오늘";
   if (date.toDateString() === yesterday.toDateString()) return "어제";
-  return date.toLocaleDateString("ko-KR", {
-    year: "numeric",
+
+  const options = {
     month: "long",
     day: "numeric",
-  });
+  };
+  if (date.getFullYear() !== today.getFullYear()) {
+    options.year = "numeric";
+  }
+
+  return date.toLocaleDateString("ko-KR", options);
 };
 
 const isSameDay = (a, b) => {

@@ -27,14 +27,24 @@ export function getTimeAgo(ts) {
   if (!ts) return "";
   const date = new Date(ts);
   if (Number.isNaN(date.getTime())) return "";
-  const diff = Date.now() - date.getTime();
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
   const min = Math.floor(diff / 60000);
   const hr = Math.floor(diff / 3600000);
   const day = Math.floor(diff / 86400000);
   if (min < 1) return "방금 전";
   if (min < 60) return `${min}분 전`;
   if (hr < 24) return `${hr}시간 전`;
-  return `${day}일 전`;
+  if (day < 7) return `${day}일 전`;
+
+  const options = {
+    month: "long",
+    day: "numeric",
+  };
+  if (date.getFullYear() !== now.getFullYear()) {
+    options.year = "numeric";
+  }
+  return date.toLocaleDateString("ko-KR", options);
 }
 
 export function countComments(comments = []) {
@@ -58,11 +68,17 @@ export function formatDateTime(dateStr, timeStr) {
 
   if (Number.isNaN(date.getTime())) return dateStr;
 
-  const dateFormatted = date.toLocaleDateString("ko-KR", {
+  const now = new Date();
+  const options = {
     month: "long",
     day: "numeric",
     weekday: "short",
-  });
+  };
+  if (date.getFullYear() !== now.getFullYear()) {
+    options.year = "numeric";
+  }
+
+  const dateFormatted = date.toLocaleDateString("ko-KR", options);
 
   if (timeStr) {
     const [hour, minute] = String(timeStr).split(":");
