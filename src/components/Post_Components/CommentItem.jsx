@@ -27,23 +27,26 @@ function renderTextWithLinks(text) {
   return parts.map((part, i) => {
     if (part.match(urlRegex)) {
       let displayImageUrl = null;
-      
+
       // 1. Direct image link (with optional query params)
       if (imageRegex.test(part)) {
         displayImageUrl = part;
-      } 
+      }
       // 2. Google Image Search Result handling
-      else if (part.includes('google.com/imgres') || part.includes('google.com/search')) {
+      else if (
+        part.includes("google.com/imgres") ||
+        part.includes("google.com/search")
+      ) {
         try {
           const url = new URL(part);
           // Case A: Direct result page with imgurl
-          const imgUrlParam = url.searchParams.get('imgurl');
+          const imgUrlParam = url.searchParams.get("imgurl");
           if (imgUrlParam) {
             displayImageUrl = imgUrlParam;
-          } 
+          }
           // Case B: Search results page with thumbnail ID (tbnid)
           else {
-            const tbnid = url.searchParams.get('tbnid');
+            const tbnid = url.searchParams.get("tbnid");
             if (tbnid) {
               displayImageUrl = `https://encrypted-tbn0.gstatic.com/images?q=tbn:${tbnid}`;
             }
@@ -53,30 +56,33 @@ function renderTextWithLinks(text) {
         }
       }
       // 3. Instagram/Social media lookaside often don't have extensions but are images
-      else if (part.includes('lookaside.instagram.com')) {
+      else if (part.includes("lookaside.instagram.com")) {
         displayImageUrl = part;
       }
 
       return (
-        <div key={i} style={{ display: 'inline' }}>
-          <a 
-            href={part} 
-            target="_blank" 
+        <div key={i} style={{ display: "inline" }}>
+          <a
+            href={part}
+            target="_blank"
             rel="noopener noreferrer"
-            style={{ color: 'var(--color-active)', textDecoration: 'underline' }}
+            style={{
+              color: "var(--color-active)",
+              textDecoration: "underline",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {part}
           </a>
           {displayImageUrl && (
-            <img 
-              src={displayImageUrl} 
-              alt="comment attachment" 
+            <img
+              src={displayImageUrl}
+              alt="comment attachment"
               className={styles.commentImg}
               onClick={(e) => e.stopPropagation()}
               onError={(e) => {
                 // If image fails to load, hide it
-                e.target.style.display = 'none';
+                e.target.style.display = "none";
               }}
             />
           )}
@@ -119,7 +125,14 @@ function InlineEdit({ value, onSave, onCancel }) {
 }
 
 // ── ReplyItem ──────────────────────────────────────────────
-export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete, onReport }) {
+function ReplyItem({
+  reply,
+  commentIdx,
+  replyIdx,
+  onUpdate,
+  onDelete,
+  onReport,
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsTruncation, setNeedsTruncation] = useState(false);
@@ -130,7 +143,9 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete, onR
 
   useEffect(() => {
     if (textRef.current) {
-      setNeedsTruncation(textRef.current.scrollHeight > textRef.current.offsetHeight);
+      setNeedsTruncation(
+        textRef.current.scrollHeight > textRef.current.offsetHeight,
+      );
     }
   }, [reply.text]);
 
@@ -141,7 +156,9 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete, onR
       </div>
       <div className={styles.commentBubble} style={{ flex: 1 }}>
         <div className={styles.commentTop}>
-          <span className={styles.commentAuthor}>{reply.authorNickname || "익명"}</span>
+          <span className={styles.commentAuthor}>
+            {reply.authorNickname || "익명"}
+          </span>
           {reply.edited && <span className={styles.editedBadge}>수정됨</span>}
           <span className={styles.commentTime}>
             {getTimeAgo(reply.createdAt)}
@@ -159,23 +176,23 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete, onR
           />
         ) : (
           <>
-            <div 
+            <div
               ref={textRef}
               className={`${styles.commentText} ${!isExpanded ? styles.commentTextCollapsed : ""}`}
             >
               {renderTextWithLinks(reply.text)}
             </div>
             {reply.image && (
-              <img 
-                src={reply.image} 
-                alt="comment" 
-                className={styles.commentImg} 
+              <img
+                src={reply.image}
+                alt="comment"
+                className={styles.commentImg}
                 onClick={(e) => e.stopPropagation()}
               />
             )}
             {needsTruncation && (
-              <button 
-                className={styles.seeMoreBtn} 
+              <button
+                className={styles.seeMoreBtn}
                 onClick={() => setIsExpanded(!isExpanded)}
               >
                 {isExpanded ? "간략히 보기" : "더보기"}
@@ -214,7 +231,13 @@ export function ReplyItem({ reply, commentIdx, replyIdx, onUpdate, onDelete, onR
 }
 
 // ── CommentItem ────────────────────────────────────────────
-export function CommentItem({ comment, commentIdx, onUpdate, onDelete, onReport }) {
+export function CommentItem({
+  comment,
+  commentIdx,
+  onUpdate,
+  onDelete,
+  onReport,
+}) {
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -227,7 +250,9 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete, onReport 
 
   useEffect(() => {
     if (textRef.current) {
-      setNeedsTruncation(textRef.current.scrollHeight > textRef.current.offsetHeight);
+      setNeedsTruncation(
+        textRef.current.scrollHeight > textRef.current.offsetHeight,
+      );
     }
   }, [comment.text]);
 
@@ -262,23 +287,23 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete, onReport 
           />
         ) : (
           <>
-            <div 
+            <div
               ref={textRef}
               className={`${styles.commentText} ${!isExpanded ? styles.commentTextCollapsed : ""}`}
             >
               {renderTextWithLinks(comment.text)}
             </div>
             {comment.image && (
-              <img 
-                src={comment.image} 
-                alt="comment" 
-                className={styles.commentImg} 
+              <img
+                src={comment.image}
+                alt="comment"
+                className={styles.commentImg}
                 onClick={(e) => e.stopPropagation()}
               />
             )}
             {needsTruncation && (
-              <button 
-                className={styles.seeMoreBtn} 
+              <button
+                className={styles.seeMoreBtn}
                 onClick={() => setIsExpanded(!isExpanded)}
               >
                 {isExpanded ? "간략히 보기" : "더보기"}
@@ -330,7 +355,6 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete, onReport 
         )}
       </div>
 
-
       {(comment.replies || []).length > 0 && (
         <div className={styles.repliesWrap}>
           {comment.replies.map((r, ri) => (
@@ -346,7 +370,6 @@ export function CommentItem({ comment, commentIdx, onUpdate, onDelete, onReport 
           ))}
         </div>
       )}
-
 
       {replyOpen && (
         <div className={styles.replyInputWrap}>

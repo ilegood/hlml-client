@@ -10,7 +10,7 @@ export const CATEGORY_MAP = {
   활동: ["식사", "운동", "수다", "게임", "공부", "창작", "휴식", "기타"],
 };
 
-export const STATUS_LIST = [STATUS_OPEN, STATUS_CLOSED];
+
 export const STATUS_EMOJI = { [STATUS_OPEN]: "🟢", [STATUS_CLOSED]: "🔒" };
 export const STATUS_CLASS = {
   [STATUS_OPEN]: "status-open",
@@ -85,15 +85,6 @@ export function formatDateTime(dateStr, timeStr) {
     return `${dateFormatted} ${hour}:${minute}`;
   }
   return dateFormatted;
-}
-
-export function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (event) => resolve(event.target.result);
-    reader.onerror = () => reject();
-    reader.readAsDataURL(file);
-  });
 }
 
 export function todayString() {

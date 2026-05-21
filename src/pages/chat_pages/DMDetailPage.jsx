@@ -79,7 +79,12 @@ function Avatar({ profileImg, nickname, size = 40, onClick }) {
     <div
       className={styles.msgAvatar}
       onClick={onClick}
-      style={{ width: size, height: size, fontSize: size * 0.3, cursor: onClick ? "pointer" : "default" }}
+      style={{
+        width: size,
+        height: size,
+        fontSize: size * 0.3,
+        cursor: onClick ? "pointer" : "default",
+      }}
     >
       {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
     </div>
@@ -218,11 +223,17 @@ export default function DMDetailPage() {
         String(msg.userId) !== String(userId) &&
         !notificationsMutedRef.current
       ) {
-        toast(`${targetNicknameRef.current || "상대방"}님이 새 메시지를 보냈습니다.`);
+        toast(
+          `${targetNicknameRef.current || "상대방"}님이 새 메시지를 보냈습니다.`,
+        );
       }
 
       if (!msg.isSystem && String(msg.userId) !== String(userId)) {
-        socket.emit("mark_read", { messageId: msg.id, userId, roomId: socketRoomId });
+        socket.emit("mark_read", {
+          messageId: msg.id,
+          userId,
+          roomId: socketRoomId,
+        });
       }
 
       const isMine = String(msg.userId) === String(userId);
@@ -273,7 +284,11 @@ export default function DMDetailPage() {
       if (formatted.length > 0) {
         formatted.forEach((m) => {
           if (!m.isSystem && String(m.userId) !== String(userId)) {
-            socket.emit("mark_read", { messageId: m.id, userId, roomId: socketRoomId });
+            socket.emit("mark_read", {
+              messageId: m.id,
+              userId,
+              roomId: socketRoomId,
+            });
           }
         });
         setTimeout(
@@ -544,7 +559,12 @@ export default function DMDetailPage() {
             setMessages((prev) =>
               prev.map((m) =>
                 m.clientTempId === clientTempId
-                  ? { ...m, isPending: false, isUploading: false, isFailed: true }
+                  ? {
+                      ...m,
+                      isPending: false,
+                      isUploading: false,
+                      isFailed: true,
+                    }
                   : m,
               ),
             );
@@ -674,9 +694,7 @@ export default function DMDetailPage() {
             <span className={styles.headerHashIcon}>👤</span>
           )}
         </div>
-        <span className={styles.headerName}>
-          {targetNickname || "사용자"}
-        </span>
+        <span className={styles.headerName}>{targetNickname || "사용자"}</span>
         <div className={styles.headerDivider} />
         <span className={styles.headerDesc}>
           {targetNickname}님과의 대화입니다.
@@ -868,123 +886,123 @@ export default function DMDetailPage() {
                   !msg.isDeleted &&
                   !msg.isPending &&
                   !msg.isFailed && (
-                  <div
-                    className={styles.msgActions}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {/* 빠른 반응 */}
-                    <div className={styles.quickReactions}>
-                      {["👍", "❤️", "😂"].map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          title={emoji}
-                          onClick={() => toggleReaction(msg.id, emoji)}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className={styles.actionDivider} />
-
-                    {/* 반응 더 추가 */}
-                    <button
-                      type="button"
-                      title="반응 추가"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowEmojiPicker(msg.id);
-                      }}
-                      style={{ position: "relative" }}
+                    <div
+                      className={styles.msgActions}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      😊
-                      {showEmojiPicker === msg.id && (
-                        <div
-                          className={styles.emojiPickerPopup}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Picker
-                            data={data}
-                            onEmojiSelect={(emoji) =>
-                              toggleReaction(msg.id, emoji.native)
-                            }
-                            theme="dark"
-                            locale="ko"
-                          />
-                        </div>
-                      )}
-                    </button>
+                      {/* 빠른 반응 */}
+                      <div className={styles.quickReactions}>
+                        {["👍", "❤️", "😂"].map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            title={emoji}
+                            onClick={() => toggleReaction(msg.id, emoji)}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
 
-                    {/* 답장 */}
-                    <button
-                      type="button"
-                      title="답장"
-                      onClick={() => startReply(msg)}
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <div className={styles.actionDivider} />
+
+                      {/* 반응 더 추가 */}
+                      <button
+                        type="button"
+                        title="반응 추가"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowEmojiPicker(msg.id);
+                        }}
+                        style={{ position: "relative" }}
                       >
-                        <polyline points="9 17 4 12 9 7" />
-                        <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
-                      </svg>
-                    </button>
+                        😊
+                        {showEmojiPicker === msg.id && (
+                          <div
+                            className={styles.emojiPickerPopup}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Picker
+                              data={data}
+                              onEmojiSelect={(emoji) =>
+                                toggleReaction(msg.id, emoji.native)
+                              }
+                              theme="dark"
+                              locale="ko"
+                            />
+                          </div>
+                        )}
+                      </button>
 
-                    {isMine && (
-                      <>
-                        {/* 수정 */}
-                        <button
-                          type="button"
-                          title="수정"
-                          onClick={() => startEdit(msg)}
+                      {/* 답장 */}
+                      <button
+                        type="button"
+                        title="답장"
+                        onClick={() => startReply(msg)}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                          <polyline points="9 17 4 12 9 7" />
+                          <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                        </svg>
+                      </button>
+
+                      {isMine && (
+                        <>
+                          {/* 수정 */}
+                          <button
+                            type="button"
+                            title="수정"
+                            onClick={() => startEdit(msg)}
                           >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                        {/* 삭제 */}
-                        <button
-                          type="button"
-                          title="삭제"
-                          onClick={() => handleDelete(msg.id)}
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          {/* 삭제 */}
+                          <button
+                            type="button"
+                            title="삭제"
+                            onClick={() => handleDelete(msg.id)}
                           >
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                            <path d="M10 11v6M14 11v6" />
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                          </svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                              <path d="M10 11v6M14 11v6" />
+                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                            </svg>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
               </div>
             </div>
           );
@@ -1054,7 +1072,9 @@ export default function DMDetailPage() {
             <div className={styles.contextText}>
               {replyTo
                 ? formatChatPreview(replyTo.content)
-                : formatChatPreview(messages.find((m) => m.id === editId)?.content)}
+                : formatChatPreview(
+                    messages.find((m) => m.id === editId)?.content,
+                  )}
             </div>
           </div>
           <button
@@ -1130,7 +1150,9 @@ export default function DMDetailPage() {
             ))}
             {sending && (
               <div className={styles.uploadStatus} role="status">
-                {pendingFiles.some((item) => item.file.type.startsWith("image/"))
+                {pendingFiles.some((item) =>
+                  item.file.type.startsWith("image/"),
+                )
                   ? "이미지 업로드 중..."
                   : "파일 업로드 중..."}
               </div>
@@ -1148,7 +1170,10 @@ export default function DMDetailPage() {
           />
           {showAttachMenu && (
             <div className={styles.attachMenu}>
-              <button type="button" onClick={() => openFilePicker("image/*,video/*")}>
+              <button
+                type="button"
+                onClick={() => openFilePicker("image/*,video/*")}
+              >
                 이미지/동영상 선택
               </button>
               <button type="button" onClick={() => openFilePicker("")}>

@@ -27,6 +27,7 @@ const FriendsList = () => {
     handleDeleteFriend,
     handleBlockUser,
     handleReport,
+    reportedFriend,
     memos,
     isEditingMemo,
     tempMemo,
@@ -49,7 +50,10 @@ const FriendsList = () => {
 
   return (
     <div className={styles.sidebarWrapper}>
-      <div ref={sidebarRef} className={`${styles.friendSidebar} ${isOpen ? styles.active : ""}`}>
+      <div
+        ref={sidebarRef}
+        className={`${styles.friendSidebar} ${isOpen ? styles.active : ""}`}
+      >
         <button className={styles.toggleBtn} onClick={handleToggleSidebar}>
           {isOpen ? "〉" : "〈"}
         </button>
@@ -234,11 +238,11 @@ const FriendsList = () => {
         <AddFriendModal onClose={() => setIsAddModalOpen(false)} />
       )}
       {isReportModalOpen && (
-        <ReportModal 
+        <ReportModal
           onClose={() => {
             setIsReportModalOpen(false);
             setReportedFriend(null);
-          }} 
+          }}
           targetUserId={reportedFriend?.id}
           targetName={reportedFriend?.name}
         />

@@ -20,6 +20,9 @@ export default function MainPage() {
     setSelCats,
     fetchPosts,
     setPosts,
+    sortBy,
+    setSortBy,
+    SORT_OPTIONS,
     MAIN_CATEGORY_ORDER,
   } = usePostsData();
 
@@ -101,13 +104,24 @@ export default function MainPage() {
               order={MAIN_CATEGORY_ORDER}
             />
           </div>
-          <button className={styles.writeBtn} onClick={handleWriteClick}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            게시글 작성
-          </button>
+          <div className={styles.sortRow}>
+            <select
+              className={styles.sortSelect}
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <button className={styles.writeBtn} onClick={handleWriteClick}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              게시글 작성
+            </button>
+          </div>
         </div>
       </div>
 

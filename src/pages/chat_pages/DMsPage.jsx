@@ -24,6 +24,12 @@ const formatLastMessage = (content) => {
 
   try {
     const parsed = JSON.parse(content);
+    if (parsed?.kind === "share_post") {
+      const sharer = parsed.sharerNickname || "알 수 없음";
+      const title = parsed.postTitle || "게시글";
+      return `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
+    }
+
     const attachments =
       parsed?.kind === "chat_payload" && Array.isArray(parsed.attachments)
         ? parsed.attachments

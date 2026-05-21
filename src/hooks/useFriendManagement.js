@@ -10,7 +10,7 @@ import {
   updateFriendMemo,
 } from "../api/friends";
 import instance from "../api/instance";
-import { toast } from "sonner"; // Assuming toast is available globally or imported
+import { toast } from "sonner";
 
 export const useFriendManagement = () => {
   const navigate = useNavigate();
@@ -171,7 +171,9 @@ export const useFriendManagement = () => {
 
   const handleStartDM = async () => {
     try {
-      const res = await instance.post("/chat/dm", { targetId: selectedFriend.id });
+      const res = await instance.post("/chat/dm", {
+        targetId: selectedFriend.id,
+      });
       navigate(`/dms/${res.data.roomId}`);
       setIsOpen(false);
       setSelectedFriend(null);

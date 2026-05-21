@@ -22,6 +22,7 @@ import {
 import { CommentItem } from "../../components/post_components/CommentItem";
 import MapPreview from "../../components/post_components/MapPreview";
 import ReportModal from "../../components/modals/ReportModal";
+import SharePostModal from "../../components/modals/SharePostModal";
 import styles from "./DetailPage.module.css";
 
 export default function DetailPage() {
@@ -35,6 +36,7 @@ export default function DetailPage() {
   const [commentImagePreview, setCommentImagePreview] = useState(null);
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [targetComment, setTargetComment] = useState(null);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [needsContentTruncation, setNeedsContentTruncation] = useState(false);
@@ -352,6 +354,9 @@ export default function DetailPage() {
           </button>
           {showMoreMenu && (
             <div className={styles.moreMenu}>
+              <div className={styles.moreItem} onClick={() => { setIsShareModalOpen(true); setShowMoreMenu(false); }}>
+                공유하기
+              </div>
               {isAuthor ? (
                 <>
                   <div className={styles.moreItem} onClick={() => navigate(`/edit/${id}`)}>
@@ -588,6 +593,13 @@ export default function DetailPage() {
           targetUserId={targetComment ? targetComment.userId : post.user_id}
           targetName={targetComment ? targetComment.authorNickname : null}
           targetContent={targetComment ? targetComment.text : post.content}
+        />
+      )}
+      {isShareModalOpen && (
+        <SharePostModal
+          postId={id}
+          postTitle={post.title}
+          onClose={() => setIsShareModalOpen(false)}
         />
       )}
     </main>
