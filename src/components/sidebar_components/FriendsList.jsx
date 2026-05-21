@@ -14,6 +14,8 @@ const FriendsList = () => {
     setIsAddModalOpen,
     isReportModalOpen,
     setIsReportModalOpen,
+    reportedFriend,
+    setReportedFriend,
     handleToggleSidebar,
     handleAccept,
     handleReject,
@@ -237,7 +239,10 @@ const FriendsList = () => {
       )}
       {isReportModalOpen && (
         <ReportModal
-          onClose={() => setIsReportModalOpen(false)}
+          onClose={() => {
+            setIsReportModalOpen(false);
+            setReportedFriend(null);
+          }}
           targetUserId={reportedFriend?.id}
           targetName={reportedFriend?.name}
         />

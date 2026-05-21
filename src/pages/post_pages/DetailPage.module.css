@@ -604,6 +604,22 @@
   opacity: 0.9;
 }
 
+.commentSubmit:disabled,
+.imageBtn:disabled,
+.commentInput:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.savingBtn {
+  font-size: 0;
+}
+
+.savingBtn::after {
+  content: attr(data-saving-label);
+  font-size: 14px;
+}
+
 /* ── Loading / Not Found ── */
 .notFound {
   text-align: center;

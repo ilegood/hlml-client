@@ -158,6 +158,11 @@
   opacity: 0.8;
 }
 
+.buttonWrap button:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
 .save {
   background: var(--color-active);
   color: white;
@@ -166,4 +171,13 @@
 .cancel {
   background: var(--color-border);
   color: var(--color-text);
+}
+
+.savingBtn {
+  font-size: 0;
+}
+
+.savingBtn::after {
+  content: attr(data-saving-label);
+  font-size: 14px;
 }

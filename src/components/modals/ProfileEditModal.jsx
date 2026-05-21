@@ -18,6 +18,7 @@ const ProfileEditModal = ({ onClose, onSave }) => {
     getImageUrl(localStorage.getItem("profile_img")) || "",
   );
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,6 +34,8 @@ const ProfileEditModal = ({ onClose, onSave }) => {
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
+
     if (!form.nickname) return toast.error("닉네임을 입력해주세요.");
 
     if (isChangingPassword) {
@@ -45,6 +48,7 @@ const ProfileEditModal = ({ onClose, onSave }) => {
     }
 
     try {
+      setIsSaving(true);
       const data = await updateProfile({
         nickname: form.nickname,
         bio: form.bio,
@@ -64,6 +68,8 @@ const ProfileEditModal = ({ onClose, onSave }) => {
       toast.error(
         error.response?.data?.message || "수정 중 오류가 발생했습니다.",
       );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -169,7 +175,12 @@ const ProfileEditModal = ({ onClose, onSave }) => {
           <button className={styles.cancel} onClick={onClose}>
             취소
           </button>
-          <button className={styles.save} onClick={handleSave}>
+          <button
+            className={`${styles.save} ${isSaving ? styles.savingBtn : ""}`}
+            onClick={handleSave}
+            disabled={isSaving}
+            data-saving-label={profileImg ? "이미지 업로드 중..." : "저장 중..."}
+          >
             저장하기
           </button>
         </div>

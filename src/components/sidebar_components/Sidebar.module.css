@@ -16,7 +16,7 @@
   z-index: 5000;
 }
 
-.sidebar:hover {
+.sidebar.open {
   width: 260px;
 }
 
@@ -75,7 +75,7 @@
   pointer-events: none;
 }
 
-.sidebar:hover .label {
+.sidebar.open .label {
   opacity: 1;
   pointer-events: auto;
 }
@@ -115,7 +115,7 @@
   z-index: 5100;
 }
 
-.sidebar:hover .notificationPanel {
+.sidebar.open .notificationPanel {
   left: 248px;
 }
 
@@ -221,7 +221,7 @@
   transform: var(--slider-translate, translateX(0));
 }
 
-.sidebar:hover .slider {
+.sidebar.open .slider {
   opacity: 1;
 }
 
@@ -251,13 +251,13 @@
   opacity: 0.9;
 }
 
-.sidebar:hover .logoutBtn {
+.sidebar.open .logoutBtn {
   justify-content: flex-start;
   padding-left: 15px;
   gap: 20px;
 }
 
-.sidebar:hover .logoutBtn .label {
+.sidebar.open .logoutBtn .label {
   width: auto;
   opacity: 1;
 }

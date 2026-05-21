@@ -2,13 +2,14 @@ import { useState } from "react";
 import { toast } from "sonner";
 import styled from "styled-components";
 import instance, { getImageUrl } from "../../api/instance";
+import instance from "../../api/instance";
 
 const ModalWrapper = styled.div`
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0, 0, 0, 0.6);
   display: flex; justify-content: center; align-items: center;
-  z-index: 4000;
+  z-index: 3000;
   backdrop-filter: blur(4px);
   pointer-events: auto;
 
@@ -89,6 +90,8 @@ const ModalWrapper = styled.div`
     cursor: pointer;
     &:hover:not(:disabled) { opacity: 0.9; }
     &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:disabled { background: var(--color-deactive); cursor: not-allowed; }
+    &:hover:not(:disabled) { opacity: 0.9; }
   }
 `;
 
@@ -124,6 +127,8 @@ export default function ReportModal({
         targetUserId: targetUserId || targetUser?.user_id,
         targetPostId,
         targetCommentId,
+        targetTitle,
+        targetContent,
         reason,
         content: content.trim(),
       });
@@ -221,6 +226,18 @@ export default function ReportModal({
         </div>
 
         <button className="submit-btn" disabled={loading} onClick={handleSubmit}>
+          <textarea 
+            placeholder="구체적인 상황을 설명해주세요"
+            value={content}
+            onChange={e => setContent(e.target.value)}
+          />
+        </div>
+
+        <button 
+          className="submit-btn" 
+          onClick={handleSubmit}
+          disabled={loading}
+        >
           {loading ? "제출 중..." : "신고 제출"}
         </button>
       </div>

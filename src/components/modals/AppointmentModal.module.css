@@ -16,13 +16,15 @@
 .modalContent {
   background: var(--color-sidebar);
   width: 480px;
-  max-height: 90vh;
+  height: min(760px, 90vh);
   border-radius: 24px;
   padding: 30px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   color: var(--color-text);
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Header ── */
@@ -31,6 +33,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 25px;
+  flex: 0 0 auto;
 }
 
 .header h2 {
@@ -57,6 +60,7 @@
   padding: 20px;
   margin-bottom: 20px;
   border: 1px solid var(--color-border);
+  flex: 0 0 auto;
 }
 
 .calHeader {
@@ -68,13 +72,26 @@
 }
 
 .navBtn {
-  background: none;
+  width: 34px;
+  height: 34px;
+  background: transparent;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 5px 10px;
+  padding: 0;
   color: var(--color-text);
-  font-size: 18px;
-  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    opacity 0.15s;
+}
+
+.navBtn:hover:not(:disabled) {
+  background: var(--color-input-focus-bg);
+  color: var(--color-active);
 }
 
 .navBtn:disabled {
@@ -85,6 +102,7 @@
 .daysGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: 20px repeat(6, 44px);
   gap: 5px;
   text-align: center;
   font-size: 12px;
@@ -93,11 +111,15 @@
 .dayLabel {
   font-weight: 700;
   opacity: 0.5;
-  margin-bottom: 5px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dayCell {
-  aspect-ratio: 1;
+  width: 100%;
+  height: 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -140,11 +162,16 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .apptList h3 {
   font-size: 14px;
   margin-bottom: 5px;
+  flex: 0 0 auto;
 }
 
 .apptItem {
@@ -190,12 +217,16 @@
 
 .emptyMsg {
   text-align: center;
-  padding: 30px 0;
+  min-height: 112px;
+  padding: 30px 12px;
   font-size: 14px;
   color: var(--color-deactive);
   background: var(--color-input-bg);
   border-radius: 12px;
   border: 1px dashed var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── Dot Popup ── */

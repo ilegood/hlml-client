@@ -48,7 +48,8 @@ export default function UserPage() {
   }, []);
 
   useEffect(() => {
-    loadStats();
+    const timer = window.setTimeout(loadStats, 0);
+    return () => window.clearTimeout(timer);
   }, [loadStats]);
 
   const refreshUserInfo = () => {

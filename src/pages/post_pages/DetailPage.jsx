@@ -34,6 +34,7 @@ export default function DetailPage() {
   const [commentText, setCommentText] = useState("");
   const [commentImage, setCommentImage] = useState(null);
   const [commentImagePreview, setCommentImagePreview] = useState(null);
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [targetComment, setTargetComment] = useState(null);
@@ -202,7 +203,9 @@ export default function DetailPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const addComment = () => {
+  const addComment = async () => {
+    if (isCommentSubmitting) return;
+
     if (!token) {
       toast.error("로그인이 필요한 서비스입니다.");
       navigate("/login");
@@ -210,13 +213,18 @@ export default function DetailPage() {
     }
     if (!commentText.trim() && !commentImage) return;
     
-    runPostAction(() => createComment(id, { 
-      content: commentText.trim(),
-      image: commentImage
-    }));
-    
-    setCommentText("");
-    removeImage();
+    try {
+      setIsCommentSubmitting(true);
+      await runPostAction(() => createComment(id, {
+        content: commentText.trim(),
+        image: commentImage
+      }));
+
+      setCommentText("");
+      removeImage();
+    } finally {
+      setIsCommentSubmitting(false);
+    }
   };
 
   const deleteComment = (idx, replyIdx = null) => {
@@ -456,7 +464,15 @@ export default function DetailPage() {
             작성자 {post.authorNickname || post.author || "이름 없음"}
           </span>
           <span className={styles.detailTime}>
-            {post.createdAt ? new Date(post.createdAt).toLocaleString("ko-KR") : ""}
+            {post.createdAt ? (() => {
+              const date = new Date(post.createdAt);
+              const now = new Date();
+              const options = { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+              if (date.getFullYear() !== now.getFullYear()) {
+                options.year = 'numeric';
+              }
+              return date.toLocaleString("ko-KR", options);
+            })() : ""}
           </span>
         </div>
 
@@ -538,6 +554,7 @@ export default function DetailPage() {
             <button 
               className={styles.imageBtn} 
               onClick={() => fileInputRef.current.click()}
+              disabled={isCommentSubmitting}
               title="이미지 첨부"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -550,9 +567,15 @@ export default function DetailPage() {
               placeholder={isDragging ? "여기에 이미지를 놓으세요" : "댓글을 입력하세요."}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
+              disabled={isCommentSubmitting}
               onKeyDown={(e) => e.key === "Enter" && addComment()}
             />
-            <button className={styles.commentSubmit} onClick={addComment}>
+            <button
+              className={`${styles.commentSubmit} ${isCommentSubmitting ? styles.savingBtn : ""}`}
+              onClick={addComment}
+              disabled={isCommentSubmitting}
+              data-saving-label={commentImage ? "이미지 업로드 중..." : "등록 중..."}
+            >
               등록
             </button>
           </div>
@@ -569,7 +592,7 @@ export default function DetailPage() {
           targetCommentId={targetComment?.id}
           targetUserId={targetComment ? targetComment.userId : post.user_id}
           targetName={targetComment ? targetComment.authorNickname : null}
-          targetContent={targetComment ? targetComment.text : null}
+          targetContent={targetComment ? targetComment.text : post.content}
         />
       )}
       {isShareModalOpen && (

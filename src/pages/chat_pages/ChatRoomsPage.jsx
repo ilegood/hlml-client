@@ -17,9 +17,6 @@ const sortByAppointment = (rooms) =>
     return dateA - dateB;
   });
 
-const isRoomMuted = (roomId) =>
-  localStorage.getItem(`chat-muted:${roomId}`) === "1";
-
 const ChatRoomsPage = () => {
   const { userId } = useAuth();
   const { summary } = useChatNotifications() || {};
@@ -113,15 +110,13 @@ const ChatRoomsPage = () => {
         ) : chatRooms.length > 0 ? (
           chatRooms.map((room) => {
             const roomId = String(room.post_id || room.id);
-            const muted = isRoomMuted(roomId);
             return (
               <ChatRoomItem
                 key={room.id}
                 room={{
                   ...room,
-                  unreadCount: muted ? 0 : unreadByRoomId.get(roomId) || 0,
+                  unreadCount: unreadByRoomId.get(roomId) || 0,
                 }}
-                hideUnreadBadge={muted}
                 onDelete={
                   room.isKicked ? () => handleDeleteKickedRoom(room.id) : null
                 }

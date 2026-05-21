@@ -59,12 +59,20 @@ const formatTime = (isoString) => {
     return date.toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
+      hourCycle: "h23",
     });
   }
-  return date.toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-};
 
-const isMuted = (roomId) => localStorage.getItem(`dm-muted:${roomId}`) === "1";
+  const options = {
+    month: "2-digit",
+    day: "2-digit",
+  };
+  if (date.getFullYear() !== now.getFullYear()) {
+    options.year = "numeric";
+  }
+
+  return date.toLocaleDateString("ko-KR", options);
+};
 
 const DMsPage = () => {
   const navigate = useNavigate();
@@ -114,11 +122,9 @@ const DMsPage = () => {
         ) : dms.length > 0 ? (
           dms.map((dm) => {
             const roomKey = String(dm.roomId);
-            const muted = isMuted(roomKey);
             const unreadCount = unreadByRoomId.has(roomKey)
               ? unreadByRoomId.get(roomKey)
               : dm.unreadCount || 0;
-            const displayUnreadCount = muted ? 0 : unreadCount;
 
             return (
               <div
@@ -151,11 +157,11 @@ const DMsPage = () => {
                 <div className={itemStyles.dateTime}>
                   {dm.lastMessageTime && formatTime(dm.lastMessageTime)}
                 </div>
-                {displayUnreadCount > 0 && (
+                {unreadCount > 0 && (
                   <span className={itemStyles.unreadBadge}>
-                    {displayUnreadCount > 99
+                    {unreadCount > 99
                       ? "99+"
-                      : displayUnreadCount}
+                      : unreadCount}
                   </span>
                 )}
               </div>

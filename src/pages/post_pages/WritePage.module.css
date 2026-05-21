@@ -479,3 +479,18 @@
 .submitBtn:active {
   transform: scale(0.98);
 }
+
+.submitBtn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.savingBtn {
+  font-size: 0;
+}
+
+.savingBtn::after {
+  content: attr(data-saving-label);
+  font-size: 16px;
+}

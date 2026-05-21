@@ -5,7 +5,6 @@ import { getImageUrl } from "../api/instance";
 import { blockUser } from "../api/friends";
 import borderImg from "../assets/border.png";
 import UserProfileModal from "./modals/UserProfileModal";
-import ReportModal from "./modals/ReportModal";
 
 export default function ChatMembersModal({
   isOpen,
@@ -54,14 +53,26 @@ export default function ChatMembersModal({
 
               return (
                 <li key={member.user_id} className={styles.memberItem}>
-                  <div className={styles.info} onClick={() => setSelectedProfileId(member.user_id)} style={{ cursor: 'pointer' }}>
+                  <div
+                    className={styles.info}
+                    onClick={() => setSelectedProfileId(member.user_id)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <div className={styles.avatarWrap}>
                       {isHost && (
-                        <img src={borderImg} className={styles.avatarBorder} alt="" />
+                        <img
+                          src={borderImg}
+                          className={styles.avatarBorder}
+                          alt=""
+                        />
                       )}
                       <div className={styles.avatar}>
                         {member.profile_img ? (
-                          <img src={getImageUrl(member.profile_img)} alt={nickname} style={{ backgroundColor: "white" }} />
+                          <img
+                            src={getImageUrl(member.profile_img)}
+                            alt={nickname}
+                            style={{ backgroundColor: "white" }}
+                          />
                         ) : (
                           <span className={styles.defaultAvatar}>
                             {nickname.slice(0, 1)}
@@ -127,13 +138,6 @@ export default function ChatMembersModal({
           userId={selectedProfileId}
           currentUserId={currentUserId}
           onClose={() => setSelectedProfileId(null)}
-        />
-      )}
-
-      {reportTarget && (
-        <ReportModal
-          targetUser={reportTarget}
-          onClose={() => setReportTarget(null)}
         />
       )}
     </>

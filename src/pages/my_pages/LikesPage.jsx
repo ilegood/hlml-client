@@ -29,8 +29,6 @@ export default function LikesPage() {
   }, [userId]);
 
   const handleLike = async (post) => {
-    if (!window.confirm("찜을 해제하시겠습니까?")) return;
-
     const currentUserId = userId || "me";
     const previous = likedPosts;
 
