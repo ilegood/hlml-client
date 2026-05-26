@@ -689,6 +689,15 @@ export default function DMDetailPage() {
       <div className={styles.header}>
         <div className={styles.headerThumb}>
           {targetProfileImg ? (
+            <img
+              src={getImageUrl(targetProfileImg)}
+              alt="target"
+              style={{ backgroundColor: "white" }}
+            />
+          ) : (
+            <span className={styles.headerHashIcon}>👤</span>
+          )}
+          {targetProfileImg ? (
             <img src={getImageUrl(targetProfileImg)} alt="target" />
           ) : (
             <span className={styles.headerHashIcon}>👤</span>

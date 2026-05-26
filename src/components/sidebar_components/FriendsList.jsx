@@ -27,6 +27,7 @@ const FriendsList = () => {
     handleDeleteFriend,
     handleBlockUser,
     handleReport,
+    reportedFriend,
     memos,
     isEditingMemo,
     tempMemo,

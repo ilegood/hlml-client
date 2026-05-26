@@ -24,14 +24,23 @@ function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
       style={{ cursor: onClick ? "pointer" : "default" }}
     >
       {isHost && (
-        <img src={borderImg} className={styles.avatarBorderSmall} alt="host-border" />
+        <img
+          src={borderImg}
+          className={styles.avatarBorderSmall}
+          alt="host-border"
+        />
       )}
       <div
         className={styles.msgAvatar}
         style={{ width: size, height: size, fontSize: size * 0.3 }}
       >
-        {url ? <img src={url} alt={label} style={{ backgroundColor: "transparent" }} /> : label.slice(0, 2)}
-      </div>    </div>
+        {url ? (
+          <img src={url} alt={label} style={{ backgroundColor: "white" }} />
+        ) : (
+          label.slice(0, 2)
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -44,14 +53,21 @@ function ReplyPreview({ parentMsg, scrollToMessage }) {
     >
       <div className={styles.replyAvatar}>
         {parentMsg.profileImg ? (
-          <img src={getImageUrl(parentMsg.profileImg)} alt={displayName(parentMsg.nickname)} />
+          <img
+            src={getImageUrl(parentMsg.profileImg)}
+            alt={displayName(parentMsg.nickname)}
+          />
         ) : (
           displayName(parentMsg.nickname).slice(0, 1)
         )}
       </div>
-      <span className={styles.replyName}>{displayName(parentMsg.nickname)}</span>
+      <span className={styles.replyName}>
+        {displayName(parentMsg.nickname)}
+      </span>
       <span className={styles.replyContent}>
-        {parentMsg.isDeleted ? "삭제된 메시지" : formatChatPreview(parentMsg.content)}
+        {parentMsg.isDeleted
+          ? "삭제된 메시지"
+          : formatChatPreview(parentMsg.content)}
       </span>
     </div>
   );
@@ -91,7 +107,12 @@ function ActionToolbar({
     <div className={styles.msgActions} onClick={(e) => e.stopPropagation()}>
       <div className={styles.quickReactions}>
         {reactions.map((emoji) => (
-          <button key={emoji} type="button" title={emoji} onClick={() => toggleReaction(msg.id, emoji)}>
+          <button
+            key={emoji}
+            type="button"
+            title={emoji}
+            onClick={() => toggleReaction(msg.id, emoji)}
+          >
             {emoji}
           </button>
         ))}
@@ -99,9 +120,21 @@ function ActionToolbar({
           type="button"
           className={styles.editReactionBtn}
           title="반응 커스텀"
-          onClick={(e) => { e.stopPropagation(); setShowCustomizer(true); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowCustomizer(true);
+          }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="12" cy="12" r="3" />
             <path d="M12 1v2" />
             <path d="M12 21v2" />
@@ -118,24 +151,41 @@ function ActionToolbar({
       <div className={styles.actionDivider} />
 
       <button
-        type="button" title="반응 추가"
-        onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(msg.id); }}
+        type="button"
+        title="반응 추가"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowEmojiPicker(msg.id);
+        }}
         style={{ position: "relative" }}
       >
         😊
         {showEmojiPicker === msg.id && (
-          <div className={styles.emojiPickerPopup} onClick={(e) => e.stopPropagation()}>
+          <div
+            className={styles.emojiPickerPopup}
+            onClick={(e) => e.stopPropagation()}
+          >
             <Picker
               data={data}
               onEmojiSelect={(emoji) => toggleReaction(msg.id, emoji.native)}
-              theme="dark" locale="ko"
+              theme="dark"
+              locale="ko"
             />
           </div>
         )}
       </button>
 
       <button type="button" title="답장" onClick={() => startReply(msg)}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <polyline points="9 17 4 12 9 7" />
           <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
         </svg>
@@ -144,13 +194,35 @@ function ActionToolbar({
       {isMine && (
         <>
           <button type="button" title="수정" onClick={() => startEdit(msg)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
           </button>
-          <button type="button" title="삭제" onClick={() => handleDelete(msg.id)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button
+            type="button"
+            title="삭제"
+            onClick={() => handleDelete(msg.id)}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="3 6 5 6 21 6" />
               <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
               <path d="M10 11v6M14 11v6" />
@@ -188,13 +260,17 @@ export default function ChatMessageItem({
   const showDateDivider = !isSameDay(prevMsg?.time, msg.time);
   const compact = !showDateDivider && isCompact(prevMsg, msg);
   const isMine = String(msg.userId) === String(userId);
-  const parentMsg = msg.parentId ? messages.find((m) => m.id === msg.parentId) : null;
+  const parentMsg = msg.parentId
+    ? messages.find((m) => m.id === msg.parentId)
+    : null;
 
-  const reactionMap = externalReactionMap ||
+  const reactionMap =
+    externalReactionMap ||
     (msg.reactions || []).reduce((acc, r) => {
       if (!acc[r.emoji]) acc[r.emoji] = { count: 0, mine: false };
       acc[r.emoji].count++;
-      if (String(r.userId || r.user_id) === String(userId)) acc[r.emoji].mine = true;
+      if (String(r.userId || r.user_id) === String(userId))
+        acc[r.emoji].mine = true;
       return acc;
     }, {});
 
@@ -210,16 +286,24 @@ export default function ChatMessageItem({
         const title = parsed.postTitle || "게시글";
         systemText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
       }
-    } catch { /* not JSON */ }
+    } catch {
+      /* not JSON */
+    }
 
     return (
       <div key={msg.id || idx}>
         {showDateDivider && (
           <div className={styles.dateDivider}>
-            <span className={styles.dateDividerText}>{formatDate(msg.time)}</span>
+            <span className={styles.dateDividerText}>
+              {formatDate(msg.time)}
+            </span>
           </div>
         )}
-        <div className={msg.isDeletionWarning ? styles.deletionWarningMsg : styles.systemMsg}>
+        <div
+          className={
+            msg.isDeletionWarning ? styles.deletionWarningMsg : styles.systemMsg
+          }
+        >
           {systemText}
         </div>
         {parsed?.kind === "share_post" && (
@@ -290,41 +374,58 @@ export default function ChatMessageItem({
               >
                 {displayName(msg.nickname)}
               </span>
-              {variant === "group" && displayName(msg.nickname) === roomAuthor && (
-                <span className={styles.msgHostBadge}>방장</span>
-              )}
-              <span className={styles.msgTimestamp}>{formatTime(msg.time)}</span>
+              {variant === "group" &&
+                displayName(msg.nickname) === roomAuthor && (
+                  <span className={styles.msgHostBadge}>방장</span>
+                )}
+              <span className={styles.msgTimestamp}>
+                {formatTime(msg.time)}
+              </span>
             </div>
           )}
 
-          <ReplyPreview parentMsg={parentMsg} scrollToMessage={scrollToMessage} />
+          <ReplyPreview
+            parentMsg={parentMsg}
+            scrollToMessage={scrollToMessage}
+          />
 
-          <div className={`${styles.msgBubble} ${msg.isDeleted ? styles.deleted : ""} ${msg.isPending ? styles.pendingMessage : ""} ${msg.isFailed ? styles.failedMessage : ""}`}>
+          <div
+            className={`${styles.msgBubble} ${msg.isDeleted ? styles.deleted : ""} ${msg.isPending ? styles.pendingMessage : ""} ${msg.isFailed ? styles.failedMessage : ""}`}
+          >
             <ChatMessageContent content={msg.content} />
-            {msg.isEdited && !msg.isDeleted && <span className={styles.editedTag}>(수정됨)</span>}
+            {msg.isEdited && !msg.isDeleted && (
+              <span className={styles.editedTag}>(수정됨)</span>
+            )}
           </div>
 
           {isMine && msg.readCount > 0 && (
             <div className={styles.readCount}>{msg.readCount}명 읽음</div>
           )}
 
-          <ReactionBadges reactionMap={reactionMap} msgId={msg.id} toggleReaction={toggleReaction} />
+          <ReactionBadges
+            reactionMap={reactionMap}
+            msgId={msg.id}
+            toggleReaction={toggleReaction}
+          />
         </div>
 
-        {hoveredMsgId === msg.id && !msg.isDeleted && !msg.isPending && !msg.isFailed && (
-          <ActionToolbar
-            msg={msg}
-            reactions={reactions}
-            toggleReaction={toggleReaction}
-            showEmojiPicker={showEmojiPicker}
-            setShowEmojiPicker={setShowEmojiPicker}
-            startReply={startReply}
-            startEdit={startEdit}
-            handleDelete={handleDelete}
-            setShowCustomizer={setShowCustomizer}
-            isMine={isMine}
-          />
-        )}
+        {hoveredMsgId === msg.id &&
+          !msg.isDeleted &&
+          !msg.isPending &&
+          !msg.isFailed && (
+            <ActionToolbar
+              msg={msg}
+              reactions={reactions}
+              toggleReaction={toggleReaction}
+              showEmojiPicker={showEmojiPicker}
+              setShowEmojiPicker={setShowEmojiPicker}
+              startReply={startReply}
+              startEdit={startEdit}
+              handleDelete={handleDelete}
+              setShowCustomizer={setShowCustomizer}
+              isMine={isMine}
+            />
+          )}
       </div>
     </div>
   );

@@ -4,8 +4,10 @@ import { io } from "socket.io-client";
 import { AuthContext } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
-import { getRoomBlockWarning, uploadChatFile } from "../../api/chat";
+import { getRoomBlockWarning } from "../../api/chat";
 import { leavePost, getPost, togglePostJoin } from "../../api/posts";
+import { getRoomBlockWarning, uploadChatFile } from "../../api/chat";
+import { leavePost, getPost } from "../../api/posts";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
@@ -18,6 +20,20 @@ import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
+import ChatInputArea from "../../components/chat_components/ChatInputArea";
+import { useFileUpload } from "../../hooks/useFileUpload";
+
+import { formatChatPreview } from "../../utils/chatPreview";
+import {
+  formatAppointmentDateTime,
+  formatTime,
+  formatDate,
+  isSameDay,
+  isCompact,
+  displayName,
+  createClientMessageId,
+} from "../../utils/chatHelpers";
+import borderImg from "../../assets/border.png";
 import MapPreview from "../../components/post_components/MapPreview";
 import borderImg from "../../assets/border.png";
 import { formatChatPreview } from "../../utils/chatPreview";
@@ -116,6 +132,8 @@ const parseSystemMessagePayload = (content) => {
 
 const displayName = (nickname) => nickname || "이름 없음";
 
+// ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
+
 function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
   const url = getImageUrl(profileImg);
   const label = displayName(nickname);
@@ -136,7 +154,7 @@ function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
         className={styles.msgAvatar}
         style={{ width: size, height: size, fontSize: size * 0.3 }}
       >
-        {url ? <img src={url} alt={label} style={{ backgroundColor: "transparent" }} /> : label.slice(0, 2)}
+        {url ? <img src={url} alt={label} style={{ backgroundColor: "white" }} /> : label.slice(0, 2)}
       </div>
     </div>
   );
@@ -219,6 +237,11 @@ export default function ChatRoomDetailPage() {
   useEffect(() => {
     notificationsMutedRef.current = notificationsMuted;
   }, [notificationsMuted]);
+
+  useEffect(() => {
+    const preventBrowserDrop = (event) => {
+      event.preventDefault();
+    };
 
   useEffect(() => {
     const preventBrowserDrop = (event) => {
@@ -401,6 +424,12 @@ export default function ChatRoomDetailPage() {
       toast.error(msg);
       navigate("/chat-rooms");
     });
+    });
+
+    socket.on("error_message", (msg) => {
+      toast.error(msg);
+      navigate("/chat-rooms");
+    });
 
     socket.on("user_kicked", ({ targetUserId }) => {
       if (Number(targetUserId) === Number(userId)) {
@@ -502,6 +531,11 @@ export default function ChatRoomDetailPage() {
         emoji.native +
         text.substring(end, text.length),
     );
+    const before = text.substring(0, start);
+    const after = text.substring(end, text.length);
+    setInput(before + emoji.native + after);
+
+    // 포커스 유지 및 커서 이동을 위한 처리
     setTimeout(() => {
       inputRef.current.focus();
       inputRef.current.setSelectionRange(
@@ -520,6 +554,10 @@ export default function ChatRoomDetailPage() {
       container.scrollHeight - container.scrollTop >
         container.clientHeight + 200,
     );
+    const isUp =
+      container.scrollHeight - container.scrollTop >
+      container.clientHeight + 200;
+    setShowScrollBtn(isUp);
   };
 
   const scrollToBottom = () =>
@@ -657,6 +695,7 @@ export default function ChatRoomDetailPage() {
                       isUploading: false,
                       isFailed: true,
                     }
+                  ? { ...m, isPending: false, isUploading: false, isFailed: true }
                   : m,
               ),
             );
@@ -687,6 +726,10 @@ export default function ChatRoomDetailPage() {
       replyTo,
       buildMessageContent,
       clearPendingFiles,
+      setEditId,
+      setInput,
+      setReplyTo,
+      setSending,
     ],
   );
 
@@ -696,14 +739,12 @@ export default function ChatRoomDetailPage() {
     setReplyTo(null);
     setTimeout(() => inputRef.current?.focus(), 0);
   };
-
   const startReply = (msg) => {
     setReplyTo(msg);
     setEditId(null);
     setInput("");
     setTimeout(() => inputRef.current?.focus(), 0);
   };
-
   const handleDelete = (msgId) => {
     toast("메시지를 삭제하시겠습니까?", {
       action: {
@@ -722,7 +763,6 @@ export default function ChatRoomDetailPage() {
       },
     });
   };
-
   const toggleReaction = (msgId, emoji) => {
     socketRef.current.emit("react_message", {
       messageId: msgId,
@@ -760,6 +800,20 @@ export default function ChatRoomDetailPage() {
       }
     }
     setShowMembers(!showMembers);
+  };
+  const handleJoinChat = async () => {
+    if (joining) return;
+    setJoining(true);
+    try {
+      const updated = await togglePostJoin(roomId);
+      if (updated) setPostData(updated);
+      setIsParticipant(true);
+    } catch (err) {
+      console.error("Failed to join:", err);
+      toast.error(err.response?.data?.message || "참여 처리에 실패했습니다.");
+    } finally {
+      setJoining(false);
+    }
   };
 
   const cancelContext = () => {
@@ -946,9 +1000,31 @@ export default function ChatRoomDetailPage() {
   return (
     <div
       className={styles.chatWrap}
-      onDrop={(e) => handleDrop(e)}
+      onDrop={(e) => handleDrop(e, addPendingFiles)}
       onDragOver={(e) => e.preventDefault()}
     >
+      {blockWarning && (
+        <div className={styles.warningOverlay}>
+          <div className={styles.warningModal}>
+            <h3>차단한 사용자가 이 채팅방에 있습니다.</h3>
+            <p>
+              {blockWarning.users
+                .map((user) => displayName(user.nickname))
+                .join(", ")}
+              님이 현재 이 그룹 채팅방에 참여 중입니다.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.setItem(blockWarning.key, "1");
+                setBlockWarning(null);
+              }}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
       {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.headerThumb}>
@@ -995,6 +1071,14 @@ export default function ChatRoomDetailPage() {
             onClick={() => setShowFileGallery(true)}
           >
             📎
+          </button>
+          <button
+            className={styles.headerIconBtn}
+            title="지도보기"
+            style={{ display: "none" }}
+            onClick={openRoomMap}
+          >
+            🗺️
           </button>
           <button
             className={styles.headerIconBtn}
@@ -1077,12 +1161,18 @@ export default function ChatRoomDetailPage() {
       >
         {messages.map((msg, idx) => {
           const prevMsg = idx > 0 ? messages[idx - 1] : null;
+          const showDateDivider = !isSameDay(prevMsg?.time, msg.time);
+          const compact = !showDateDivider && isCompact(prevMsg, msg);
+          const isMine = String(msg.userId) === String(userId);
+          const parentMsg = msg.parentId ? messages.find((m) => m.id === msg.parentId) : null;
+          const msgNickname = displayName(msg.nickname);
           const msgNickname = displayName(msg.nickname);
           const showDateDivider = !isSameDay(prevMsg?.time, msg.time);
           const compact = !showDateDivider && isCompact(prevMsg, msg);
           const isMine = String(msg.userId) === String(userId);
           const parentMsg = msg.parentId ? getParentMsg(msg.parentId) : null;
 
+          // 리액션 집계
           const reactionMap = (msg.reactions || []).reduce((acc, r) => {
             if (!acc[r.emoji]) acc[r.emoji] = { count: 0, mine: false };
             acc[r.emoji].count++;
@@ -1091,10 +1181,24 @@ export default function ChatRoomDetailPage() {
           }, {});
 
           if (msg.isSystem) {
+            let systemText = msg.content;
+            let parsed = null;
+            try {
+              parsed = JSON.parse(msg.content);
+              if (parsed?.kind === "share_post") {
+                const sharer = parsed.sharerNickname || "알 수 없음";
+                const title = parsed.postTitle || "게시글";
+                systemText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
+              }
+            } catch { /* not JSON */ }
             const systemPayload = parseSystemMessagePayload(msg.content);
             const systemText = systemPayload?.text || msg.content;
-            const hasMap = systemPayload?.kind === "appointment_change" && systemPayload.showMap && Number.isFinite(systemPayload.latitude) && Number.isFinite(systemPayload.longitude);
-            
+            const hasMap =
+              systemPayload?.kind === "appointment_change" &&
+              systemPayload.showMap &&
+              Number.isFinite(systemPayload.latitude) &&
+              Number.isFinite(systemPayload.longitude);
+
             return (
               <div key={msg.id || idx}>
                 {showDateDivider && (
@@ -1102,7 +1206,40 @@ export default function ChatRoomDetailPage() {
                     <span className={styles.dateDividerText}>{formatDate(msg.time)}</span>
                   </div>
                 )}
-                <div className={msg.isDeletionWarning ? styles.deletionWarningMsg : styles.systemMsg}>
+                <div className={styles.systemMsg}>{systemText}</div>
+                {parsed?.kind === "share_post" && (
+                  <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/chat-rooms/${parsed.postId}`)}
+                      style={{
+                        height: 32,
+                        padding: "0 16px",
+                        border: "none",
+                        borderRadius: 6,
+                        background: "var(--color-active)",
+                        color: "#fff",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: "pointer",
+                      }}
+                    >
+                      참여하기
+                    </button>
+                  </div>
+                )}
+                    <span className={styles.dateDividerText}>
+                      {formatDate(msg.time)}
+                    </span>
+                  </div>
+                )}
+                <div
+                  className={
+                    msg.isDeletionWarning
+                      ? styles.deletionWarningMsg
+                      : styles.systemMsg
+                  }
+                >
                   <span>{systemText}</span>
                   {hasMap && (
                     <div className={styles.systemMsgMap}>
@@ -1180,47 +1317,192 @@ export default function ChatRoomDetailPage() {
                   )}
                 </div>
 
-                {hoveredMsgId === msg.id && !msg.isDeleted && !msg.isPending && !msg.isFailed && (
-                  <div className={styles.msgActions} onClick={(e) => e.stopPropagation()}>
-                    <div className={styles.quickReactions}>
-                      {["👍", "❤️", "😂"].map((emoji) => (
-                        <button key={emoji} type="button" title={emoji} onClick={() => toggleReaction(msg.id, emoji)}>{emoji}</button>
-                      ))}
-                    </div>
-                    <div className={styles.actionDivider} />
-                    <button type="button" title="반응 추가" onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(msg.id); }} style={{ position: "relative" }}>
-                      😊
-                      {showEmojiPicker === msg.id && (
-                        <div className={styles.emojiPickerPopup} onClick={(e) => e.stopPropagation()}>
-                          <Picker data={data} onEmojiSelect={(emoji) => toggleReaction(msg.id, emoji.native)} theme="dark" locale="ko" />
-                        </div>
+                {/* ── Action toolbar (항상 오른쪽 끝) ── */}
+                {hoveredMsgId === msg.id &&
+                  !msg.isDeleted &&
+                  !msg.isPending &&
+                  !msg.isFailed && (
+                    <div
+                      className={styles.msgActions}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* 빠른 반응 */}
+                      <div className={styles.quickReactions}>
+                        {["👍", "❤️", "😂"].map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            title={emoji}
+                            onClick={() => toggleReaction(msg.id, emoji)}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className={styles.actionDivider} />
+
+                      {/* 반응 더 추가 */}
+                      <button
+                        type="button"
+                        title="반응 추가"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowEmojiPicker(msg.id);
+                        }}
+                        style={{ position: "relative" }}
+                      >
+                        😊
+                        {showEmojiPicker === msg.id && (
+                          <div
+                            className={styles.emojiPickerPopup}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Picker
+                              data={data}
+                              onEmojiSelect={(emoji) =>
+                                toggleReaction(msg.id, emoji.native)
+                              }
+                              theme="dark"
+                              locale="ko"
+                            />
+                          </div>
+                        )}
+                      </button>
+
+                      {/* 답장 */}
+                      <button
+                        type="button"
+                        title="답장"
+                        onClick={() => startReply(msg)}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="9 17 4 12 9 7" />
+                          <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                        </svg>
+                      </button>
+
+                      {isMine && (
+                        <>
+                          {/* 수정 */}
+                          <button
+                            type="button"
+                            title="수정"
+                            onClick={() => startEdit(msg)}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          {/* 삭제 */}
+                          <button
+                            type="button"
+                            title="삭제"
+                            onClick={() => handleDelete(msg.id)}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                              <path d="M10 11v6M14 11v6" />
+                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                            </svg>
+                          </button>
+                        </>
                       )}
-                    </button>
-                    <button type="button" title="답장" onClick={() => startReply(msg)}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" /></svg>
-                    </button>
-                    {isMine && (
-                      <>
-                        <button type="button" title="수정" onClick={() => startEdit(msg)}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-                        </button>
-                        <button type="button" title="삭제" onClick={() => handleDelete(msg.id)}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 2 0 0 1 1 1v2" /></svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )}
               </div>
             </div>
           );
-        })}
+        })};
         <div ref={bottomRef} />
       </div>
 
       {showScrollBtn && (
-        <button className={styles.scrollToBottom} onClick={scrollToBottom} title="최신 메시지 보기" aria-label="맨 밑으로 내려가기">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><polyline points="6 9 12 15 18 9" /></svg>
+        <button
+          className={styles.scrollToBottom}
+          onClick={scrollToBottom}
+          title="최신 메시지 보기"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+      )}
+
+      <ChatInputArea
+        input={input}
+        setInput={setInput}
+        handleSend={handleSend}
+        sending={sending}
+        editId={editId}
+        replyTo={replyTo}
+        cancelContext={cancelContext}
+        pendingFiles={pendingFiles}
+        removePendingFile={removePendingFile}
+        addPendingFiles={addPendingFiles}
+        openFilePicker={openFilePicker}
+        handlePaste={handlePaste}
+        handleEmojiSelect={handleEmojiSelect}
+        inputRef={inputRef}
+        fileInputRef={fileInputRef}
+        fileAccept={fileAccept}
+        showAttachMenu={showAttachMenu}
+        setShowAttachMenu={setShowAttachMenu}
+        showMainEmojiPicker={showMainEmojiPicker}
+        setShowMainEmojiPicker={setShowMainEmojiPicker}
+        roomTitle={roomTitle}
+        roomId={roomId}
+        formatChatPreview={formatChatPreview}
+        messages={messages}
+      />
+          aria-label="맨 밑으로 내려가기"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
           <span>맨 밑으로</span>
         </button>
       )}
@@ -1417,6 +1699,11 @@ export default function ChatRoomDetailPage() {
               });
               setRoomAppointment(normalizeRoomAppointment(updatedPost));
             }
+            socketRef.current?.emit("join_room", {
+              roomId,
+              nickname: name,
+              userId,
+            });
           }}
         />
       )}
@@ -1430,8 +1717,18 @@ export default function ChatRoomDetailPage() {
         authorNickname={roomAuthor}
         currentUserId={userId}
         onKick={(target) => {
-          socketRef.current?.emit("kick_user", { roomId, targetUserId: target.user_id, targetNickname: target.nickname, myUserId: userId });
-          setRoomMembers((prev) => prev.filter((member) => Number(member.user_id) !== Number(target.user_id)));
+          socketRef.current?.emit("kick_user", {
+            roomId,
+            targetUserId: target.user_id,
+            targetNickname: target.nickname,
+            myUserId: userId,
+          });
+          setRoomMembers((prev) =>
+            prev.filter(
+              (member) => Number(member.user_id) !== Number(target.user_id),
+            ),
+            prev.filter((member) => Number(member.user_id) !== Number(target.user_id)),
+          );
         }}
       />
 
