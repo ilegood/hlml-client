@@ -2,7 +2,7 @@ export const STATUS_OPEN = "모집중";
 export const STATUS_CLOSED = "모집완료";
 
 export const CATEGORY_MAP = {
-  성별: ["남성", "여성", "무관"],
+  성별: ["여성", "남성", "무관"],
   나이: ["10대", "20대", "30대", "40대", "50대 이상"],
   흡연: ["흡연자", "비흡연자"],
   음주: ["음주", "금주"],
@@ -10,8 +10,7 @@ export const CATEGORY_MAP = {
   활동: ["식사", "운동", "수다", "게임", "공부", "창작", "휴식", "기타"],
 };
 
-
-export const STATUS_EMOJI = { [STATUS_OPEN]: "🟢", [STATUS_CLOSED]: "🔒" };
+export const STATUS_EMOJI = { [STATUS_OPEN]: "모집", [STATUS_CLOSED]: "완료" };
 export const STATUS_CLASS = {
   [STATUS_OPEN]: "status-open",
   [STATUS_CLOSED]: "status-full",
@@ -48,7 +47,10 @@ export function getTimeAgo(ts) {
 }
 
 export function countComments(comments = []) {
-  return comments.reduce((sum, comment) => sum + 1 + (comment.replies || []).length, 0);
+  return comments.reduce(
+    (sum, comment) => sum + 1 + (comment.replies || []).length,
+    0,
+  );
 }
 
 export function formatDateTime(dateStr, timeStr) {

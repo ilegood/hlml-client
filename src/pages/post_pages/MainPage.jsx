@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import { togglePostLike } from "../../api/posts";
 import CategorySelector from "../../components/post_components/CategorySelector";
+import SortDropdown from "../../components/post_components/SortDropdown";
 import CentralMapBar from "../../components/post_components/CentralMapBar";
 import styles from "./MainPage.module.css";
 import { usePostsData } from "../../hooks/usePostsData";
@@ -13,7 +14,10 @@ export default function MainPage() {
   const navigate = useNavigate();
   const { userId, token } = useAuth();
   const {
-    filteredPosts,
+    paginatedPosts,
+    totalPages,
+    currentPage,
+    setCurrentPage,
     search,
     setSearch,
     selCats,
@@ -105,15 +109,7 @@ export default function MainPage() {
             />
           </div>
           <div className={styles.sortRow}>
-            <select
-              className={styles.sortSelect}
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+            <SortDropdown value={sortBy} options={SORT_OPTIONS} onChange={setSortBy} />
             <button className={styles.writeBtn} onClick={handleWriteClick}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -128,11 +124,44 @@ export default function MainPage() {
       <CentralMapBar />
 
       <PostListDisplay
-        filteredPosts={filteredPosts}
+        filteredPosts={paginatedPosts}
         handleLike={handleLike}
         onOpen={(id) => navigate(`/detail/${id}`)}
         currentUserId={userId || "me"}
       />
+
+      <div className={styles.paginationBar}>
+        <button
+          type="button"
+          className={styles.pageBtn}
+          onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+          disabled={currentPage === 1}
+        >
+          이전
+        </button>
+
+        <div className={styles.pageNumbers}>
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+            <button
+              key={page}
+              type="button"
+              className={`${styles.pageBtn}${currentPage === page ? ` ${styles.pageBtnActive}` : ""}`}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          className={styles.pageBtn}
+          onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+          disabled={currentPage === totalPages}
+        >
+          다음
+        </button>
+      </div>
     </main>
   );
 }

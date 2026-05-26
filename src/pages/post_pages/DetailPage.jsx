@@ -599,6 +599,7 @@ export default function DetailPage() {
         <SharePostModal
           postId={id}
           postTitle={post.title}
+          postImage={post.image}
           onClose={() => setIsShareModalOpen(false)}
         />
       )}

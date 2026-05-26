@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { getPosts } from "../api/posts";
 
 const MAIN_CATEGORY_ORDER = ["인원", "성별", "나이", "흡연", "음주", "활동"];
+const PAGE_SIZE = 10;
 
 const SORT_OPTIONS = [
   { value: "latest", label: "최신순" },
@@ -36,6 +37,7 @@ export const usePostsData = () => {
   const [search, setSearch] = useState("");
   const [selCats, setSelCats] = useState({});
   const [sortBy, setSortBy] = useState("latest");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -52,23 +54,11 @@ export const usePostsData = () => {
 
   const filteredPosts = useMemo(() => {
     const sortFn = getSortFn(sortBy);
-    return [...posts].sort(sortFn).filter((post) => {
-      const keyword = search.toLowerCase();
-      const matchText =
-        post.title.toLowerCase().includes(keyword) ||
-        post.content.toLowerCase().includes(keyword) ||
-        (post.place && post.place.toLowerCase().includes(keyword));
-      const matchCat = Object.entries(selCats).every(([key, value]) => {
-        if (!value) return true;
-        if (key === "인원") return post.capacity === parseInt(value, 10);
-        return post.categories?.[key] === value;
-      });
-    });
-    return matchText && matchCat;
-    const filteredPosts = [...posts]
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    const keyword = search.toLowerCase();
+
+    return [...posts]
+      .sort(sortFn)
       .filter((post) => {
-        const keyword = search.toLowerCase();
         const matchText =
           post.title.toLowerCase().includes(keyword) ||
           post.content.toLowerCase().includes(keyword) ||
@@ -82,10 +72,19 @@ export const usePostsData = () => {
       });
   }, [posts, search, selCats, sortBy]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / PAGE_SIZE));
+  const effectivePage = Math.min(currentPage, totalPages);
+
+  const paginatedPosts = useMemo(() => {
+    const start = (effectivePage - 1) * PAGE_SIZE;
+    return filteredPosts.slice(start, start + PAGE_SIZE);
+  }, [filteredPosts, effectivePage]);
+
   return {
     posts,
     setPosts,
     filteredPosts,
+    paginatedPosts,
     search,
     setSearch,
     selCats,
@@ -93,6 +92,10 @@ export const usePostsData = () => {
     fetchPosts,
     sortBy,
     setSortBy,
+    currentPage: effectivePage,
+    setCurrentPage,
+    totalPages,
+    pageSize: PAGE_SIZE,
     SORT_OPTIONS,
     MAIN_CATEGORY_ORDER,
   };

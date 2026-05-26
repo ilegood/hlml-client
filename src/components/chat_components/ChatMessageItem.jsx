@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
@@ -119,7 +119,7 @@ function ActionToolbar({
         <button
           type="button"
           className={styles.editReactionBtn}
-          title="반응 커스텀"
+          title="반응 커스터마이즈"
           onClick={(e) => {
             e.stopPropagation();
             setShowCustomizer(true);
@@ -159,7 +159,7 @@ function ActionToolbar({
         }}
         style={{ position: "relative" }}
       >
-        😊
+        반응
         {showEmojiPicker === msg.id && (
           <div
             className={styles.emojiPickerPopup}
@@ -299,32 +299,39 @@ export default function ChatMessageItem({
             </span>
           </div>
         )}
-        <div
-          className={
-            msg.isDeletionWarning ? styles.deletionWarningMsg : styles.systemMsg
-          }
-        >
-          {systemText}
-        </div>
         {parsed?.kind === "share_post" && (
-          <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
-            <button
-              type="button"
-              onClick={() => navigate(`/chat-rooms/${parsed.postId}`)}
-              style={{
-                height: 32,
-                padding: "0 16px",
-                border: "none",
-                borderRadius: 6,
-                background: "var(--color-active)",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: 13,
-                cursor: "pointer",
-              }}
-            >
-              참여하기
-            </button>
+          <button
+            type="button"
+            onClick={() => navigate(`/detail/${parsed.postId}`)}
+            className={styles.sharedPostCard}
+            disabled={!parsed.postId}
+          >
+            <div className={styles.sharedPostImageContainer}>
+              {parsed.postImage && (
+                <img
+                  src={getImageUrl(parsed.postImage)}
+                  alt="Post Thumbnail"
+                  className={styles.sharedPostImage}
+                />
+              )}
+            </div>
+            <div className={styles.sharedPostContent}>
+              <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
+              <strong className={styles.sharedPostTitle}>
+                {parsed.postTitle || "게시글"}
+              </strong>
+              <span className={styles.sharedPostMeta}>
+                {parsed.sharerNickname || "알 수 없음"}님이 공유했습니다. 클릭하면 게시글로 이동합니다.
+              </span>
+            </div>
+          </button>
+        )}        {parsed?.kind !== "share_post" && (
+          <div
+            className={
+              msg.isDeletionWarning ? styles.deletionWarningMsg : styles.systemMsg
+            }
+          >
+            {systemText}
           </div>
         )}
       </div>

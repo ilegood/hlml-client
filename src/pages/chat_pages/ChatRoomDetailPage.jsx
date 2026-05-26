@@ -4,10 +4,8 @@ import { io } from "socket.io-client";
 import { AuthContext } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
-import { getRoomBlockWarning } from "../../api/chat";
-import { leavePost, getPost, togglePostJoin } from "../../api/posts";
 import { getRoomBlockWarning, uploadChatFile } from "../../api/chat";
-import { leavePost, getPost } from "../../api/posts";
+import { leavePost, getPost, togglePostJoin } from "../../api/posts";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
@@ -21,7 +19,8 @@ import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import ChatInputArea from "../../components/chat_components/ChatInputArea";
-import { useFileUpload } from "../../hooks/useFileUpload";
+import MapPreview from "../../components/post_components/MapPreview";
+import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
 
 import { formatChatPreview } from "../../utils/chatPreview";
 import {
@@ -32,115 +31,19 @@ import {
   isCompact,
   displayName,
   createClientMessageId,
+  normalizeRoomAppointment,
+  parseSystemMessagePayload,
 } from "../../utils/chatHelpers";
 import borderImg from "../../assets/border.png";
-import MapPreview from "../../components/post_components/MapPreview";
-import borderImg from "../../assets/border.png";
-import { formatChatPreview } from "../../utils/chatPreview";
-import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
 
-// ── 헬퍼 ──────────────────────────────────────────────────────────────────────
-const formatTime = (isoString) => {
-  if (!isoString) return "";
-  return new Date(isoString).toLocaleTimeString("ko-KR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  });
-};
-
-const formatDate = (isoString) => {
-  if (!isoString) return "";
-  const d = new Date(isoString);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-
-  if (d.toDateString() === today.toDateString()) return "오늘";
-  if (d.toDateString() === yesterday.toDateString()) return "어제";
-
-  const options = {
-    month: "long",
-    day: "numeric",
-  };
-  if (d.getFullYear() !== today.getFullYear()) {
-    options.year = "numeric";
-  }
-
-  return d.toLocaleDateString("ko-KR", options);
-};
-
-const isSameDay = (a, b) => {
-  if (!a || !b) return false;
-  const da = new Date(a),
-    db = new Date(b);
-  return (
-    da.getFullYear() === db.getFullYear() &&
-    da.getMonth() === db.getMonth() &&
-    da.getDate() === db.getDate()
-  );
-};
-
-// 같은 유저가 2분 이내에 연속 작성한 경우 compact 처리
-const isCompact = (prev, curr) => {
-  if (!prev || prev.isSystem || curr.isSystem) return false;
-  if (prev.userId !== curr.userId) return false;
-  const diff = new Date(curr.time) - new Date(prev.time);
-  return diff < 2 * 60 * 1000;
-};
-
-const createClientMessageId = () =>
-  `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
-
-const formatAppointmentDateTime = (date, time) => {
-  const now = new Date();
-  const apptDate = new Date(date);
-  const options = {
-    month: "long",
-    day: "numeric",
-  };
-  if (apptDate.getFullYear() !== now.getFullYear()) {
-    options.year = "numeric";
-  }
-
-  const dateText = date ? apptDate.toLocaleDateString("ko-KR", options) : "";
-  const timeText = time ? String(time).slice(0, 5) : "";
-  return [dateText, timeText].filter(Boolean).join(" ");
-};
-
-const normalizeRoomAppointment = (info = {}) => ({
-  date: info.date || "",
-  time: info.time || "",
-  place: info.place || "",
-  latitude: info.latitude ? Number(info.latitude) : null,
-  longitude: info.longitude ? Number(info.longitude) : null,
-  capacity: Number(info.capacity) || 0,
-  participants: Number(info.participants) || 0,
-  status: info.status || "",
-});
-
-const parseSystemMessagePayload = (content) => {
-  if (!content || typeof content !== "string") return null;
-
-  try {
-    const parsed = JSON.parse(content);
-    return parsed?.kind === "appointment_change" ? parsed : null;
-  } catch {
-    return null;
-  }
-};
-
-const displayName = (nickname) => nickname || "이름 없음";
-
-// ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
-
+// Avatar 컴포넌트
 function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
   const url = getImageUrl(profileImg);
   const label = displayName(nickname);
   return (
-    <div 
-      className={styles.avatarWrapSmall} 
-      onClick={onClick} 
+    <div
+      className={styles.avatarWrapSmall}
+      onClick={onClick}
       style={{ cursor: onClick ? "pointer" : "default" }}
     >
       {isHost && (
@@ -154,14 +57,17 @@ function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
         className={styles.msgAvatar}
         style={{ width: size, height: size, fontSize: size * 0.3 }}
       >
-        {url ? <img src={url} alt={label} style={{ backgroundColor: "white" }} /> : label.slice(0, 2)}
+        {url ? (
+          <img src={url} alt={label} style={{ backgroundColor: "white" }} />
+        ) : (
+          label.slice(0, 2)
+        )}
       </div>
     </div>
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────────
-
+// Main Component
 export default function ChatRoomDetailPage() {
   const { roomId } = useParams();
   const { name, userId, profileImg } = useContext(AuthContext);
@@ -238,11 +144,7 @@ export default function ChatRoomDetailPage() {
     notificationsMutedRef.current = notificationsMuted;
   }, [notificationsMuted]);
 
-  useEffect(() => {
-    const preventBrowserDrop = (event) => {
-      event.preventDefault();
-    };
-
+  // Prevent browser's default file drop behavior
   useEffect(() => {
     const preventBrowserDrop = (event) => {
       event.preventDefault();
@@ -256,8 +158,7 @@ export default function ChatRoomDetailPage() {
     };
   }, []);
 
-  // ── Socket setup ────────────────────────────────────────────────────────────
-
+  // Socket setup
   useEffect(() => {
     if (!userId || !name) {
       toast.error("로그인이 필요한 서비스입니다.");
@@ -424,12 +325,6 @@ export default function ChatRoomDetailPage() {
       toast.error(msg);
       navigate("/chat-rooms");
     });
-    });
-
-    socket.on("error_message", (msg) => {
-      toast.error(msg);
-      navigate("/chat-rooms");
-    });
 
     socket.on("user_kicked", ({ targetUserId }) => {
       if (Number(targetUserId) === Number(userId)) {
@@ -492,7 +387,7 @@ export default function ChatRoomDetailPage() {
     loadBlockWarning();
   }, [roomId, userId]);
 
-  // ── Participation check ──
+  // Participation check
   useEffect(() => {
     if (!userId || !roomId) return;
     const checkParticipation = async () => {
@@ -501,7 +396,9 @@ export default function ChatRoomDetailPage() {
         const post = await getPost(roomId);
         setPostData(post);
         const isAuthor = String(post.user_id) === String(userId);
-        const hasJoined = (post.joinedUserIds || []).map(String).includes(String(userId));
+        const hasJoined = (post.joinedUserIds || [])
+          .map(String)
+          .includes(String(userId));
         setIsParticipant(isAuthor || hasJoined);
       } catch (err) {
         console.error("Failed to fetch post:", err);
@@ -545,8 +442,7 @@ export default function ChatRoomDetailPage() {
     }, 0);
   };
 
-  // ── Scroll ──────────────────────────────────────────────────────────────────
-
+  // Scroll
   const handleScroll = () => {
     const container = messagesRef.current;
     if (!container) return;
@@ -563,8 +459,7 @@ export default function ChatRoomDetailPage() {
   const scrollToBottom = () =>
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  // ── Actions ─────────────────────────────────────────────────────────────────
-
+  // Actions
   const buildMessageContent = useCallback(async () => {
     const text = input.trim();
     if (pendingFiles.length === 0) return text;
@@ -610,37 +505,39 @@ export default function ChatRoomDetailPage() {
       } else {
         sendingRef.current = true;
         setSending(true);
-        let clientTempId = null;
+        let clientTempId = createClientMessageId(); // Always create a temp ID
         try {
           const isUploadingMessage = pendingFiles.length > 0;
-          if (!isUploadingMessage) {
-            clientTempId = createClientMessageId();
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: clientTempId,
-                clientTempId,
-                roomId,
-                userId,
-                nickname: name,
-                profileImg,
-                content: input.trim(),
-                isSystem: false,
-                isPending: true,
-                isUploading: false,
-                isFailed: false,
-                parentId: replyTo?.id || null,
-                reactions: [],
-                readCount: 0,
-                time: new Date().toISOString(),
-              },
-            ]);
-            setTimeout(
-              () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
-              0,
-            );
-          }
-          const content = await buildMessageContent();
+          // Add pending message state to UI
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: clientTempId,
+              clientTempId,
+              roomId,
+              userId,
+              nickname: name,
+              profileImg,
+              content: input.trim() || (isUploadingMessage ? "파일 업로드 중..." : ""),
+              isSystem: false,
+              isPending: true,
+              isUploading: isUploadingMessage,
+              isFailed: false,
+              parentId: replyTo?.id || null,
+              reactions: [],
+              readCount: 0,
+              time: new Date().toISOString(),
+            },
+          ]);
+          setTimeout(
+            () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+            0,
+          );
+          clearPendingFiles(); // Clear pending files immediately after creating temp message
+
+          const content = await buildMessageContent(); // Build content, includes file uploads
+
+          // Update message after content is built (e.g., if content changed from "uploading..." to actual JSON)
           if (clientTempId) {
             setMessages((prev) =>
               prev.map((m) =>
@@ -650,6 +547,8 @@ export default function ChatRoomDetailPage() {
               ),
             );
           }
+
+          // Emit message via socket
           socketRef.current.emit(
             "send_message",
             {
@@ -677,24 +576,12 @@ export default function ChatRoomDetailPage() {
             },
           );
           setReplyTo(null);
-          clearPendingFiles();
-          if (!clientTempId) {
-            setTimeout(
-              () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
-              0,
-            );
-          }
         } catch (error) {
+          // Fix for catch block
           if (clientTempId) {
             setMessages((prev) =>
               prev.map((m) =>
                 m.clientTempId === clientTempId
-                  ? {
-                      ...m,
-                      isPending: false,
-                      isUploading: false,
-                      isFailed: true,
-                    }
                   ? { ...m, isPending: false, isUploading: false, isFailed: true }
                   : m,
               ),
@@ -704,7 +591,7 @@ export default function ChatRoomDetailPage() {
           toast.error(
             error?.response?.data?.message || "파일 업로드에 실패했습니다.",
           );
-          clearPendingFiles();
+          clearPendingFiles(); // Clear files even on error
           sendingRef.current = false;
           setSending(false);
           return;
@@ -801,21 +688,6 @@ export default function ChatRoomDetailPage() {
     }
     setShowMembers(!showMembers);
   };
-  const handleJoinChat = async () => {
-    if (joining) return;
-    setJoining(true);
-    try {
-      const updated = await togglePostJoin(roomId);
-      if (updated) setPostData(updated);
-      setIsParticipant(true);
-    } catch (err) {
-      console.error("Failed to join:", err);
-      toast.error(err.response?.data?.message || "참여 처리에 실패했습니다.");
-    } finally {
-      setJoining(false);
-    }
-  };
-
   const cancelContext = () => {
     setReplyTo(null);
     setEditId(null);
@@ -828,7 +700,11 @@ export default function ChatRoomDetailPage() {
         label: "나가기",
         onClick: async () => {
           try {
-            socketRef.current?.emit("leave_room", { roomId, nickname: name, userId });
+            socketRef.current?.emit("leave_room", {
+              roomId,
+              nickname: name,
+              userId,
+            });
             await leavePost(roomId);
             toast.success("채팅방에서 나갔습니다.");
             navigate("/chat-rooms");
@@ -891,7 +767,8 @@ export default function ChatRoomDetailPage() {
     toast.error("연결된 장소 정보가 없습니다.");
   };
 
-  const isFull = postData && (postData.participants || 1) >= (postData.capacity || 999);
+  const isFull =
+    postData && (postData.participants || 1) >= (postData.capacity || 999);
 
   if (loadingPost) {
     return (
@@ -912,7 +789,9 @@ export default function ChatRoomDetailPage() {
           <div className={styles.warningModal}>
             <h3>게시글을 찾을 수 없습니다.</h3>
             <p>존재하지 않거나 삭제된 게시글입니다.</p>
-            <button type="button" onClick={() => navigate(-1)}>뒤로 가기</button>
+            <button type="button" onClick={() => navigate(-1)}>
+              뒤로 가기
+            </button>
           </div>
         </div>
       </div>
@@ -931,7 +810,9 @@ export default function ChatRoomDetailPage() {
               </p>
             )}
             {postData.place && (
-              <p style={{ margin: "4px 0", color: "#888" }}>📍 {postData.place}</p>
+              <p style={{ margin: "4px 0", color: "#888" }}>
+                📍 {postData.place}
+              </p>
             )}
             <p style={{ margin: "4px 0", color: "#888" }}>
               👥 {postData.participants || 1}/{postData.capacity || "∞"}
@@ -952,7 +833,13 @@ export default function ChatRoomDetailPage() {
                 {postData.content}
               </p>
             )}
-            <hr style={{ border: "none", borderTop: "1px solid var(--color-border)", margin: "16px 0" }} />
+            <hr
+              style={{
+                border: "none",
+                borderTop: "1px solid var(--color-border)",
+                margin: "16px 0",
+              }}
+            />
             <h3 style={{ margin: "0 0 16px" }}>참여하겠습니까?</h3>
             <div style={{ display: "flex", gap: 8 }}>
               <button
@@ -971,7 +858,11 @@ export default function ChatRoomDetailPage() {
                   cursor: isFull ? "default" : "pointer",
                 }}
               >
-                {joining ? "참여 중..." : isFull ? "정원이 가득 찼습니다" : "참여하기"}
+                {joining
+                  ? "참여 중..."
+                  : isFull
+                    ? "정원이 가득 찼습니다"
+                    : "참여하기"}
               </button>
               <button
                 type="button"
@@ -1032,12 +923,28 @@ export default function ChatRoomDetailPage() {
             <img src={getImageUrl(roomImage)} alt="room" />
           ) : (
             <span className={styles.headerHashIcon} style={{ fontSize: 22 }}>
-              {postData && (() => {
-                const CAT_MAP = { 게임:"🎮", 스터디:"📚", 운동:"🏃", 맛집:"🍽️", 여행:"✈️", 음악:"🎵", 영화:"🎬", 사진:"📷", 반려동물:"🐾", 독서:"📖", 언어:"💬", 취미:"🎨", 패션:"👗", 기타:"💡" };
-                const cats = postData.categories || {};
-                const key = Object.keys(cats).find(k => cats[k]);
-                return key && CAT_MAP[key] ? CAT_MAP[key] : "#";
-              })()}
+              {postData &&
+                (() => {
+                  const CAT_MAP = {
+                    게임: "🎮",
+                    스터디: "📚",
+                    운동: "🏃",
+                    맛집: "🍽️",
+                    여행: "✈️",
+                    음악: "🎵",
+                    영화: "🎬",
+                    사진: "📷",
+                    반려동물: "🐾",
+                    독서: "📖",
+                    언어: "💬",
+                    취미: "🎨",
+                    패션: "👗",
+                    기타: "💡",
+                  };
+                  const cats = postData.categories || {};
+                  const key = Object.keys(cats).find((k) => cats[k]);
+                  return key && CAT_MAP[key] ? CAT_MAP[key] : "#";
+                })()}
             </span>
           )}
         </div>
@@ -1102,8 +1009,10 @@ export default function ChatRoomDetailPage() {
           <div className={styles.appointmentCardLabel}>약속 정보</div>
           <strong>{roomTitle || `채팅방 ${roomId}`}</strong>
           <span>
-            {formatAppointmentDateTime(roomAppointment.date, roomAppointment.time) ||
-              "날짜와 시간이 정해지지 않았습니다."}
+            {formatAppointmentDateTime(
+              roomAppointment.date,
+              roomAppointment.time,
+            ) || "날짜와 시간이 정해지지 않았습니다."}
           </span>
         </div>
         <div className={styles.appointmentCardMeta}>
@@ -1115,7 +1024,8 @@ export default function ChatRoomDetailPage() {
             <span>참석</span>
             <strong>
               {roomAppointment.participants || 0}
-              {roomAppointment.capacity ? ` / ${roomAppointment.capacity}` : ""}명
+              {roomAppointment.capacity ? ` / ${roomAppointment.capacity}` : ""}
+              명
             </strong>
           </div>
           <div>
@@ -1123,7 +1033,11 @@ export default function ChatRoomDetailPage() {
             <strong>{roomAppointment.status || "확인 중"}</strong>
           </div>
         </div>
-        <button type="button" className={styles.appointmentCardMapBtn} onClick={openRoomMap}>
+        <button
+          type="button"
+          className={styles.appointmentCardMapBtn}
+          onClick={openRoomMap}
+        >
           위치 보기
         </button>
       </section>
@@ -1164,89 +1078,81 @@ export default function ChatRoomDetailPage() {
           const showDateDivider = !isSameDay(prevMsg?.time, msg.time);
           const compact = !showDateDivider && isCompact(prevMsg, msg);
           const isMine = String(msg.userId) === String(userId);
-          const parentMsg = msg.parentId ? messages.find((m) => m.id === msg.parentId) : null;
-          const msgNickname = displayName(msg.nickname);
-          const msgNickname = displayName(msg.nickname);
-          const showDateDivider = !isSameDay(prevMsg?.time, msg.time);
-          const compact = !showDateDivider && isCompact(prevMsg, msg);
-          const isMine = String(msg.userId) === String(userId);
           const parentMsg = msg.parentId ? getParentMsg(msg.parentId) : null;
+          const msgNickname = displayName(msg.nickname);
 
           // 리액션 집계
           const reactionMap = (msg.reactions || []).reduce((acc, r) => {
             if (!acc[r.emoji]) acc[r.emoji] = { count: 0, mine: false };
             acc[r.emoji].count++;
-            if (String(r.userId || r.user_id) === String(userId)) acc[r.emoji].mine = true;
+            if (String(r.userId || r.user_id) === String(userId))
+              acc[r.emoji].mine = true;
             return acc;
           }, {});
 
           if (msg.isSystem) {
-            let systemText = msg.content;
-            let parsed = null;
-            try {
-              parsed = JSON.parse(msg.content);
-              if (parsed?.kind === "share_post") {
-                const sharer = parsed.sharerNickname || "알 수 없음";
-                const title = parsed.postTitle || "게시글";
-                systemText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
-              }
-            } catch { /* not JSON */ }
             const systemPayload = parseSystemMessagePayload(msg.content);
-            const systemText = systemPayload?.text || msg.content;
-            const hasMap =
-              systemPayload?.kind === "appointment_change" &&
-              systemPayload.showMap &&
-              Number.isFinite(systemPayload.latitude) &&
-              Number.isFinite(systemPayload.longitude);
+            const isSharePost = systemPayload?.kind === "share_post";
+            const isAppointmentChange = systemPayload?.kind === "appointment_change";
+            let displaySystemText = systemPayload?.text || msg.content;
+
+            if (isSharePost) {
+                const sharer = systemPayload.sharerNickname || "알 수 없음";
+                const title = systemPayload.postTitle || "게시글";
+                displaySystemText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
+            }
 
             return (
               <div key={msg.id || idx}>
                 {showDateDivider && (
                   <div className={styles.dateDivider}>
-                    <span className={styles.dateDividerText}>{formatDate(msg.time)}</span>
-                  </div>
-                )}
-                <div className={styles.systemMsg}>{systemText}</div>
-                {parsed?.kind === "share_post" && (
-                  <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/chat-rooms/${parsed.postId}`)}
-                      style={{
-                        height: 32,
-                        padding: "0 16px",
-                        border: "none",
-                        borderRadius: 6,
-                        background: "var(--color-active)",
-                        color: "#fff",
-                        fontWeight: 700,
-                        fontSize: 13,
-                        cursor: "pointer",
-                      }}
-                    >
-                      참여하기
-                    </button>
-                  </div>
-                )}
                     <span className={styles.dateDividerText}>
                       {formatDate(msg.time)}
                     </span>
                   </div>
                 )}
-                <div
-                  className={
-                    msg.isDeletionWarning
-                      ? styles.deletionWarningMsg
-                      : styles.systemMsg
-                  }
-                >
-                  <span>{systemText}</span>
-                  {hasMap && (
-                    <div className={styles.systemMsgMap}>
-                      <MapPreview latitude={systemPayload.latitude} longitude={systemPayload.longitude} />
+                {isSharePost ? (
+                  <button
+                    type="button"
+                    className={styles.sharedPostCard}
+                    onClick={() => navigate(`/detail/${systemPayload.postId}`)}
+                    disabled={!systemPayload.postId}
+                  >
+                    {systemPayload.postImage && (
+                      <div className={styles.sharedPostImageContainer}>
+                        <img
+                          src={getImageUrl(systemPayload.postImage)}
+                          alt="Post"
+                          className={styles.sharedPostImage}
+                        />
+                      </div>
+                    )}
+                    <div className={styles.sharedPostContent}>
+                      <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
+                      <strong className={styles.sharedPostTitle}>
+                        {systemPayload.postTitle || "게시글"}
+                      </strong>
+                      <span className={styles.sharedPostMeta}>
+                        {systemPayload.sharerNickname || "알 수 없음"}님이 공유했습니다. 클릭하면 게시글로 이동합니다.
+                      </span>
                     </div>
-                  )}
-                </div>
+                  </button>
+                ) : (
+                  <div
+                    className={
+                      msg.isDeletionWarning
+                        ? styles.deletionWarningMsg
+                        : styles.systemMsg
+                    }
+                  >
+                    <span>{displaySystemText}</span>
+                    {isAppointmentChange && systemPayload.showMap && Number.isFinite(systemPayload.latitude) && Number.isFinite(systemPayload.longitude) && (
+                      <div className={styles.systemMsgMap}>
+                        <MapPreview latitude={systemPayload.latitude} longitude={systemPayload.longitude} />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           }
@@ -1255,7 +1161,9 @@ export default function ChatRoomDetailPage() {
             <div key={msg.id || idx}>
               {showDateDivider && (
                 <div className={styles.dateDivider}>
-                  <span className={styles.dateDividerText}>{formatDate(msg.time)}</span>
+                  <span className={styles.dateDividerText}>
+                    {formatDate(msg.time)}
+                  </span>
                 </div>
               )}
 
@@ -1267,7 +1175,9 @@ export default function ChatRoomDetailPage() {
               >
                 <div className={styles.msgAvatarWrap}>
                   {compact ? (
-                    <span className={styles.compactTime}>{formatTime(msg.time)}</span>
+                    <span className={styles.compactTime}>
+                      {formatTime(msg.time)}
+                    </span>
                   ) : (
                     <Avatar
                       profileImg={msg.profileImg}
@@ -1281,38 +1191,81 @@ export default function ChatRoomDetailPage() {
                 <div className={styles.msgContent}>
                   {!compact && (
                     <div className={styles.msgHeader}>
-                      <span className={`${styles.msgNickname} ${isMine ? styles.msgNicknameMine : ""}`} onClick={() => setSelectedProfileId(msg.userId)} style={{ cursor: "pointer" }}>{msgNickname}</span>
-                      {msgNickname === roomAuthor && <span className={styles.msgHostBadge}>방장</span>}
-                      <span className={styles.msgTimestamp}>{formatTime(msg.time)}</span>
+                      <span
+                        className={`${styles.msgNickname} ${isMine ? styles.msgNicknameMine : ""}`}
+                        onClick={() => setSelectedProfileId(msg.userId)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {msgNickname}
+                      </span>
+                      {msgNickname === roomAuthor && (
+                        <span className={styles.msgHostBadge}>방장</span>
+                      )}
+                      <span className={styles.msgTimestamp}>
+                        {formatTime(msg.time)}
+                      </span>
                     </div>
                   )}
 
                   {parentMsg && (
-                    <div className={styles.replyPreviewInMsg} onClick={() => scrollToMessage(parentMsg.id)}>
+                    <div
+                      className={styles.replyPreviewInMsg}
+                      onClick={() => scrollToMessage(parentMsg.id)}
+                    >
                       <div className={styles.replyAvatar}>
-                        {parentMsg.profileImg ? <img src={getImageUrl(parentMsg.profileImg)} alt={displayName(parentMsg.nickname)} /> : displayName(parentMsg.nickname).slice(0, 1)}
+                        {parentMsg.profileImg ? (
+                          <img
+                            src={getImageUrl(parentMsg.profileImg)}
+                            alt={displayName(parentMsg.nickname)}
+                          />
+                        ) : (
+                          displayName(parentMsg.nickname).slice(0, 1)
+                        )}
                       </div>
-                      <span className={styles.replyName}>{displayName(parentMsg.nickname)}</span>
-                      <span className={styles.replyContent}>{parentMsg.isDeleted ? "삭제된 메시지" : formatChatPreview(parentMsg.content)}</span>
+                      <span className={styles.replyName}>
+                        {displayName(parentMsg.nickname)}
+                      </span>
+                      <span className={styles.replyContent}>
+                        {parentMsg.isDeleted
+                          ? "삭제된 메시지"
+                          : formatChatPreview(parentMsg.content)}
+                      </span>
                     </div>
                   )}
 
                   <MessageRowErrorBoundary fallbackText={msg.content}>
-                    <div className={`${styles.msgBubble} ${msg.isDeleted ? styles.deleted : ""} ${msg.isPending ? styles.pendingMessage : ""} ${msg.isFailed ? styles.failedMessage : ""}`}>
+                    <div
+                      className={`${styles.msgBubble} ${msg.isDeleted ? styles.deleted : ""} ${msg.isPending ? styles.pendingMessage : ""} ${msg.isFailed ? styles.failedMessage : ""}`}
+                    >
                       <ChatMessageContent content={msg.content} />
-                      {msg.isEdited && !msg.isDeleted && <span className={styles.editedTag}>(수정됨)</span>}
+                      {msg.isEdited && !msg.isDeleted && (
+                        <span className={styles.editedTag}>(수정됨)</span>
+                      )}
                     </div>
                   </MessageRowErrorBoundary>
 
-                  {isMine && msg.readCount > 0 && <div className={styles.readCount}>{msg.readCount}명 읽음</div>}
+                  {isMine && msg.readCount > 0 && (
+                    <div className={styles.readCount}>
+                      {msg.readCount}명 읽음
+                    </div>
+                  )}
 
                   {Object.keys(reactionMap).length > 0 && (
                     <div className={styles.reactionsArea}>
-                      {Object.entries(reactionMap).map(([emoji, { count, mine }]) => (
-                        <div key={emoji} className={`${styles.reactionBadge} ${mine ? styles.activeReaction : ""}`} onClick={() => toggleReaction(msg.id, emoji)}>
-                          {emoji}<span className={styles.reactionCount}>{count}</span>
-                        </div>
-                      ))}
+                      {Object.entries(reactionMap).map(
+                        ([emoji, { count, mine }]) => (
+                          <div
+                            key={emoji}
+                            className={`${styles.reactionBadge} ${mine ? styles.activeReaction : ""}`}
+                            onClick={() => toggleReaction(msg.id, emoji)}
+                          >
+                            {emoji}
+                            <span className={styles.reactionCount}>
+                              {count}
+                            </span>
+                          </div>
+                        ),
+                      )}
                     </div>
                   )}
                 </div>
@@ -1442,7 +1395,7 @@ export default function ChatRoomDetailPage() {
               </div>
             </div>
           );
-        })};
+        })}
         <div ref={bottomRef} />
       </div>
 
@@ -1451,46 +1404,6 @@ export default function ChatRoomDetailPage() {
           className={styles.scrollToBottom}
           onClick={scrollToBottom}
           title="최신 메시지 보기"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-      )}
-
-      <ChatInputArea
-        input={input}
-        setInput={setInput}
-        handleSend={handleSend}
-        sending={sending}
-        editId={editId}
-        replyTo={replyTo}
-        cancelContext={cancelContext}
-        pendingFiles={pendingFiles}
-        removePendingFile={removePendingFile}
-        addPendingFiles={addPendingFiles}
-        openFilePicker={openFilePicker}
-        handlePaste={handlePaste}
-        handleEmojiSelect={handleEmojiSelect}
-        inputRef={inputRef}
-        fileInputRef={fileInputRef}
-        fileAccept={fileAccept}
-        showAttachMenu={showAttachMenu}
-        setShowAttachMenu={setShowAttachMenu}
-        showMainEmojiPicker={showMainEmojiPicker}
-        setShowMainEmojiPicker={setShowMainEmojiPicker}
-        roomTitle={roomTitle}
-        roomId={roomId}
-        formatChatPreview={formatChatPreview}
-        messages={messages}
-      />
           aria-label="맨 밑으로 내려가기"
         >
           <svg
@@ -1512,15 +1425,61 @@ export default function ChatRoomDetailPage() {
           <div>
             <div className={styles.contextLabel}>
               {replyTo ? (
-                <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" /></svg>{displayName(replyTo.nickname)}님에게 답장 중</>
+                <>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <polyline points="9 17 4 12 9 7" />
+                    <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                  </svg>
+                  {displayName(replyTo.nickname)}님에게 답장 중
+                </>
               ) : (
-                <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>메시지 수정 중</>
+                <>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  메시지 수정 중
+                </>
               )}
             </div>
-            <div className={styles.contextText}>{replyTo ? formatChatPreview(replyTo.content) : formatChatPreview(messages.find((m) => m.id === editId)?.content)}</div>
+            <div className={styles.contextText}>
+              {replyTo
+                ? formatChatPreview(replyTo.content)
+                : formatChatPreview(
+                    messages.find((m) => m.id === editId)?.content,
+                  )}
+            </div>
           </div>
-          <button type="button" className={styles.closeBtn} onClick={cancelContext}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          <button
+            type="button"
+            className={styles.closeBtn}
+            onClick={cancelContext}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
       )}
@@ -1578,7 +1537,9 @@ export default function ChatRoomDetailPage() {
             ))}
             {sending && (
               <div className={styles.uploadStatus} role="status">
-                {pendingFiles.some((item) => item.file.type.startsWith("image/"))
+                {pendingFiles.some((item) =>
+                  item.file.type.startsWith("image/"),
+                )
                   ? "이미지 업로드 중..."
                   : "파일 업로드 중..."}
               </div>
@@ -1596,7 +1557,10 @@ export default function ChatRoomDetailPage() {
           />
           {showAttachMenu && (
             <div className={styles.attachMenu}>
-              <button type="button" onClick={() => openFilePicker("image/*,video/*")}>
+              <button
+                type="button"
+                onClick={() => openFilePicker("image/*,video/*")}
+              >
                 이미지/동영상 선택
               </button>
               <button type="button" onClick={() => openFilePicker("")}>
@@ -1631,7 +1595,7 @@ export default function ChatRoomDetailPage() {
               editId
                 ? "메시지 수정..."
                 : replyTo
-                  ? `@${displayName(replyTo.nickname)}님에게 답장...`
+                  ? `@${replyTo.nickname || "이름 없음"}님에게 답장...`
                   : `#${roomTitle || roomId}에 메시지 보내기`
             }
             rows={1}
@@ -1694,8 +1658,12 @@ export default function ChatRoomDetailPage() {
               setRoomImage(updatedPost.image || "");
               setRoomLocation({
                 place: updatedPost.place || "",
-                latitude: updatedPost.latitude ? Number(updatedPost.latitude) : null,
-                longitude: updatedPost.longitude ? Number(updatedPost.longitude) : null,
+                latitude: updatedPost.latitude
+                  ? Number(updatedPost.latitude)
+                  : null,
+                longitude: updatedPost.longitude
+                  ? Number(updatedPost.longitude)
+                  : null,
               });
               setRoomAppointment(normalizeRoomAppointment(updatedPost));
             }
@@ -1708,7 +1676,12 @@ export default function ChatRoomDetailPage() {
         />
       )}
 
-      {showFileGallery && <ChatFileGallery messages={messages} onClose={() => setShowFileGallery(false)} />}
+      {showFileGallery && (
+        <ChatFileGallery
+          messages={messages}
+          onClose={() => setShowFileGallery(false)}
+        />
+      )}
 
       <ChatMembersModal
         isOpen={showMembers}
@@ -1727,12 +1700,17 @@ export default function ChatRoomDetailPage() {
             prev.filter(
               (member) => Number(member.user_id) !== Number(target.user_id),
             ),
-            prev.filter((member) => Number(member.user_id) !== Number(target.user_id)),
           );
         }}
       />
 
-      {selectedProfileId && <UserProfileModal userId={selectedProfileId} currentUserId={userId} onClose={() => setSelectedProfileId(null)} />}
+      {selectedProfileId && (
+        <UserProfileModal
+          userId={selectedProfileId}
+          currentUserId={userId}
+          onClose={() => setSelectedProfileId(null)}
+        />
+      )}
     </div>
   );
 }
