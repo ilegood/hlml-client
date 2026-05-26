@@ -10,10 +10,8 @@ export const login = async (form) => {
 };
 
 export const updateProfile = async (profileData) => {
-  const token = localStorage.getItem("token");
-  
   let dataToSend;
-  let headers = { Authorization: `Bearer ${token}` };
+  let headers = {};
 
   if (profileData.profile_img instanceof File) {
     dataToSend = new FormData();
@@ -34,10 +32,7 @@ export const updateProfile = async (profileData) => {
 };
 
 export const deleteUser = async () => {
-  const token = localStorage.getItem("token");
-  const { data } = await instance.delete("/users", {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const { data } = await instance.delete("/users");
   return data;
 };
 

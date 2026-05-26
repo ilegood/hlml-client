@@ -1,8 +1,8 @@
 import { useState } from "react";
 import styles from "./ChatMembersModal.module.css";
-import { getImageUrl } from "../api/instance";
-import borderImg from "../assets/border.png";
-import UserProfileModal from "./modals/UserProfileModal";
+import { getImageUrl } from "../../api/instance";
+import borderImg from "../../assets/border.png";
+import UserProfileModal from "./UserProfileModal";
 
 export default function ChatMembersModal({
   isOpen,

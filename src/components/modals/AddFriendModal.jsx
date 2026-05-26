@@ -1,8 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { toast } from "sonner";
-import { searchUsers, addFriend } from "../api/friends";
-import { getImageUrl } from "../api/instance";
+import { searchUsers, addFriend } from "../../api/friends";
+import { getImageUrl } from "../../api/instance";
 
 const ModalOverlay = styled.div`
   position: fixed;
