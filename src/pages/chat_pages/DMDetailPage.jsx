@@ -115,12 +115,15 @@ export default function DMDetailPage() {
   );
   const [sending, setSending] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
+  const [typingNickname, setTypingNickname] = useState("");
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const typingTimerRef = useRef(null);
+  const typingEmitRef = useRef(0);
   const {
     pendingFiles,
     showAttachMenu,
@@ -335,6 +338,19 @@ export default function DMDetailPage() {
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, readCount } : m)),
       );
+    });
+
+    socket.on("typing", ({ nickname }) => {
+      if (nickname !== name && nickname) {
+        setTypingNickname(nickname);
+        clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = setTimeout(() => setTypingNickname(""), 2500);
+      }
+    });
+
+    socket.on("stop_typing", () => {
+      setTypingNickname("");
+      clearTimeout(typingTimerRef.current);
     });
 
     return () => socket.disconnect();
@@ -581,6 +597,7 @@ export default function DMDetailPage() {
         setSending(false);
       }
       setInput("");
+      socketRef.current?.emit("stop_typing", { roomId: socketRoomId });
       inputRef.current?.focus();
     },
     [
@@ -1131,6 +1148,18 @@ export default function DMDetailPage() {
         </div>
       )}
 
+      {/* ── Typing indicator ── */}
+      {typingNickname && (
+        <div style={{
+          padding: "4px 16px",
+          fontSize: 12,
+          color: "var(--color-text-secondary, #888)",
+          fontStyle: "italic",
+        }}>
+          {typingNickname}님이 입력중입니다...
+        </div>
+      )}
+
       {/* ── Input area ── */}
       <div className={styles.inputArea}>
         {pendingFiles.length > 0 && (
@@ -1228,7 +1257,18 @@ export default function DMDetailPage() {
             ref={inputRef}
             className={styles.input}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              if (!e.target.value.trim()) {
+                socketRef.current?.emit("stop_typing", { roomId: socketRoomId });
+              } else {
+                const now = Date.now();
+                if (now - typingEmitRef.current > 2000) {
+                  typingEmitRef.current = now;
+                  socketRef.current?.emit("typing", { roomId: socketRoomId, nickname: name });
+                }
+              }
+            }}
             onInput={resizeInput}
             onCompositionEnd={resizeInput}
             onPaste={handlePaste}
