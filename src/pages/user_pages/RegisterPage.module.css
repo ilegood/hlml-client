@@ -18,12 +18,13 @@
 
 /* ── Label & Input ── */
 .label {
+  position: relative;
   display: flex;
   flex-direction: column;
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 22px;
+  margin-bottom: 26px;
   gap: 8px;
 }
 
@@ -66,6 +67,70 @@
   background-color: var(--color-input-focus-bg);
 }
 
+.helpText {
+  color: #888;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.fieldMessage {
+  position: absolute;
+  left: 18px;
+  bottom: -18px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.fieldError {
+  color: #ff4d4f;
+}
+
+.fieldValid {
+  color: #16a34a;
+}
+
+.fieldMuted {
+  color: #888;
+}
+
+.passwordPopover {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 22px;
+  z-index: 20;
+  width: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-sidebar);
+  color: var(--color-text);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.passwordPopover strong {
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.passwordPopover span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.criteriaMet {
+  color: #16a34a;
+}
+
+.criteriaUnmet {
+  color: #888;
+}
+
 /* ── Birth ── */
 .birthWrap {
   display: flex;
@@ -79,9 +144,10 @@
 
 /* ── Gender ── */
 .genderField {
+  position: relative;
   border: 0;
   padding: 0;
-  margin: 0 0 22px;
+  margin: 0 0 26px;
 }
 
 .genderLabel {
@@ -156,13 +222,19 @@
   color: white;
 }
 
+.btnSubmit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btnCancel:hover,
-.btnSubmit:hover {
+.btnSubmit:hover:not(:disabled) {
   opacity: 0.85;
 }
 
 .btnCancel:active,
-.btnSubmit:active {
+.btnSubmit:active:not(:disabled) {
   transform: scale(0.98);
 }
 
@@ -179,4 +251,13 @@
 
 .backLink:hover {
   color: var(--color-active);
+}
+
+@media (max-width: 760px) {
+  .passwordPopover {
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    width: auto;
+  }
 }

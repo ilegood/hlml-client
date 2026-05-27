@@ -5,6 +5,19 @@ export const login = async (form) => {
   return data;
 };
 
+export const requestPasswordReset = async (email) => {
+  const { data } = await instance.post("/users/password/forgot", { email });
+  return data;
+};
+
+export const resetPassword = async ({ token, password }) => {
+  const { data } = await instance.post("/users/password/reset", {
+    token,
+    password,
+  });
+  return data;
+};
+
 export const updateProfile = async (profileData) => {
   const token = localStorage.getItem("token");
   
@@ -44,5 +57,15 @@ export const getUserPublicProfile = async (id) => {
 
 export const getUserActivity = async (id) => {
   const { data } = await instance.get(`/users/${id}/activity`);
+  return data;
+};
+
+export const verifyEmail = async (token) => {
+  const { data } = await instance.post("/users/verify-email", { token });
+  return data;
+};
+
+export const resendVerificationEmail = async (email) => {
+  const { data } = await instance.post("/users/resend-verification-email", { email });
   return data;
 };

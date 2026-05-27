@@ -180,11 +180,14 @@ export default function QAModal({ onClose }) {
       {showConfirm && (
         <div
           className={styles.confirmOverlay}
-          onClick={() => !isDeleting && setShowConfirm(false)}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            if (!isDeleting) setShowConfirm(false);
+          }}
         >
           <div
             className={styles.confirmModal}
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             <h3>회원탈퇴 확인</h3>
             <p>

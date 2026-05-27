@@ -402,8 +402,9 @@ export function MediaLightbox({ attachments, index, onClose, onMove }) {
             onMouseDown={(event) => event.stopPropagation()}
             onClick={() => onMove(-1)}
             title="이전"
+            aria-label="이전 이미지"
           >
-            이전
+            ‹
           </button>
           <button
             type="button"
@@ -411,8 +412,9 @@ export function MediaLightbox({ attachments, index, onClose, onMove }) {
             onMouseDown={(event) => event.stopPropagation()}
             onClick={() => onMove(1)}
             title="다음"
+            aria-label="다음 이미지"
           >
-            다음
+            ›
           </button>
         </>
       )}
