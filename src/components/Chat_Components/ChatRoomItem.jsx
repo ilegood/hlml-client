@@ -10,10 +10,6 @@ const ChatRoomItem = ({ room, onDelete, hideUnreadBadge = false }) => {
     const date = new Date(dateStr);
     if (Number.isNaN(date.getTime())) return "";
     const now = new Date();
-    const options = {
-      month: "long",
-      day: "numeric",
-    };
     if (date.getFullYear() !== now.getFullYear()) {
       return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
     }

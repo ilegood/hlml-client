@@ -41,3 +41,8 @@ export const getUserPublicProfile = async (id) => {
   const { data } = await instance.get(`/users/${id}`);
   return data;
 };
+
+export const getUserActivity = async (id) => {
+  const { data } = await instance.get(`/users/${id}/activity`);
+  return data;
+};

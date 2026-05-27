@@ -48,6 +48,17 @@ const formatDate = (isoString) => {
   return date.toLocaleDateString("ko-KR", options);
 };
 
+const parseSharedPostPayload = (content) => {
+  if (!content) return null;
+
+  try {
+    const parsed = typeof content === "string" ? JSON.parse(content) : content;
+    return parsed?.kind === "share_post" ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
 const isSameDay = (a, b) => {
   if (!a || !b) return false;
   const first = new Date(a);
@@ -766,6 +777,7 @@ export default function DMDetailPage() {
                 systemText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
               }
             } catch { /* not JSON */ }
+            const sharedPost = parseSharedPostPayload(msg.content);
 
             return (
               <div key={msg.id || idx}>
@@ -797,6 +809,23 @@ export default function DMDetailPage() {
                       채팅방 들어가기
                     </button>
                   </div>
+                {sharedPost ? (
+                  <button
+                    type="button"
+                    className={styles.sharedPostCard}
+                    onClick={() => navigate(`/detail/${sharedPost.postId}`)}
+                    disabled={!sharedPost.postId}
+                  >
+                    <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
+                    <strong className={styles.sharedPostTitle}>
+                      {sharedPost.postTitle || "게시글"}
+                    </strong>
+                    <span className={styles.sharedPostMeta}>
+                      {sharedPost.sharerNickname || "알 수 없음"}님이 공유했습니다. 클릭하면 게시글로 이동합니다.
+                    </span>
+                  </button>
+                ) : (
+                  <div className={styles.systemMsg}>{msg.content}</div>
                 )}
               </div>
             );

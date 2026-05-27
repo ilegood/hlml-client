@@ -140,6 +140,15 @@ export default function ChatMembersModal({
           onClose={() => setSelectedProfileId(null)}
         />
       )}
+
+      {reportTarget && (
+        <ReportModal
+          targetUser={reportTarget}
+          targetUserId={reportTarget.user_id}
+          targetName={reportTarget.nickname}
+          onClose={() => setReportTarget(null)}
+        />
+      )}
     </>
   );
 }
