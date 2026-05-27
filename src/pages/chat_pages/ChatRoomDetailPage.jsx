@@ -1057,13 +1057,6 @@ export default function ChatRoomDetailPage() {
               {appointmentReminder.place && ` · ${appointmentReminder.place}`}
             </span>
           </div>
-          <button
-            type="button"
-            className={styles.appointmentReminderAction}
-            onClick={openRoomMap}
-          >
-            위치 보기
-          </button>
         </div>
       )}
 

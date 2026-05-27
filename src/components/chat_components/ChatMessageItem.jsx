@@ -306,26 +306,27 @@ export default function ChatMessageItem({
             className={styles.sharedPostCard}
             disabled={!parsed.postId}
           >
-            <div className={styles.sharedPostImageContainer}>
-              {parsed.postImage && (
+            {parsed.postImage && (
+              <div className={styles.sharedPostImageContainer}>
                 <img
                   src={getImageUrl(parsed.postImage)}
-                  alt="Post Thumbnail"
+                  alt=""
                   className={styles.sharedPostImage}
                 />
-              )}
-            </div>
+              </div>
+            )}
             <div className={styles.sharedPostContent}>
               <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
               <strong className={styles.sharedPostTitle}>
                 {parsed.postTitle || "게시글"}
               </strong>
               <span className={styles.sharedPostMeta}>
-                {parsed.sharerNickname || "알 수 없음"}님이 공유했습니다. 클릭하면 게시글로 이동합니다.
+                {parsed.sharerNickname || "알 수 없음"}님이 공유했습니다.
               </span>
             </div>
           </button>
-        )}        {parsed?.kind !== "share_post" && (
+        )}
+        {parsed?.kind !== "share_post" && (
           <div
             className={
               msg.isDeletionWarning ? styles.deletionWarningMsg : styles.systemMsg

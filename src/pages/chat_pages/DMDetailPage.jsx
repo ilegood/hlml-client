@@ -111,6 +111,7 @@ export default function DMDetailPage() {
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [targetUserId, setTargetUserId] = useState(null);
   const [targetNickname, setTargetNickname] = useState("");
   const [targetProfileImg, setTargetProfileImg] = useState("");
 
@@ -360,6 +361,7 @@ export default function DMDetailPage() {
         if (!mounted) return;
 
         targetNicknameRef.current = data.targetNickname || "";
+        setTargetUserId(data.targetId || null);
         setTargetNickname(data.targetNickname || "");
         setTargetProfileImg(data.targetProfileImg || "");
       } catch (err) {
@@ -698,7 +700,13 @@ export default function DMDetailPage() {
     >
       {/* ── Header ── */}
       <div className={styles.header}>
-        <div className={styles.headerThumb}>
+        <button
+          type="button"
+          className={`${styles.headerThumb} ${styles.headerProfileButton}`}
+          disabled={!targetUserId}
+          onClick={() => setSelectedProfileId(targetUserId)}
+          title="프로필 보기"
+        >
           {targetProfileImg ? (
             <img
               src={getImageUrl(targetProfileImg)}
@@ -708,12 +716,7 @@ export default function DMDetailPage() {
           ) : (
             <span className={styles.headerHashIcon}>👤</span>
           )}
-          {targetProfileImg ? (
-            <img src={getImageUrl(targetProfileImg)} alt="target" />
-          ) : (
-            <span className={styles.headerHashIcon}>👤</span>
-          )}
-        </div>
+        </button>
         <span className={styles.headerName}>{targetNickname || "사용자"}</span>
         <div className={styles.headerDivider} />
         <span className={styles.headerDesc}>
@@ -785,13 +788,24 @@ export default function DMDetailPage() {
                     onClick={() => navigate(`/detail/${sharedPost.postId}`)}
                     disabled={!sharedPost.postId}
                   >
-                    <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
-                    <strong className={styles.sharedPostTitle}>
-                      {sharedPost.postTitle || "게시글"}
-                    </strong>
-                    <span className={styles.sharedPostMeta}>
-                      {sharedPost.sharerNickname || "알 수 없음"}님이 공유했습니다. 클릭하면 게시글로 이동합니다.
-                    </span>
+                    {sharedPost.postImage && (
+                      <div className={styles.sharedPostImageContainer}>
+                        <img
+                          src={getImageUrl(sharedPost.postImage)}
+                          alt=""
+                          className={styles.sharedPostImage}
+                        />
+                      </div>
+                    )}
+                    <div className={styles.sharedPostContent}>
+                      <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
+                      <strong className={styles.sharedPostTitle}>
+                        {sharedPost.postTitle || "게시글"}
+                      </strong>
+                      <span className={styles.sharedPostMeta}>
+                        {sharedPost.sharerNickname || "알 수 없음"}님이 공유했습니다.
+                      </span>
+                    </div>
                   </button>
                 ) : (
                   <div className={styles.systemMsg}>{msg.content}</div>
