@@ -48,17 +48,6 @@ const formatDate = (isoString) => {
   return date.toLocaleDateString("ko-KR", options);
 };
 
-const parseSharedPostPayload = (content) => {
-  if (!content) return null;
-
-  try {
-    const parsed = typeof content === "string" ? JSON.parse(content) : content;
-    return parsed?.kind === "share_post" ? parsed : null;
-  } catch {
-    return null;
-  }
-};
-
 const isSameDay = (a, b) => {
   if (!a || !b) return false;
   const first = new Date(a);
@@ -708,11 +697,6 @@ export default function DMDetailPage() {
           ) : (
             <span className={styles.headerHashIcon}>👤</span>
           )}
-          {targetProfileImg ? (
-            <img src={getImageUrl(targetProfileImg)} alt="target" />
-          ) : (
-            <span className={styles.headerHashIcon}>👤</span>
-          )}
         </div>
         <span className={styles.headerName}>{targetNickname || "사용자"}</span>
         <div className={styles.headerDivider} />
@@ -767,17 +751,19 @@ export default function DMDetailPage() {
           }, {});
 
           if (msg.isSystem) {
-            let systemText = msg.content;
             let parsed = null;
             try {
               parsed = JSON.parse(msg.content);
-              if (parsed?.kind === "share_post") {
-                const sharer = parsed.sharerNickname || "알 수 없음";
-                const title = parsed.postTitle || "게시글";
-                systemText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
-              }
             } catch { /* not JSON */ }
-            const sharedPost = parseSharedPostPayload(msg.content);
+
+            const isSharePost = parsed?.kind === "share_post";
+            let displayText = msg.content;
+
+            if (isSharePost) {
+              const sharer = parsed.sharerNickname || "알 수 없음";
+              const title = parsed.postTitle || "게시글";
+              displayText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
+            }
 
             return (
               <div key={msg.id || idx}>
@@ -788,45 +774,23 @@ export default function DMDetailPage() {
                     </span>
                   </div>
                 )}
-                <div className={styles.systemMsg}>{systemText}</div>
-                {parsed?.kind === "share_post" && (
-                  <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/chat-rooms/${parsed.postId}`)}
-                      style={{
-                        height: 32,
-                        padding: "0 16px",
-                        border: "none",
-                        borderRadius: 6,
-                        background: "var(--color-active)",
-                        color: "#fff",
-                        fontWeight: 700,
-                        fontSize: 13,
-                        cursor: "pointer",
-                      }}
-                    >
-                      채팅방 들어가기
-                    </button>
-                  </div>
-                {sharedPost ? (
+                <div className={styles.systemMsg}>{displayText}</div>
+                {isSharePost ? (
                   <button
                     type="button"
                     className={styles.sharedPostCard}
-                    onClick={() => navigate(`/detail/${sharedPost.postId}`)}
-                    disabled={!sharedPost.postId}
+                    onClick={() => navigate(`/detail/${parsed.postId}`)}
+                    disabled={!parsed.postId}
                   >
                     <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
                     <strong className={styles.sharedPostTitle}>
-                      {sharedPost.postTitle || "게시글"}
+                      {parsed.postTitle || "게시글"}
                     </strong>
                     <span className={styles.sharedPostMeta}>
-                      {sharedPost.sharerNickname || "알 수 없음"}님이 공유했습니다. 클릭하면 게시글로 이동합니다.
+                      {parsed.sharerNickname || "알 수 없음"}님이 공유했습니다. 클릭하면 게시글로 이동합니다.
                     </span>
                   </button>
-                ) : (
-                  <div className={styles.systemMsg}>{msg.content}</div>
-                )}
+                ) : null}
               </div>
             );
           }

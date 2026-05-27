@@ -35,30 +35,6 @@ import {
   parseSystemMessagePayload,
 } from "../../utils/chatHelpers";
 import borderImg from "../../assets/border.png";
-import MapPreview from "../../components/post_components/MapPreview";
-import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
-
-const normalizeRoomAppointment = (info = {}) => ({
-  date: info.date || "",
-  time: info.time || "",
-  place: info.place || "",
-  latitude: info.latitude ? Number(info.latitude) : null,
-  longitude: info.longitude ? Number(info.longitude) : null,
-  capacity: Number(info.capacity) || 0,
-  participants: Number(info.participants) || 0,
-  status: info.status || "",
-});
-
-const parseSystemMessagePayload = (content) => {
-  if (!content || typeof content !== "string") return null;
-
-  try {
-    const parsed = JSON.parse(content);
-    return parsed?.kind === "appointment_change" ? parsed : null;
-  } catch {
-    return null;
-  }
-};
 
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
@@ -1115,9 +1091,6 @@ export default function ChatRoomDetailPage() {
 
           if (msg.isSystem) {
             const systemPayload = parseSystemMessagePayload(msg.content);
-            if (systemPayload?.kind === "appointment_change") {
-              systemText = systemPayload.text || msg.content;
-            }
             const hasMap =
               systemPayload?.kind === "appointment_change" &&
               systemPayload.showMap &&
@@ -1150,7 +1123,7 @@ export default function ChatRoomDetailPage() {
                       : styles.systemMsg
                   }
                 >
-                  <span>{systemText}</span>
+                  <span>{displaySystemText}</span>
                   {hasMap && (
                     <div className={styles.systemMsgMap}>
                       <MapPreview
@@ -1160,11 +1133,11 @@ export default function ChatRoomDetailPage() {
                     </div>
                   )}
                 </div>
-                {parsed?.kind === "share_post" && (
+                {isSharePost && (
                   <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
                     <button
                       type="button"
-                      onClick={() => navigate(`/chat-rooms/${parsed.postId}`)}
+                      onClick={() => navigate(`/chat-rooms/${systemPayload.postId}`)}
                       style={{
                         height: 32,
                         padding: "0 16px",
