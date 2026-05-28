@@ -158,17 +158,23 @@ const RegisterPage = () => {
       : "";
   const genderError =
     touched.gender && !form.gender ? "성별을 선택해주세요." : "";
+  const displayNicknameAvail = (nicknameError || !nickname)
+    ? { checking: false, available: null, message: "" }
+    : availability.nickname;
+  const displayEmailAvail = (emailError || !email)
+    ? { checking: false, available: null, message: "" }
+    : availability.email;
   const nicknameAvailabilityMessage =
     !nicknameError && nickname
-      ? availability.nickname.checking
+      ? displayNicknameAvail.checking
         ? "닉네임 중복 확인 중..."
-        : availability.nickname.message
+        : displayNicknameAvail.message
       : "";
   const emailAvailabilityMessage =
     !emailError && email
-      ? availability.email.checking
+      ? displayEmailAvail.checking
         ? "이메일 중복 확인 중..."
-        : availability.email.message
+        : displayEmailAvail.message
       : "";
   const isFormValid =
     nickname &&
@@ -187,10 +193,10 @@ const RegisterPage = () => {
     !phoneError &&
     !birthdayError &&
     !genderError &&
-    availability.nickname.available === true &&
-    availability.email.available === true &&
-    !availability.nickname.checking &&
-    !availability.email.checking;
+    displayNicknameAvail.available === true &&
+    displayEmailAvail.available === true &&
+    !displayNicknameAvail.checking &&
+    !displayEmailAvail.checking;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -237,19 +243,9 @@ const RegisterPage = () => {
   };
 
   useEffect(() => {
-    if (nicknameError || !nickname) {
-      setAvailability((prev) => ({
-        ...prev,
-        nickname: { checking: false, available: null, message: "" },
-      }));
-      return;
-    }
+    if (nicknameError || !nickname) return;
 
     let cancelled = false;
-    setAvailability((prev) => ({
-      ...prev,
-      nickname: { checking: true, available: null, message: "" },
-    }));
 
     const timer = setTimeout(async () => {
       try {
@@ -285,19 +281,9 @@ const RegisterPage = () => {
   }, [nickname, nicknameError]);
 
   useEffect(() => {
-    if (emailError || !email) {
-      setAvailability((prev) => ({
-        ...prev,
-        email: { checking: false, available: null, message: "" },
-      }));
-      return;
-    }
+    if (emailError || !email) return;
 
     let cancelled = false;
-    setAvailability((prev) => ({
-      ...prev,
-      email: { checking: true, available: null, message: "" },
-    }));
 
     const timer = setTimeout(async () => {
       try {
@@ -406,9 +392,9 @@ const RegisterPage = () => {
             ) : nicknameAvailabilityMessage ? (
               <span
                 className={`${styles.fieldMessage} ${
-                  availability.nickname.available
+                  displayNicknameAvail.available
                     ? styles.fieldValid
-                    : availability.nickname.checking
+                    : displayNicknameAvail.checking
                       ? styles.fieldMuted
                       : styles.fieldError
                 }`}
@@ -436,9 +422,9 @@ const RegisterPage = () => {
             ) : emailAvailabilityMessage ? (
               <span
                 className={`${styles.fieldMessage} ${
-                  availability.email.available
+                  displayEmailAvail.available
                     ? styles.fieldValid
-                    : availability.email.checking
+                    : displayEmailAvail.checking
                       ? styles.fieldMuted
                       : styles.fieldError
                 }`}

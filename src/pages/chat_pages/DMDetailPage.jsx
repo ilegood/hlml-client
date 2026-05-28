@@ -742,7 +742,7 @@ export default function DMDetailPage() {
           ) : (
             <span className={styles.headerHashIcon}>👤</span>
           )}
-        </div>
+        </button>
         <span className={styles.headerName} style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {targetNickname || "사용자"}
           {targetOnline && (
@@ -848,10 +848,10 @@ export default function DMDetailPage() {
                     onClick={() => navigate(`/detail/${parsed.postId}`)}
                     disabled={!parsed.postId}
                   >
-                    {sharedPost.postImage && (
+                    {parsed.postImage && (
                       <div className={styles.sharedPostImageContainer}>
                         <img
-                          src={getImageUrl(sharedPost.postImage)}
+                          src={getImageUrl(parsed.postImage)}
                           alt=""
                           className={styles.sharedPostImage}
                         />
@@ -860,10 +860,10 @@ export default function DMDetailPage() {
                     <div className={styles.sharedPostContent}>
                       <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
                       <strong className={styles.sharedPostTitle}>
-                        {sharedPost.postTitle || "게시글"}
+                        {parsed.postTitle || "게시글"}
                       </strong>
                       <span className={styles.sharedPostMeta}>
-                        {sharedPost.sharerNickname || "알 수 없음"}님이 공유했습니다.
+                        {parsed.sharerNickname || "알 수 없음"}님이 공유했습니다.
                       </span>
                     </div>
                   </button>
