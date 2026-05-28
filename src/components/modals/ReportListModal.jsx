@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { toast } from "sonner";
-import instance from "../../api/instance";
-import { getImageUrl } from "../../api/instance";
+import instance, { getImageUrl } from "../../api/instance";
 import { useAuth } from "../../context/auth";
 
 const ModalWrapper = styled.div`
@@ -24,16 +23,23 @@ const ModalWrapper = styled.div`
     color: var(--color-text);
   }
 
-  .header {
+  .header,
+  .title-row,
+  .item-top,
+  .reported-user,
+  .go-report-btn,
+  .selected-user-card,
+  .result-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+  }
+
+  .header {
+    justify-content: space-between;
     margin-bottom: 25px;
   }
 
   .title-row {
-    display: flex;
-    align-items: center;
     gap: 10px;
   }
 
@@ -45,19 +51,18 @@ const ModalWrapper = styled.div`
   }
 
   .back-btn,
-  .close-btn {
+  .close-btn,
+  .clear-selected-user {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0;
     color: var(--color-deactive);
-    display: flex;
-    align-items: center;
   }
 
   .back-btn:hover,
-  .close-btn:hover {
-    color: var(--color-text);
+  .close-btn:hover,
+  .clear-selected-user:hover {
+    color: #eb4d4b;
   }
 
   .report-list-container,
@@ -81,25 +86,28 @@ const ModalWrapper = styled.div`
     display: none;
   }
 
-  .report-item {
-    padding: 16px;
+  .report-item,
+  .selected-user-card {
     background: var(--color-input-bg);
     border: 1.5px solid var(--color-border);
     border-radius: 16px;
   }
 
+  .report-item {
+    padding: 16px;
+  }
+
   .item-top {
-    display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
     margin-bottom: 8px;
   }
 
-  .reported-user {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .reported-user,
+  .selected-user-card,
+  .result-item {
+    gap: 10px;
     min-width: 0;
   }
 
@@ -118,13 +126,16 @@ const ModalWrapper = styled.div`
     object-fit: cover;
   }
 
-  .name {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--color-text);
+  .name,
+  .selected-user-meta strong {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .name {
+    font-size: 15px;
+    font-weight: 800;
   }
 
   .status-badge {
@@ -143,24 +154,27 @@ const ModalWrapper = styled.div`
     margin-bottom: 8px;
   }
 
+  .reason,
+  .date,
+  .selected-user-meta span {
+    color: var(--color-deactive);
+  }
+
   .reason {
     font-size: 13px;
     font-weight: 700;
-    color: var(--color-deactive);
     margin-bottom: 6px;
   }
 
   .content {
     font-size: 14px;
     line-height: 1.5;
-    color: var(--color-text);
     opacity: 0.9;
   }
 
   .date {
     margin-top: 10px;
     font-size: 11px;
-    color: var(--color-deactive);
     text-align: right;
   }
 
@@ -200,8 +214,6 @@ const ModalWrapper = styled.div`
   }
 
   .go-report-btn {
-    display: flex;
-    align-items: center;
     justify-content: center;
     gap: 8px;
   }
@@ -267,9 +279,6 @@ const ModalWrapper = styled.div`
   .result-item {
     padding: 10px 16px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
   }
 
   .result-item:hover {
@@ -284,12 +293,8 @@ const ModalWrapper = styled.div`
   }
 
   .selected-user-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
     padding: 12px;
-    border: 1.5px solid #eb4d4b;
-    border-radius: 12px;
+    border-color: #eb4d4b;
     background: rgba(235, 77, 75, 0.08);
   }
 
@@ -303,60 +308,63 @@ const ModalWrapper = styled.div`
     min-width: 0;
   }
 
-  .selected-user-meta strong {
+  .selected-user-meta strong,
+  .selected-user-meta span {
     display: block;
+  }
+
+  .selected-user-meta strong {
     font-size: 14px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .selected-user-meta span {
-    display: block;
     font-size: 12px;
-    color: var(--color-deactive);
     font-weight: 700;
   }
 
   .clear-selected-user {
-    border: none;
-    background: transparent;
-    color: var(--color-deactive);
-    cursor: pointer;
     font-size: 20px;
     line-height: 1;
     padding: 4px;
-  }
-
-  .clear-selected-user:hover {
-    color: #eb4d4b;
   }
 `;
 
 const REASON_PLACEHOLDER = "신고 사유를 선택해주세요";
 
-const getTodayText = () =>
-  new Date().toLocaleDateString("ko-KR", {
+const formatReportDate = (value) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleString("ko-KR", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   });
+};
 
-export default function ReportListModal({ onClose }) {
-  const { token, userId } = useAuth();
-  const storageKey = useMemo(
-    () => `report-history:${userId || "guest"}`,
-    [userId],
-  );
+const getReportTypeLabel = (report) => {
+  if (report.reportType === "post") return "게시글";
+  if (report.reportType === "comment") return "댓글";
+  return "사용자";
+};
+
+const getReportSummary = (report) => {
+  const typeLabel = getReportTypeLabel(report);
+  if (report.reportType === "post") {
+    return `${typeLabel} 신고 접수완료`;
+  }
+  if (report.reportType === "comment") {
+    return `${typeLabel} 신고 접수완료`;
+  }
+  return `${report.targetName} 신고 접수완료`;
+};
+
+export default function ReportListModal({ onClose, onChanged }) {
+  const { token } = useAuth();
   const [view, setView] = useState("list");
-  const [reports, setReports] = useState(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [reports, setReports] = useState([]);
   const [targetUser, setTargetUser] = useState("");
   const [targetUserId, setTargetUserId] = useState(null);
   const [targetProfileImg, setTargetProfileImg] = useState("");
@@ -366,27 +374,34 @@ export default function ReportListModal({ onClose }) {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const selectedUser = targetUserId
-    ? {
-        id: targetUserId,
-        nickname: targetUser,
-        profile_img: targetProfileImg,
-        report_count: targetReportCount,
-      }
-    : null;
+  const selectedUser = useMemo(
+    () =>
+      targetUserId
+        ? {
+            id: targetUserId,
+            nickname: targetUser,
+            profile_img: targetProfileImg,
+            report_count: targetReportCount,
+          }
+        : null,
+    [targetProfileImg, targetReportCount, targetUser, targetUserId],
+  );
 
-  useEffect(() => {
+  const fetchReports = useCallback(async () => {
+    if (!token) return;
+
     try {
-      const saved = localStorage.getItem(storageKey);
-      setReports(saved ? JSON.parse(saved) : []);
-    } catch {
-      setReports([]);
+      const { data } = await instance.get("/reports/my");
+      setReports(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Report list load failed:", err);
+      toast.error("신고 내역을 불러오지 못했습니다.");
     }
-  }, [storageKey]);
+  }, [token]);
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(reports));
-  }, [reports, storageKey]);
+    fetchReports();
+  }, [fetchReports]);
 
   useEffect(() => {
     const searchUsers = async () => {
@@ -397,10 +412,10 @@ export default function ReportListModal({ onClose }) {
 
       setIsSearching(true);
       try {
-        const res = await instance.get(
+        const { data } = await instance.get(
           `/users/search?q=${encodeURIComponent(targetUser)}`,
         );
-        setSearchResults(res.data);
+        setSearchResults(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Search failed:", err);
       } finally {
@@ -452,28 +467,17 @@ export default function ReportListModal({ onClose }) {
     }
 
     try {
-      const res = await instance.post("/reports", {
+      await instance.post("/reports", {
         targetUserId,
         reason,
         content: content.trim(),
       });
 
-      const nextReport = {
-        id: res.data.id || `${Date.now()}-${targetUserId}`,
-        targetUserId: res.data.targetUserId || targetUserId,
-        targetName: res.data.targetName || targetUser,
-        targetProfileImg: res.data.targetProfileImg || targetProfileImg,
-        reason: res.data.reason || reason,
-        content: res.data.content || content.trim(),
-        status: "pending",
-        reportCount: res.data.reportCount,
-        date: getTodayText(),
-      };
-
-      setReports((prev) => [nextReport, ...prev]);
       toast.success(`${targetUser}님 신고가 접수되었습니다.`);
       resetForm();
       setView("list");
+      fetchReports();
+      onChanged?.();
     } catch (err) {
       console.error("Report submit failed:", err);
       toast.error(err.response?.data?.message || "신고 접수에 실패했습니다.");
@@ -517,25 +521,29 @@ export default function ReportListModal({ onClose }) {
                         </div>
                         <span className="name">{report.targetName}</span>
                       </div>
-                      <span className="status-badge">접수중</span>
+                      <span className="status-badge">접수완료</span>
                     </div>
-                  <div className="summary">
-                    {report.targetName} 신고 접수중
-                  </div>
+                    <div className="summary">{getReportSummary(report)}</div>
+                    {report.targetTitle && (
+                      <div className="reason">게시글: {report.targetTitle}</div>
+                    )}
+                    {report.targetExcerpt && (
+                      <div className="content">"{report.targetExcerpt}"</div>
+                    )}
                     {report.reportCount !== undefined && (
                       <div className="reason">
                         누적 신고 횟수 {report.reportCount}회
                       </div>
                     )}
-                  <div className="reason">{report.reason}</div>
+                    <div className="reason">{report.reason}</div>
                     <div className="content">{report.content}</div>
-                    <div className="date">{report.date}</div>
+                    <div className="date">{formatReportDate(report.createdAt)}</div>
                   </div>
                 ))
               ) : (
                 <div className="empty">
                   <span className="icon">!</span>
-                  <p>신고 내역이 없습니다.</p>
+                  <p>최근 24시간 신고 내역이 없습니다.</p>
                 </div>
               )}
             </div>
@@ -587,7 +595,7 @@ export default function ReportListModal({ onClose }) {
                     }}
                     title="선택 해제"
                   >
-                    ×
+                    x
                   </button>
                 </div>
               )}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/auth";
 import {
@@ -10,7 +10,7 @@ import {
   updateFriendMemo,
 } from "../api/friends";
 import instance from "../api/instance";
-import { toast } from "sonner"; // Assuming toast is available globally or imported
+import { toast } from "sonner";
 
 export const useFriendManagement = () => {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export const useFriendManagement = () => {
 
   const menuRef = useRef(null);
 
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -52,11 +52,12 @@ export const useFriendManagement = () => {
     } catch (err) {
       console.error("친구 요청 로드 실패", err);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll();
-  }, [token]);
+  }, [fetchAll]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -72,7 +73,7 @@ export const useFriendManagement = () => {
     try {
       await acceptFriend(id);
       fetchAll();
-    } catch (err) {
+    } catch {
       toast.error("친구 요청 수락 실패");
     }
   };
@@ -81,7 +82,7 @@ export const useFriendManagement = () => {
     try {
       await rejectFriend(id);
       fetchAll();
-    } catch (err) {
+    } catch {
       toast.error("친구 요청 거절 실패");
     }
   };
@@ -93,7 +94,7 @@ export const useFriendManagement = () => {
         fetchAll();
         setActiveMenuId(null);
         if (selectedFriend?.id === id) setSelectedFriend(null);
-      } catch (err) {
+      } catch {
         toast.error("친구 삭제 실패");
       }
     }
@@ -107,13 +108,16 @@ export const useFriendManagement = () => {
         setActiveMenuId(null);
         if (selectedFriend?.id === id) setSelectedFriend(null);
         toast.success("사용자가 차단되었습니다.");
-      } catch (err) {
+      } catch {
         toast.error("사용자 차단 실패");
       }
     }
   };
 
-  const handleReport = () => {
+  const [reportedFriend, setReportedFriend] = useState(null);
+
+  const handleReport = (friend) => {
+    setReportedFriend(friend);
     setIsReportModalOpen(true);
     setActiveMenuId(null);
   };
@@ -158,7 +162,7 @@ export const useFriendManagement = () => {
       setMemos({ ...memos, [selectedFriend.id]: tempMemo });
       setIsEditingMemo(false);
       toast.success("메모가 저장되었습니다.");
-    } catch (err) {
+    } catch {
       toast.error("메모 저장 실패");
     }
   };
@@ -167,7 +171,9 @@ export const useFriendManagement = () => {
 
   const handleStartDM = async () => {
     try {
-      const res = await instance.post("/chat/dm", { targetId: selectedFriend.id });
+      const res = await instance.post("/chat/dm", {
+        targetId: selectedFriend.id,
+      });
       navigate(`/dms/${res.data.roomId}`);
       setIsOpen(false);
       setSelectedFriend(null);
@@ -186,6 +192,8 @@ export const useFriendManagement = () => {
     setRequests,
     selectedFriend,
     setSelectedFriend,
+    reportedFriend,
+    setReportedFriend,
     searchQuery,
     setSearchQuery,
     isAddModalOpen,

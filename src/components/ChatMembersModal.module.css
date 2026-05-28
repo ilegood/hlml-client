@@ -150,7 +150,54 @@
   transition: all 0.2s ease;
 }
 
-.memberItem:hover .kickBtn {
+.memberItem:hover .kickBtn,
+.memberItem:hover .reportBtn,
+.memberItem:hover .blockBtn {
   opacity: 1;
   visibility: visible;
+}
+
+.reportBtn {
+  margin-left: 6px;
+  background-color: transparent;
+  color: var(--color-deactive, #07b1bc);
+  border: 1px solid var(--color-deactive, #07b1bc);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+}
+
+.reportBtn:hover {
+  background-color: var(--color-deactive, #07b1bc);
+  color: #fff;
+}
+
+.blockBtn {
+  margin-left: 6px;
+  background-color: transparent;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+}
+
+.blockBtn:hover:not(:disabled) {
+  background-color: #ff6b6b;
+  color: #fff;
+}
+
+.blockBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }

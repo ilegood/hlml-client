@@ -2,16 +2,19 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import styles from "./ChatRoomItem.module.css";
 
-const ChatRoomItem = ({ room, onDelete }) => {
+const ChatRoomItem = ({ room, onDelete, hideUnreadBadge = false }) => {
   const navigate = useNavigate();
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
     if (Number.isNaN(date.getTime())) return "";
+    const now = new Date();
+    if (date.getFullYear() !== now.getFullYear()) {
+      return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    }
     return `${date.getMonth() + 1}월 ${date.getDate()}일`;
   };
-
   const formatTime = (timeStr) => {
     if (!timeStr) return "";
     return String(timeStr).slice(0, 5);
@@ -55,6 +58,11 @@ const ChatRoomItem = ({ room, onDelete }) => {
           {room.time && formatTime(room.time)}
         </div>
         <div className={styles.place}>{room.place || ""}</div>
+        {!hideUnreadBadge && room.unreadCount > 0 && (
+          <span className={styles.unreadBadge}>
+            {room.unreadCount > 99 ? "99+" : room.unreadCount}
+          </span>
+        )}
       </div>
 
       {onDelete && (

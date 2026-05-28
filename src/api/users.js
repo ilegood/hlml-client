@@ -1,11 +1,20 @@
 import instance from "./instance";
 
-export const register = async (form) => {
-  await instance.post("/users/register", form);
-};
-
 export const login = async (form) => {
   const { data } = await instance.post("/users/login", form);
+  return data;
+};
+
+export const requestPasswordReset = async (email) => {
+  const { data } = await instance.post("/users/password/forgot", { email });
+  return data;
+};
+
+export const resetPassword = async ({ token, password }) => {
+  const { data } = await instance.post("/users/password/reset", {
+    token,
+    password,
+  });
   return data;
 };
 
@@ -43,5 +52,20 @@ export const deleteUser = async () => {
 
 export const getUserPublicProfile = async (id) => {
   const { data } = await instance.get(`/users/${id}`);
+  return data;
+};
+
+export const getUserActivity = async (id) => {
+  const { data } = await instance.get(`/users/${id}/activity`);
+  return data;
+};
+
+export const verifyEmail = async (token) => {
+  const { data } = await instance.post("/users/verify-email", { token });
+  return data;
+};
+
+export const resendVerificationEmail = async (email) => {
+  const { data } = await instance.post("/users/resend-verification-email", { email });
   return data;
 };

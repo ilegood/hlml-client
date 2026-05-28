@@ -8,8 +8,14 @@ import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
+import {
+  ChatMessageContent,
+  MessageRowErrorBoundary,
+} from "../../components/chat_components/ChatAttachment";
+import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
+import { formatChatPreview } from "../../utils/chatPreview";
+import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 const formatTime = (isoString) => {
@@ -17,6 +23,7 @@ const formatTime = (isoString) => {
   return new Date(isoString).toLocaleTimeString("ko-KR", {
     hour: "2-digit",
     minute: "2-digit",
+    hourCycle: "h23",
   });
 };
 
@@ -29,11 +36,27 @@ const formatDate = (isoString) => {
 
   if (date.toDateString() === today.toDateString()) return "오늘";
   if (date.toDateString() === yesterday.toDateString()) return "어제";
-  return date.toLocaleDateString("ko-KR", {
-    year: "numeric",
+
+  const options = {
     month: "long",
     day: "numeric",
-  });
+  };
+  if (date.getFullYear() !== today.getFullYear()) {
+    options.year = "numeric";
+  }
+
+  return date.toLocaleDateString("ko-KR", options);
+};
+
+const parseSharedPostPayload = (content) => {
+  if (!content) return null;
+
+  try {
+    const parsed = typeof content === "string" ? JSON.parse(content) : content;
+    return parsed?.kind === "share_post" ? parsed : null;
+  } catch {
+    return null;
+  }
 };
 
 const isSameDay = (a, b) => {
@@ -56,6 +79,9 @@ const isCompact = (prev, curr) => {
   return diff >= 0 && diff < 2 * 60 * 1000;
 };
 
+const createClientMessageId = () =>
+  `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
+
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
 function Avatar({ profileImg, nickname, size = 40, onClick }) {
@@ -64,7 +90,12 @@ function Avatar({ profileImg, nickname, size = 40, onClick }) {
     <div
       className={styles.msgAvatar}
       onClick={onClick}
-      style={{ width: size, height: size, fontSize: size * 0.3, cursor: onClick ? "pointer" : "default" }}
+      style={{
+        width: size,
+        height: size,
+        fontSize: size * 0.3,
+        cursor: onClick ? "pointer" : "default",
+      }}
     >
       {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
     </div>
@@ -80,9 +111,9 @@ export default function DMDetailPage() {
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [targetUserId, setTargetUserId] = useState(null);
   const [targetNickname, setTargetNickname] = useState("");
   const [targetProfileImg, setTargetProfileImg] = useState("");
-  const [targetUserId, setTargetUserId] = useState(null);
 
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
@@ -90,7 +121,7 @@ export default function DMDetailPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(null);
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
-  const [pendingFiles, setPendingFiles] = useState([]);
+  const [showFileGallery, setShowFileGallery] = useState(false);
   const [notificationsMuted, setNotificationsMuted] = useState(
     () => localStorage.getItem(`dm-muted:${roomId}`) === "1",
   );
@@ -102,27 +133,39 @@ export default function DMDetailPage() {
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
-  const pendingFilesRef = useRef([]);
+  const {
+    pendingFiles,
+    showAttachMenu,
+    setShowAttachMenu,
+    fileAccept,
+    clearPendingFiles,
+    addPendingFiles,
+    openFilePicker,
+    removePendingFile,
+  } = usePendingChatFiles({ inputRef, fileInputRef });
+
+  const resizeInput = useCallback(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(textarea.scrollHeight, 160);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY = textarea.scrollHeight > 160 ? "auto" : "hidden";
+  }, []);
+
+  useEffect(() => {
+    resizeInput();
+  }, [input, resizeInput]);
+  const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
   const targetNicknameRef = useRef("");
 
   const socketRoomId = `dm_${roomId}`;
 
   useEffect(() => {
-    pendingFilesRef.current = pendingFiles;
-  }, [pendingFiles]);
-
-  useEffect(() => {
     notificationsMutedRef.current = notificationsMuted;
   }, [notificationsMuted]);
-
-  useEffect(() => {
-    return () => {
-      pendingFilesRef.current.forEach((item) =>
-        URL.revokeObjectURL(item.previewUrl),
-      );
-    };
-  }, []);
 
   useEffect(() => {
     const preventBrowserDrop = (event) => {
@@ -147,30 +190,62 @@ export default function DMDetailPage() {
       return;
     }
 
-    socketRef.current = io(BASE_URL);
+    socketRef.current = io(BASE_URL, {
+      auth: { token: localStorage.getItem("token") },
+    });
     const socket = socketRef.current;
 
     socket.on("receive_message", (msg) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...msg,
-          isEdited: msg.is_edited === 1,
-          isDeleted: msg.is_deleted === 1,
-          time: msg.created_at || new Date().toISOString(),
-        },
-      ]);
+      setMessages((prev) => {
+        if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+        if (msg.clientTempId) {
+          const pendingIndex = prev.findIndex(
+            (m) => m.clientTempId === msg.clientTempId,
+          );
+          if (pendingIndex !== -1) {
+            return prev.map((m, index) =>
+              index === pendingIndex
+                ? {
+                    ...m,
+                    ...msg,
+                    isPending: false,
+                    isFailed: false,
+                    isEdited: msg.is_edited === 1,
+                    isDeleted: msg.is_deleted === 1,
+                    time: msg.created_at || msg.time || m.time,
+                  }
+                : m,
+            );
+          }
+        }
+
+        return [
+          ...prev,
+          {
+            ...msg,
+            isEdited: msg.is_edited === 1,
+            isDeleted: msg.is_deleted === 1,
+            time: msg.created_at || new Date().toISOString(),
+          },
+        ];
+      });
 
       if (
         !msg.isSystem &&
         String(msg.userId) !== String(userId) &&
         !notificationsMutedRef.current
       ) {
-        toast(`${targetNicknameRef.current || "상대방"}님이 새 메시지를 보냈습니다.`);
+        toast(
+          `${targetNicknameRef.current || "상대방"}님이 새 메시지를 보냈습니다.`,
+        );
       }
 
       if (!msg.isSystem && String(msg.userId) !== String(userId)) {
-        socket.emit("mark_read", { messageId: msg.id, userId, roomId: socketRoomId });
+        socket.emit("mark_read", {
+          messageId: msg.id,
+          userId,
+          roomId: socketRoomId,
+        });
       }
 
       const isMine = String(msg.userId) === String(userId);
@@ -188,11 +263,10 @@ export default function DMDetailPage() {
       }
     });
 
-    socket.on("room_info", ({ title, image, targetId }) => {
+    socket.on("room_info", ({ title, image }) => {
       targetNicknameRef.current = title || "";
       setTargetNickname(title);
       setTargetProfileImg(image);
-      setTargetUserId(targetId);
     });
 
     socket.on("dm_room_deleted", ({ roomId: deletedRoomId }) => {
@@ -200,8 +274,6 @@ export default function DMDetailPage() {
       toast.success("대화 기록이 삭제되었습니다.");
       navigate("/dms", { replace: true });
     });
-
-    socket.emit("join_room", { roomId: socketRoomId, nickname: name, userId });
 
     socket.on("load_messages", (rawMessages) => {
       const formatted = rawMessages.map((msg) => ({
@@ -224,7 +296,11 @@ export default function DMDetailPage() {
       if (formatted.length > 0) {
         formatted.forEach((m) => {
           if (!m.isSystem && String(m.userId) !== String(userId)) {
-            socket.emit("mark_read", { messageId: m.id, userId, roomId: socketRoomId });
+            socket.emit("mark_read", {
+              messageId: m.id,
+              userId,
+              roomId: socketRoomId,
+            });
           }
         });
         setTimeout(
@@ -233,6 +309,8 @@ export default function DMDetailPage() {
         );
       }
     });
+
+    socket.emit("join_room", { roomId: socketRoomId, nickname: name, userId });
 
     socket.on("message_edited", ({ messageId, content }) => {
       setMessages((prev) =>
@@ -283,9 +361,9 @@ export default function DMDetailPage() {
         if (!mounted) return;
 
         targetNicknameRef.current = data.targetNickname || "";
+        setTargetUserId(data.targetId || null);
         setTargetNickname(data.targetNickname || "");
         setTargetProfileImg(data.targetProfileImg || "");
-        setTargetUserId(data.targetId || null);
       } catch (err) {
         if (!mounted) return;
         if (err?.response?.status === 404) {
@@ -374,43 +452,6 @@ export default function DMDetailPage() {
     }
   };
 
-  const clearPendingFiles = useCallback(() => {
-    setPendingFiles((prev) => {
-      prev.forEach((item) => URL.revokeObjectURL(item.previewUrl));
-      return [];
-    });
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
-
-  const addPendingFiles = useCallback((fileList) => {
-    const files = Array.from(fileList || []).filter(
-      (file) =>
-        file.type.startsWith("image/") || file.type.startsWith("video/"),
-    );
-    if (files.length === 0) return;
-
-    setPendingFiles((prev) => [
-      ...prev,
-      ...files.map((file) => ({
-        id: createPendingFileId(file),
-        file,
-        previewUrl: URL.createObjectURL(file),
-      })),
-    ]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
-
-  const removePendingFile = useCallback((id) => {
-    setPendingFiles((prev) => {
-      const next = [];
-      prev.forEach((item) => {
-        if (item.id === id) URL.revokeObjectURL(item.previewUrl);
-        else next.push(item);
-      });
-      return next;
-    });
-  }, []);
-
   const buildMessageContent = useCallback(async () => {
     const text = input.trim();
     if (pendingFiles.length === 0) return text;
@@ -423,6 +464,9 @@ export default function DMDetailPage() {
       text,
       attachments: uploads.map((uploaded) => ({
         url: uploaded.url,
+        downloadUrl: uploaded.downloadUrl,
+        publicId: uploaded.publicId,
+        resourceType: uploaded.resourceType,
         name: uploaded.name,
         mimeType: uploaded.mimeType,
         size: uploaded.size,
@@ -433,6 +477,7 @@ export default function DMDetailPage() {
   const handleSend = useCallback(
     async (e) => {
       if (e) e.preventDefault();
+      if (sendingRef.current) return;
       if ((!input.trim() && pendingFiles.length === 0) || !socketRef.current)
         return;
 
@@ -442,30 +487,110 @@ export default function DMDetailPage() {
           messageId: editId,
           content: input,
           roomId: socketRoomId,
+          userId,
         });
         setEditId(null);
       } else {
+        sendingRef.current = true;
         setSending(true);
+        let clientTempId = null;
         try {
+          const isUploadingMessage = pendingFiles.length > 0;
+          if (!isUploadingMessage) {
+            clientTempId = createClientMessageId();
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: clientTempId,
+                clientTempId,
+                roomId: socketRoomId,
+                userId,
+                nickname: name,
+                profileImg,
+                content: input.trim(),
+                isSystem: false,
+                isPending: true,
+                isUploading: false,
+                isFailed: false,
+                parentId: replyTo?.id || null,
+                reactions: [],
+                readCount: 0,
+                time: new Date().toISOString(),
+              },
+            ]);
+            setTimeout(
+              () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+              0,
+            );
+          }
           const content = await buildMessageContent();
-          socketRef.current.emit("send_message", {
-            roomId: socketRoomId,
-            userId,
-            nickname: name,
-            profileImg,
-            content,
-            isSystem: false,
-            parentId: replyTo?.id || null,
-            time: new Date().toISOString(),
-          });
+          if (clientTempId) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.clientTempId === clientTempId
+                  ? { ...m, content, isUploading: false }
+                  : m,
+              ),
+            );
+          }
+          socketRef.current.emit(
+            "send_message",
+            {
+              clientTempId,
+              roomId: socketRoomId,
+              userId,
+              nickname: name,
+              profileImg,
+              content,
+              isSystem: false,
+              parentId: replyTo?.id || null,
+              time: new Date().toISOString(),
+            },
+            (res) => {
+              if (clientTempId && !res?.ok) {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.clientTempId === clientTempId
+                      ? { ...m, isPending: false, isFailed: true }
+                      : m,
+                  ),
+                );
+                toast.error("메시지 전송에 실패했습니다.");
+              }
+            },
+          );
           setReplyTo(null);
           clearPendingFiles();
+          if (!clientTempId) {
+            setTimeout(
+              () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+              0,
+            );
+          }
         } catch (error) {
+          if (clientTempId) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.clientTempId === clientTempId
+                  ? {
+                      ...m,
+                      isPending: false,
+                      isUploading: false,
+                      isFailed: true,
+                    }
+                  : m,
+              ),
+            );
+          }
           console.error("Failed to upload chat file:", error);
-          toast.error("파일 업로드에 실패했습니다.");
+          toast.error(
+            error?.response?.data?.message || "파일 업로드에 실패했습니다.",
+          );
+          sendingRef.current = false;
           setSending(false);
           return;
         }
+        sendingRef.current = false;
         setSending(false);
       }
       setInput("");
@@ -507,6 +632,7 @@ export default function DMDetailPage() {
           socketRef.current.emit("delete_message", {
             messageId: msgId,
             roomId: socketRoomId,
+            userId,
           });
           if (editId === msgId) {
             setEditId(null);
@@ -574,16 +700,24 @@ export default function DMDetailPage() {
     >
       {/* ── Header ── */}
       <div className={styles.header}>
-        <div className={styles.headerThumb}>
+        <button
+          type="button"
+          className={`${styles.headerThumb} ${styles.headerProfileButton}`}
+          disabled={!targetUserId}
+          onClick={() => setSelectedProfileId(targetUserId)}
+          title="프로필 보기"
+        >
           {targetProfileImg ? (
-            <img src={getImageUrl(targetProfileImg)} alt="target" />
+            <img
+              src={getImageUrl(targetProfileImg)}
+              alt="target"
+              style={{ backgroundColor: "white" }}
+            />
           ) : (
             <span className={styles.headerHashIcon}>👤</span>
           )}
-        </div>
-        <span className={styles.headerName}>
-          {targetNickname || "사용자"}
-        </span>
+        </button>
+        <span className={styles.headerName}>{targetNickname || "사용자"}</span>
         <div className={styles.headerDivider} />
         <span className={styles.headerDesc}>
           {targetNickname}님과의 대화입니다.
@@ -595,6 +729,13 @@ export default function DMDetailPage() {
             onClick={toggleNotifications}
           >
             {notificationsMuted ? "🔕" : "🔔"}
+          </button>
+          <button
+            className={styles.headerIconBtn}
+            title="파일 모아보기"
+            onClick={() => setShowFileGallery(true)}
+          >
+            📎
           </button>
           <button
             className={styles.headerIconBtn}
@@ -629,6 +770,8 @@ export default function DMDetailPage() {
           }, {});
 
           if (msg.isSystem) {
+            const sharedPost = parseSharedPostPayload(msg.content);
+
             return (
               <div key={msg.id || idx}>
                 {showDateDivider && (
@@ -638,7 +781,35 @@ export default function DMDetailPage() {
                     </span>
                   </div>
                 )}
-                <div className={styles.systemMsg}>{msg.content}</div>
+                {sharedPost ? (
+                  <button
+                    type="button"
+                    className={styles.sharedPostCard}
+                    onClick={() => navigate(`/detail/${sharedPost.postId}`)}
+                    disabled={!sharedPost.postId}
+                  >
+                    {sharedPost.postImage && (
+                      <div className={styles.sharedPostImageContainer}>
+                        <img
+                          src={getImageUrl(sharedPost.postImage)}
+                          alt=""
+                          className={styles.sharedPostImage}
+                        />
+                      </div>
+                    )}
+                    <div className={styles.sharedPostContent}>
+                      <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
+                      <strong className={styles.sharedPostTitle}>
+                        {sharedPost.postTitle || "게시글"}
+                      </strong>
+                      <span className={styles.sharedPostMeta}>
+                        {sharedPost.sharerNickname || "알 수 없음"}님이 공유했습니다.
+                      </span>
+                    </div>
+                  </button>
+                ) : (
+                  <div className={styles.systemMsg}>{msg.content}</div>
+                )}
               </div>
             );
           }
@@ -714,20 +885,26 @@ export default function DMDetailPage() {
                       <span className={styles.replyContent}>
                         {parentMsg.isDeleted
                           ? "삭제된 메시지"
-                          : parentMsg.content}
+                          : formatChatPreview(parentMsg.content)}
                       </span>
                     </div>
                   )}
 
                   {/* 메시지 본문 */}
-                  <div
-                    className={`${styles.msgBubble} ${msg.isDeleted ? styles.deleted : ""}`}
-                  >
-                    <ChatMessageContent content={msg.content} />
-                    {msg.isEdited && !msg.isDeleted && (
-                      <span className={styles.editedTag}>(수정됨)</span>
-                    )}
-                  </div>
+                  <MessageRowErrorBoundary fallbackText={msg.content}>
+                    <div
+                      className={`${styles.msgBubble} ${
+                        msg.isDeleted ? styles.deleted : ""
+                      } ${msg.isPending ? styles.pendingMessage : ""} ${
+                        msg.isFailed ? styles.failedMessage : ""
+                      }`}
+                    >
+                      <ChatMessageContent content={msg.content} />
+                      {msg.isEdited && !msg.isDeleted && (
+                        <span className={styles.editedTag}>(수정됨)</span>
+                      )}
+                    </div>
+                  </MessageRowErrorBoundary>
 
                   {/* 읽음 수 */}
                   {isMine && msg.readCount > 0 && (
@@ -758,124 +935,127 @@ export default function DMDetailPage() {
                 </div>
 
                 {/* ── Action toolbar (항상 오른쪽 끝) ── */}
-                {hoveredMsgId === msg.id && !msg.isDeleted && (
-                  <div
-                    className={styles.msgActions}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {/* 빠른 반응 */}
-                    <div className={styles.quickReactions}>
-                      {["👍", "❤️", "😂"].map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          title={emoji}
-                          onClick={() => toggleReaction(msg.id, emoji)}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className={styles.actionDivider} />
-
-                    {/* 반응 더 추가 */}
-                    <button
-                      type="button"
-                      title="반응 추가"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowEmojiPicker(msg.id);
-                      }}
-                      style={{ position: "relative" }}
+                {hoveredMsgId === msg.id &&
+                  !msg.isDeleted &&
+                  !msg.isPending &&
+                  !msg.isFailed && (
+                    <div
+                      className={styles.msgActions}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      😊
-                      {showEmojiPicker === msg.id && (
-                        <div
-                          className={styles.emojiPickerPopup}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Picker
-                            data={data}
-                            onEmojiSelect={(emoji) =>
-                              toggleReaction(msg.id, emoji.native)
-                            }
-                            theme="dark"
-                            locale="ko"
-                          />
-                        </div>
-                      )}
-                    </button>
+                      {/* 빠른 반응 */}
+                      <div className={styles.quickReactions}>
+                        {["👍", "❤️", "😂"].map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            title={emoji}
+                            onClick={() => toggleReaction(msg.id, emoji)}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
 
-                    {/* 답장 */}
-                    <button
-                      type="button"
-                      title="답장"
-                      onClick={() => startReply(msg)}
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <div className={styles.actionDivider} />
+
+                      {/* 반응 더 추가 */}
+                      <button
+                        type="button"
+                        title="반응 추가"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowEmojiPicker(msg.id);
+                        }}
+                        style={{ position: "relative" }}
                       >
-                        <polyline points="9 17 4 12 9 7" />
-                        <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
-                      </svg>
-                    </button>
+                        😊
+                        {showEmojiPicker === msg.id && (
+                          <div
+                            className={styles.emojiPickerPopup}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Picker
+                              data={data}
+                              onEmojiSelect={(emoji) =>
+                                toggleReaction(msg.id, emoji.native)
+                              }
+                              theme="dark"
+                              locale="ko"
+                            />
+                          </div>
+                        )}
+                      </button>
 
-                    {isMine && (
-                      <>
-                        {/* 수정 */}
-                        <button
-                          type="button"
-                          title="수정"
-                          onClick={() => startEdit(msg)}
+                      {/* 답장 */}
+                      <button
+                        type="button"
+                        title="답장"
+                        onClick={() => startReply(msg)}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                          <polyline points="9 17 4 12 9 7" />
+                          <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                        </svg>
+                      </button>
+
+                      {isMine && (
+                        <>
+                          {/* 수정 */}
+                          <button
+                            type="button"
+                            title="수정"
+                            onClick={() => startEdit(msg)}
                           >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                        {/* 삭제 */}
-                        <button
-                          type="button"
-                          title="삭제"
-                          onClick={() => handleDelete(msg.id)}
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          {/* 삭제 */}
+                          <button
+                            type="button"
+                            title="삭제"
+                            onClick={() => handleDelete(msg.id)}
                           >
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                            <path d="M10 11v6M14 11v6" />
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                          </svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                              <path d="M10 11v6M14 11v6" />
+                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                            </svg>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
               </div>
             </div>
           );
@@ -889,17 +1069,19 @@ export default function DMDetailPage() {
           className={styles.scrollToBottom}
           onClick={scrollToBottom}
           title="최신 메시지 보기"
+          aria-label="맨 밑으로 내려가기"
         >
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.5"
+            strokeWidth="2.4"
           >
             <polyline points="6 9 12 15 18 9" />
           </svg>
+          <span>맨 밑으로</span>
         </button>
       )}
 
@@ -942,8 +1124,10 @@ export default function DMDetailPage() {
             </div>
             <div className={styles.contextText}>
               {replyTo
-                ? replyTo.content
-                : messages.find((m) => m.id === editId)?.content}
+                ? formatChatPreview(replyTo.content)
+                : formatChatPreview(
+                    messages.find((m) => m.id === editId)?.content,
+                  )}
             </div>
           </div>
           <button
@@ -978,48 +1162,94 @@ export default function DMDetailPage() {
                     src={item.previewUrl}
                     muted
                   />
-                ) : (
+                ) : item.file.type.startsWith("image/") ? (
                   <img
                     className={styles.pendingThumb}
                     src={item.previewUrl}
                     alt={item.file.name}
                   />
+                ) : (
+                  <div className={styles.pendingFilePreview}>
+                    <span className={styles.pendingFileIcon}>
+                      <svg
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                    </span>
+                    <span className={styles.pendingFileName}>
+                      {item.file.name}
+                    </span>
+                  </div>
                 )}
                 <button
                   type="button"
                   className={styles.pendingRemove}
                   title="첨부 삭제"
+                  disabled={sending}
                   onClick={() => removePendingFile(item.id)}
                 >
                   ×
                 </button>
               </div>
             ))}
+            {sending && (
+              <div className={styles.uploadStatus} role="status">
+                {pendingFiles.some((item) =>
+                  item.file.type.startsWith("image/"),
+                )
+                  ? "이미지 업로드 중..."
+                  : "파일 업로드 중..."}
+              </div>
+            )}
           </div>
         )}
         <div className={styles.inputBox}>
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,video/*"
+            accept={fileAccept}
             multiple
             className={styles.fileInput}
             onChange={(e) => addPendingFiles(e.target.files)}
           />
+          {showAttachMenu && (
+            <div className={styles.attachMenu}>
+              <button
+                type="button"
+                onClick={() => openFilePicker("image/*,video/*")}
+              >
+                이미지/동영상 선택
+              </button>
+              <button type="button" onClick={() => openFilePicker("")}>
+                일반 파일 선택
+              </button>
+            </div>
+          )}
           <button
             type="button"
             className={styles.attachBtn}
-            title="이미지 또는 동영상 추가"
+            title="파일 추가"
             disabled={sending}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => setShowAttachMenu((prev) => !prev)}
           >
             +
           </button>
-          <input
+          <textarea
             ref={inputRef}
             className={styles.input}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onInput={resizeInput}
+            onCompositionEnd={resizeInput}
             onPaste={handlePaste}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -1034,6 +1264,7 @@ export default function DMDetailPage() {
                   ? `@${replyTo.nickname}님에게 답장...`
                   : `${targetNickname}님에게 메시지 보내기`
             }
+            rows={1}
           />
           <div className={styles.inputActions}>
             <button
@@ -1088,6 +1319,13 @@ export default function DMDetailPage() {
           userId={selectedProfileId}
           currentUserId={userId}
           onClose={() => setSelectedProfileId(null)}
+        />
+      )}
+
+      {showFileGallery && (
+        <ChatFileGallery
+          messages={messages}
+          onClose={() => setShowFileGallery(false)}
         />
       )}
     </div>

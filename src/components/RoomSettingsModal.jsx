@@ -26,11 +26,19 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
   const [image, setImage] = useState(null);
   const [existingImage, setExistingImage] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const minCapacity = useMemo(
     () => Math.max(2, Number(currentParticipants) || 1),
     [currentParticipants],
   );
+  const isAtCapacity = Number(capacity) <= Number(currentParticipants);
+
+  useEffect(() => {
+    if (isAtCapacity && status !== STATUS_CLOSED) {
+      setStatus(STATUS_CLOSED);
+    }
+  }, [isAtCapacity, status]);
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -72,6 +80,8 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
   };
 
   const handleSubmit = async () => {
+    if (isSaving) return;
+
     if (!title.trim() || !content.trim()) {
       toast.error("제목과 내용을 입력해주세요.");
       return;
@@ -83,6 +93,7 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
       return;
     }
 
+    const nextStatus = isAtCapacity ? STATUS_CLOSED : status;
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("content", content.trim());
@@ -92,7 +103,7 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
     formData.append("latitude", latitude || "");
     formData.append("longitude", longitude || "");
     formData.append("capacity", capacity);
-    formData.append("status", status);
+    formData.append("status", nextStatus);
     formData.append("categories", JSON.stringify(categories));
 
     if (image?.file) {
@@ -104,13 +115,16 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
     }
 
     try {
-      await updatePost(roomId, formData);
+      setIsSaving(true);
+      const result = await updatePost(roomId, formData);
       toast.success("방 설정을 저장했습니다.");
-      onUpdate?.();
+      onUpdate?.(result?.post);
       onClose();
     } catch (err) {
       console.error("Failed to update room:", err);
       toast.error(err.response?.data?.message || "방 설정 저장에 실패했습니다.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -227,7 +241,9 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value={STATUS_OPEN}>모집중</option>
+                <option value={STATUS_OPEN} disabled={isAtCapacity}>
+                  모집중
+                </option>
                 <option value={STATUS_CLOSED}>모집완료</option>
               </select>
             </div>
@@ -238,7 +254,12 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
           <button className={styles.cancelBtn} onClick={onClose}>
             취소
           </button>
-          <button className={styles.submitBtn} onClick={handleSubmit}>
+          <button
+            className={`${styles.submitBtn} ${isSaving ? styles.savingBtn : ""}`}
+            onClick={handleSubmit}
+            disabled={isSaving}
+            data-saving-label={image?.file ? "이미지 업로드 중..." : "저장 중..."}
+          >
             저장하기
           </button>
         </div>

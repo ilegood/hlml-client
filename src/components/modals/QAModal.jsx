@@ -79,7 +79,10 @@ export default function QAModal({ onClose }) {
 
   return (
     <div className={styles.modalOverlay} onMouseDown={onClose}>
-      <div className={styles.modalContent} onMouseDown={(e) => e.stopPropagation()}>
+      <div
+        className={styles.modalContent}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <div className={styles.header}>
           <h2>자주 묻는 질문 (Q&A)</h2>
           <button className={styles.closeBtn} onClick={onClose}>
@@ -177,11 +180,14 @@ export default function QAModal({ onClose }) {
       {showConfirm && (
         <div
           className={styles.confirmOverlay}
-          onClick={() => !isDeleting && setShowConfirm(false)}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            if (!isDeleting) setShowConfirm(false);
+          }}
         >
           <div
             className={styles.confirmModal}
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             <h3>회원탈퇴 확인</h3>
             <p>

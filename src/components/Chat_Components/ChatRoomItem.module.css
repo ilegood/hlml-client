@@ -23,7 +23,6 @@
   width: 70px;
   height: 70px;
   border-radius: 18px;
-  background-color: var(--color-input-bg);
   flex-shrink: 0;
   background-size: cover;
   background-position: center;
@@ -87,6 +86,20 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.unreadBadge {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #ff4757;
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 22px;
+  text-align: center;
+  align-self: flex-end;
 }
 
 /* ── Kicked status styles ── */

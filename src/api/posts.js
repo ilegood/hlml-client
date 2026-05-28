@@ -1,8 +1,9 @@
-import instance from "./instance";
+import instance, { BASE_URL } from "./instance";
 import { normalizeStatus } from "./homeConstants";
 
 const API_URL = "/posts";
-const BASE_URL = "http://localhost:4000";
+
+const MYSQL_DATETIME_RE = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/;
 
 const formatDateValue = (value) => {
   if (!value) return "";
@@ -16,6 +17,27 @@ const formatTimeValue = (value) => {
   if (!value) return "";
   return String(value).slice(0, 8);
 };
+
+const normalizeDateTimeValue = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value !== "string") return value;
+
+  if (MYSQL_DATETIME_RE.test(value)) {
+    return `${value.replace(" ", "T")}Z`;
+  }
+
+  return value;
+};
+
+const normalizeComment = (comment) => ({
+  ...comment,
+  createdAt: normalizeDateTimeValue(comment.createdAt ?? comment.created_at),
+  image: normalizeImageUrl(comment.image),
+  replies: Array.isArray(comment.replies)
+    ? comment.replies.map(normalizeComment)
+    : [],
+});
 
 const parseCategories = (categories) => {
   if (!categories) return {};
@@ -37,7 +59,7 @@ const normalizePost = (post) => ({
   ...post,
   id: post.post_id,
   status: normalizeStatus(post.status),
-  createdAt: post.created_at,
+  createdAt: normalizeDateTimeValue(post.created_at),
   image: normalizeImageUrl(post.image),
   latitude: post.latitude ? Number(post.latitude) : null,
   longitude: post.longitude ? Number(post.longitude) : null,
@@ -51,7 +73,9 @@ const normalizePost = (post) => ({
     ? post.participantDetails
     : [],
   authorDetails: post.authorDetails || null,
-  comments: Array.isArray(post.comments) ? post.comments : [],
+  comments: Array.isArray(post.comments)
+    ? post.comments.map(normalizeComment)
+    : [],
   likes: post.likes || 0,
   participants: post.participants || 1,
 });
@@ -98,8 +122,13 @@ const toPostFormData = (data) => {
   return formData;
 };
 
-export const getPosts = async () => {
-  const res = await instance.get(API_URL);
+export const getPosts = async (options = {}) => {
+  const params = new URLSearchParams();
+  if (options.visibleOnly) params.set("visibleOnly", "1");
+
+  const res = await instance.get(
+    params.toString() ? `${API_URL}?${params.toString()}` : API_URL,
+  );
   return res.data.map(normalizePost);
 };
 
@@ -115,7 +144,10 @@ export const createPost = async (formData) => {
 
 export const updatePost = async (id, data) => {
   const res = await instance.patch(`${API_URL}/${id}`, toPostFormData(data));
-  return res.data;
+  return {
+    ...res.data,
+    post: res.data?.post ? normalizePost(res.data.post) : undefined,
+  };
 };
 
 export const deletePost = async (id) => {
@@ -153,8 +185,19 @@ export const deletePostBan = async (id) => {
   return res.data;
 };
 
+const toCommentFormData = (data) => {
+  if (data instanceof FormData) return data;
+  const formData = new FormData();
+  // content must be sent even if empty string to satisfy NOT NULL constraint
+  formData.append("content", data.content || "");
+  if (data.parent_id) formData.append("parent_id", data.parent_id);
+  if (data.image) formData.append("image", data.image);
+  return formData;
+};
+
 export const createComment = async (postId, data) => {
-  const res = await instance.post(`${API_URL}/${postId}/comments`, data);
+  const payload = data.image ? toCommentFormData(data) : data;
+  const res = await instance.post(`${API_URL}/${postId}/comments`, payload);
   return normalizePost(res.data);
 };
 
