@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import {
   STATUS_CLOSED,
-  STATUS_EMOJI,
   STATUS_CLASS,
   countComments,
   formatDateTime,
@@ -383,7 +382,7 @@ export default function DetailPage() {
 
         <div className={styles.statusRow}>
           <span className={`${styles.statusBadge} ${statusBadgeClass}`}>
-            {STATUS_EMOJI[status]} {status}
+            {status}
           </span>
           {Boolean(post.edited) && <span className={styles.editedBadge}>수정됨</span>}
         </div>

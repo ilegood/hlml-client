@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import styled from "styled-components";
 import instance, { getImageUrl } from "../../api/instance";
@@ -156,15 +157,6 @@ const PostPreviewContainer = styled.div`
   margin-bottom: 12px;
 `;
 
-const PostPreviewImage = styled.img`
-  width: 100%;
-  height: 150px; /* Increased height for a larger image */
-  border-radius: 8px;
-  object-fit: cover;
-  flex-shrink: 0;
-  margin-bottom: 10px;
-`;
-
 const PostPreviewTitle = styled.span`
   font-weight: 800;
   font-size: 16px; /* Slightly larger font for prominence */
@@ -178,6 +170,7 @@ const SharedByText = styled.span`
 `;
 
 export default function SharePostModal({ postId, postTitle, postImage, onClose }) {
+  const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState(null);
@@ -199,7 +192,7 @@ export default function SharePostModal({ postId, postTitle, postImage, onClose }
     if (!selectedId) return;
     setLoading(true);
     try {
-      await instance.post("/chat/share", {
+      const { data } = await instance.post("/chat/share", {
         targetId: selectedId,
         postId,
         postTitle,
@@ -207,6 +200,9 @@ export default function SharePostModal({ postId, postTitle, postImage, onClose }
       });
       toast.success("친구에게 게시글을 공유했습니다.");
       onClose();
+      if (data?.roomId) {
+        navigate(`/dms/${data.roomId}`);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "공유에 실패했습니다.");
     } finally {
@@ -225,9 +221,6 @@ export default function SharePostModal({ postId, postTitle, postImage, onClose }
         </Header>
 
         <PostPreviewContainer>
-          {postImage && (
-            <PostPreviewImage src={getImageUrl(postImage)} alt="Post Image" />
-          )}
           <PostPreviewTitle>{postTitle}</PostPreviewTitle>
           {currentUserName && (
             <SharedByText>{currentUserName}님이 공유했습니다.</SharedByText>

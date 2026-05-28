@@ -707,10 +707,22 @@ export default function ChatRoomDetailPage() {
     if (!showMembers) {
       try {
         const post = await getPost(roomId);
-        const members = [];
-        if (post.authorDetails) members.push(post.authorDetails);
-        if (post.participantDetails) members.push(...post.participantDetails);
-        setRoomMembers(members);
+        const memberMap = new Map();
+        const addMember = (member) => {
+          if (!member?.user_id) return;
+          memberMap.set(Number(member.user_id), member);
+        };
+
+        addMember(post.authorDetails);
+        post.participantDetails?.forEach(addMember);
+        if (userId && !memberMap.has(Number(userId))) {
+          addMember({
+            user_id: userId,
+            nickname: name,
+            profile_img: profileImg,
+          });
+        }
+        setRoomMembers([...memberMap.values()]);
       } catch (err) {
         console.error("Failed to fetch members:", err);
         toast.error("멤버 정보를 불러오는 데 실패했습니다.");
@@ -1088,13 +1100,6 @@ export default function ChatRoomDetailPage() {
               {appointmentReminder.place && ` · ${appointmentReminder.place}`}
             </span>
           </div>
-          <button
-            type="button"
-            className={styles.appointmentReminderAction}
-            onClick={openRoomMap}
-          >
-            위치 보기
-          </button>
         </div>
       )}
 

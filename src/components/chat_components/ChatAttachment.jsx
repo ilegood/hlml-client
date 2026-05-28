@@ -21,6 +21,7 @@ const parseMessagePayload = (content) => {
       return {
         kind: "share_post",
         postId: parsed.postId,
+        postImage: parsed.postImage || "",
         postTitle: parsed.postTitle || "게시글",
         sharerNickname: parsed.sharerNickname || "알 수 없음",
       };
@@ -233,13 +234,24 @@ function SharedPostCard({ payload }) {
       onClick={() => navigate(`/detail/${payload.postId}`)}
       disabled={!payload.postId}
     >
-      <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
-      <strong className={styles.sharedPostTitle}>
-        {payload.postTitle || "게시글"}
-      </strong>
-      <span className={styles.sharedPostMeta}>
-        {payload.sharerNickname || "알 수 없음"}님이 공유했습니다. 클릭하면 게시글로 이동합니다.
-      </span>
+      {payload.postImage && (
+        <div className={styles.sharedPostImageContainer}>
+          <img
+            src={getImageUrl(payload.postImage)}
+            alt=""
+            className={styles.sharedPostImage}
+          />
+        </div>
+      )}
+      <div className={styles.sharedPostContent}>
+        <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
+        <strong className={styles.sharedPostTitle}>
+          {payload.postTitle || "게시글"}
+        </strong>
+        <span className={styles.sharedPostMeta}>
+          {payload.sharerNickname || "알 수 없음"}님이 공유했습니다.
+        </span>
+      </div>
     </button>
   );
 }
@@ -390,8 +402,9 @@ export function MediaLightbox({ attachments, index, onClose, onMove }) {
             onMouseDown={(event) => event.stopPropagation()}
             onClick={() => onMove(-1)}
             title="이전"
+            aria-label="이전 이미지"
           >
-            이전
+            ‹
           </button>
           <button
             type="button"
@@ -399,8 +412,9 @@ export function MediaLightbox({ attachments, index, onClose, onMove }) {
             onMouseDown={(event) => event.stopPropagation()}
             onClick={() => onMove(1)}
             title="다음"
+            aria-label="다음 이미지"
           >
-            다음
+            ›
           </button>
         </>
       )}
