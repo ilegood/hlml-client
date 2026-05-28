@@ -6,6 +6,19 @@ import { deletePostBan, getKickedPosts, getPosts } from "../../api/posts";
 import ChatRoomItem from "../../components/chat_components/ChatRoomItem";
 import styles from "./ChatRoomsPage.module.css";
 
+const PIN_PREFIX = "chat-pinned:";
+
+const getPinnedIds = () => {
+  const ids = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith(PIN_PREFIX) && localStorage.getItem(key) === "1") {
+      ids.push(key.slice(PIN_PREFIX.length));
+    }
+  }
+  return new Set(ids);
+};
+
 const sortByAppointment = (rooms) =>
   [...rooms].sort((a, b) => {
     if (!a.date) return 1;
@@ -17,11 +30,26 @@ const sortByAppointment = (rooms) =>
     return dateA - dateB;
   });
 
+const sortPinnedFirst = (rooms, pinnedIds) => {
+  const pinned = [];
+  const unpinned = [];
+  for (const room of rooms) {
+    const roomId = String(room.post_id || room.id);
+    if (pinnedIds.has(roomId)) {
+      pinned.push(room);
+    } else {
+      unpinned.push(room);
+    }
+  }
+  return [...pinned, ...unpinned];
+};
+
 const ChatRoomsPage = () => {
   const { userId } = useAuth();
   const { summary } = useChatNotifications() || {};
   const [chatRooms, setChatRooms] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pinnedIds, setPinnedIds] = useState(() => getPinnedIds());
 
   const unreadByRoomId = useMemo(
     () =>
@@ -33,6 +61,20 @@ const ChatRoomsPage = () => {
       ),
     [summary?.rooms?.groups],
   );
+
+  const refreshPinned = useCallback(() => {
+    setPinnedIds(getPinnedIds());
+  }, []);
+
+  const togglePin = useCallback((roomId) => {
+    const key = `${PIN_PREFIX}${roomId}`;
+    if (localStorage.getItem(key) === "1") {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, "1");
+    }
+    refreshPinned();
+  }, [refreshPinned]);
 
   const fetchChatRooms = useCallback(async () => {
     if (!userId) {
@@ -65,14 +107,15 @@ const ChatRoomsPage = () => {
         }
       });
 
-      setChatRooms(sortByAppointment(combined));
+      const sorted = sortByAppointment(combined);
+      setChatRooms(sortPinnedFirst(sorted, pinnedIds));
     } catch (error) {
       console.error("Failed to fetch chat rooms:", error);
       toast.error("채팅방 목록을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, pinnedIds]);
 
   useEffect(() => {
     fetchChatRooms();
@@ -117,6 +160,10 @@ const ChatRoomsPage = () => {
                   ...room,
                   unreadCount: unreadByRoomId.get(roomId) || 0,
                 }}
+                isPinned={pinnedIds.has(roomId)}
+                onTogglePin={
+                  room.isKicked ? undefined : () => togglePin(roomId)
+                }
                 onDelete={
                   room.isKicked ? () => handleDeleteKickedRoom(room.id) : null
                 }

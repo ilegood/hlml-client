@@ -22,3 +22,10 @@ export const getChatNotifications = async () => {
   const res = await instance.get("/chat/notifications");
   return res.data;
 };
+
+export const searchMessages = async (roomKey, query) => {
+  const res = await instance.get("/chat/search", {
+    params: { roomKey, q: query },
+  });
+  return res.data;
+};

@@ -76,12 +76,26 @@ const formatTime = (isoString) => {
   return date.toLocaleDateString("ko-KR", options);
 };
 
+const PIN_PREFIX = "dm-pinned:";
+
+const getPinnedDmIds = () => {
+  const ids = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith(PIN_PREFIX) && localStorage.getItem(key) === "1") {
+      ids.push(key.slice(PIN_PREFIX.length));
+    }
+  }
+  return new Set(ids);
+};
+
 const DMsPage = () => {
   const navigate = useNavigate();
   const { userId } = useAuth();
   const { summary, refresh } = useChatNotifications() || {};
   const [dms, setDms] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pinnedIds, setPinnedIds] = useState(() => getPinnedDmIds());
 
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const onlineSocketRef = useRef(null);
@@ -121,6 +135,34 @@ const DMsPage = () => {
     [summary?.rooms?.dms],
   );
 
+  const refreshPinned = () => {
+    setPinnedIds(getPinnedDmIds());
+  };
+
+  const togglePin = (roomId) => {
+    const key = `${PIN_PREFIX}${roomId}`;
+    if (localStorage.getItem(key) === "1") {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, "1");
+    }
+    refreshPinned();
+  };
+
+  const sortedDms = useMemo(() => {
+    const pinned = [];
+    const unpinned = [];
+    for (const dm of dms) {
+      const id = String(dm.roomId);
+      if (pinnedIds.has(id)) {
+        pinned.push(dm);
+      } else {
+        unpinned.push(dm);
+      }
+    }
+    return [...pinned, ...unpinned];
+  }, [dms, pinnedIds]);
+
   useEffect(() => {
     const fetchDMs = async () => {
       try {
@@ -148,9 +190,10 @@ const DMsPage = () => {
       <div className={styles.chatRoomList}>
         {loading ? (
           <div className={styles.empty}>메시지를 불러오는 중...</div>
-        ) : dms.length > 0 ? (
-          dms.map((dm) => {
+        ) : sortedDms.length > 0 ? (
+          sortedDms.map((dm) => {
             const roomKey = String(dm.roomId);
+            const isPinned = pinnedIds.has(roomKey);
             const unreadCount = unreadByRoomId.has(roomKey)
               ? unreadByRoomId.get(roomKey)
               : dm.unreadCount || 0;
@@ -158,7 +201,7 @@ const DMsPage = () => {
             return (
               <div
                 key={dm.roomId}
-                className={itemStyles.chatRoomItem}
+                className={`${itemStyles.chatRoomItem} ${isPinned ? itemStyles.pinned : ""}`}
                 onClick={() => navigate(`/dms/${dm.roomId}`)}
                 style={{ cursor: "pointer" }}
               >
@@ -201,6 +244,17 @@ const DMsPage = () => {
                   </span>
                 )}
               </div>
+
+              <button
+                className={`${itemStyles.pinBtn} ${isPinned ? itemStyles.pinBtnActive : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePin(dm.roomId);
+                }}
+                title={isPinned ? "상단 고정 해제" : "상단에 고정"}
+              >
+                📌
+              </button>
             </div>
             );
           })

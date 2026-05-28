@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import styles from "./ChatRoomItem.module.css";
 
-const ChatRoomItem = ({ room, onDelete, hideUnreadBadge = false }) => {
+const ChatRoomItem = ({ room, onDelete, hideUnreadBadge = false, isPinned, onTogglePin }) => {
   const navigate = useNavigate();
 
   const formatDate = (dateStr) => {
@@ -30,7 +30,7 @@ const ChatRoomItem = ({ room, onDelete, hideUnreadBadge = false }) => {
 
   return (
     <div
-      className={`${styles.chatRoomItem} ${room.isKicked ? styles.kicked : ""}`}
+      className={`${styles.chatRoomItem} ${room.isKicked ? styles.kicked : ""} ${isPinned ? styles.pinned : ""}`}
       onClick={handleClick}
       style={{ cursor: room.isKicked ? "default" : "pointer" }}
     >
@@ -64,6 +64,19 @@ const ChatRoomItem = ({ room, onDelete, hideUnreadBadge = false }) => {
           </span>
         )}
       </div>
+
+      {onTogglePin && (
+        <button
+          className={`${styles.pinBtn} ${isPinned ? styles.pinBtnActive : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onTogglePin();
+          }}
+          title={isPinned ? "상단 고정 해제" : "상단에 고정"}
+        >
+          📌
+        </button>
+      )}
 
       {onDelete && (
         <button

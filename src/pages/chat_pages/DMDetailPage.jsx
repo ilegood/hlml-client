@@ -13,6 +13,7 @@ import {
   MessageRowErrorBoundary,
 } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
+import ChatSearchOverlay from "../../components/chat_components/ChatSearchOverlay";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import { formatChatPreview } from "../../utils/chatPreview";
 import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
@@ -112,6 +113,7 @@ export default function DMDetailPage() {
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [showFileGallery, setShowFileGallery] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [notificationsMuted, setNotificationsMuted] = useState(
     () => localStorage.getItem(`dm-muted:${roomId}`) === "1",
   );
@@ -766,6 +768,13 @@ export default function DMDetailPage() {
         <div className={styles.headerActions}>
           <button
             className={styles.headerIconBtn}
+            title="대화 검색"
+            onClick={() => setShowSearch((v) => !v)}
+          >
+            🔍
+          </button>
+          <button
+            className={styles.headerIconBtn}
             title={notificationsMuted ? "DM 알림 켜기" : "DM 알림 끄기"}
             onClick={toggleNotifications}
           >
@@ -786,6 +795,13 @@ export default function DMDetailPage() {
             🚪
           </button>
         </div>
+        {showSearch && (
+          <ChatSearchOverlay
+            roomKey={socketRoomId}
+            onSelectMessage={(msgId) => scrollToMessage(msgId)}
+            onClose={() => setShowSearch(false)}
+          />
+        )}
       </div>
 
       {/* ── Message list ── */}

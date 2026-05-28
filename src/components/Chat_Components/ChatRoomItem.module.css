@@ -102,6 +102,43 @@
   align-self: flex-end;
 }
 
+.pinned {
+  border-color: var(--color-active);
+  background-color: color-mix(in srgb, var(--color-active) 5%, var(--color-sidebar));
+}
+
+.pinBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0;
+  margin-left: 10px;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.chatRoomItem:hover .pinBtn {
+  opacity: 0.5;
+}
+
+.chatRoomItem:hover .pinBtn:hover {
+  opacity: 1;
+  background: var(--color-border);
+}
+
+.pinBtnActive {
+  opacity: 1 !important;
+}
+
 /* ── Kicked status styles ── */
 .chatRoomItem.kicked {
   opacity: 0.6;

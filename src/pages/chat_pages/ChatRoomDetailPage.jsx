@@ -15,6 +15,7 @@ import {
   MessageRowErrorBoundary,
 } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
+import ChatSearchOverlay from "../../components/chat_components/ChatSearchOverlay";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
@@ -96,6 +97,7 @@ export default function ChatRoomDetailPage() {
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [showFileGallery, setShowFileGallery] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [notificationsMuted, setNotificationsMuted] = useState(
     () => localStorage.getItem(`chat-muted:${roomId}`) === "1",
   );
@@ -1009,6 +1011,13 @@ export default function ChatRoomDetailPage() {
           )}
           <button
             className={styles.headerIconBtn}
+            title="대화 검색"
+            onClick={() => setShowSearch((v) => !v)}
+          >
+            🔍
+          </button>
+          <button
+            className={styles.headerIconBtn}
             title={notificationsMuted ? "채팅 알림 켜기" : "채팅 알림 끄기"}
             onClick={toggleNotifications}
           >
@@ -1045,6 +1054,13 @@ export default function ChatRoomDetailPage() {
             🚪
           </button>
         </div>
+        {showSearch && (
+          <ChatSearchOverlay
+            roomKey={String(roomId)}
+            onSelectMessage={(msgId) => scrollToMessage(msgId)}
+            onClose={() => setShowSearch(false)}
+          />
+        )}
       </div>
 
       <section className={styles.appointmentCard}>
