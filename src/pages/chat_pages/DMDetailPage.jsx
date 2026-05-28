@@ -102,6 +102,7 @@ export default function DMDetailPage() {
   const [input, setInput] = useState("");
   const [targetNickname, setTargetNickname] = useState("");
   const [targetProfileImg, setTargetProfileImg] = useState("");
+  const [targetOnline, setTargetOnline] = useState(false);
 
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
@@ -151,6 +152,7 @@ export default function DMDetailPage() {
   const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
   const targetNicknameRef = useRef("");
+  const targetIdRef = useRef(null);
 
   const socketRoomId = `dm_${roomId}`;
 
@@ -189,6 +191,7 @@ export default function DMDetailPage() {
     socket.on("receive_message", (msg) => {
       setMessages((prev) => {
         if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+        if (msg.isSystem && prev.some((m) => m.isSystem && String(m.userId) === String(msg.userId) && m.content === msg.content)) return prev;
         if (msg.clientTempId) {
           const pendingIndex = prev.findIndex(
             (m) => m.clientTempId === msg.clientTempId,
@@ -267,21 +270,31 @@ export default function DMDetailPage() {
     });
 
     socket.on("load_messages", (rawMessages) => {
-      const formatted = rawMessages.map((msg) => ({
-        id: msg.id,
-        roomId: msg.room_id,
-        userId: msg.user_id,
-        nickname: msg.nickname,
-        profileImg: msg.profileImg,
-        content: msg.content,
-        isSystem: msg.is_system === 1,
-        isEdited: msg.is_edited === 1,
-        isDeleted: msg.is_deleted === 1,
-        parentId: msg.parent_id,
-        reactions: msg.reactions || [],
-        readCount: msg.readCount || 0,
-        time: msg.created_at,
-      }));
+      const seen = new Map();
+      const formatted = [];
+      for (const msg of rawMessages) {
+        const isSystem = msg.is_system === 1;
+        if (isSystem) {
+          const key = `${msg.user_id}:${msg.content}`;
+          if (seen.has(key)) continue;
+          seen.set(key, true);
+        }
+        formatted.push({
+          id: msg.id,
+          roomId: msg.room_id,
+          userId: msg.user_id,
+          nickname: msg.nickname,
+          profileImg: msg.profileImg,
+          content: msg.content,
+          isSystem,
+          isEdited: msg.is_edited === 1,
+          isDeleted: msg.is_deleted === 1,
+          parentId: msg.parent_id,
+          reactions: msg.reactions || [],
+          readCount: msg.readCount || 0,
+          time: msg.created_at,
+        });
+      }
       setMessages(formatted);
 
       if (formatted.length > 0) {
@@ -353,6 +366,12 @@ export default function DMDetailPage() {
       clearTimeout(typingTimerRef.current);
     });
 
+    socket.on("friend_online_status", ({ userId: friendId, online }) => {
+      if (targetIdRef.current && Number(friendId) === targetIdRef.current) {
+        setTargetOnline(online);
+      }
+    });
+
     return () => socket.disconnect();
   }, [roomId, userId, name, navigate, socketRoomId]);
 
@@ -367,6 +386,7 @@ export default function DMDetailPage() {
         targetNicknameRef.current = data.targetNickname || "";
         setTargetNickname(data.targetNickname || "");
         setTargetProfileImg(data.targetProfileImg || "");
+        targetIdRef.current = data.targetId ? Number(data.targetId) : null;
       } catch (err) {
         if (!mounted) return;
         if (err?.response?.status === 404) {
@@ -715,7 +735,28 @@ export default function DMDetailPage() {
             <span className={styles.headerHashIcon}>👤</span>
           )}
         </div>
-        <span className={styles.headerName}>{targetNickname || "사용자"}</span>
+        <span className={styles.headerName} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {targetNickname || "사용자"}
+          {targetOnline && (
+            <span style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: 11,
+              color: "#31c48d",
+              fontWeight: 600,
+            }}>
+              <span style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "#31c48d",
+                display: "inline-block",
+              }} />
+              온라인
+            </span>
+          )}
+        </span>
         <div className={styles.headerDivider} />
         <span className={styles.headerDesc}>
           {targetNickname}님과의 대화입니다.

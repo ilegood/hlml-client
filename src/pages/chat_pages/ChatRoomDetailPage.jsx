@@ -115,6 +115,7 @@ export default function ChatRoomDetailPage() {
   const fileInputRef = useRef(null);
   const typingTimerRef = useRef(null);
   const typingEmitRef = useRef(0);
+  const joinEmittedRef = useRef(false);
   const {
     pendingFiles,
     showAttachMenu,
@@ -180,6 +181,9 @@ export default function ChatRoomDetailPage() {
 
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
+      // join_room은 한 번만 emit (소켓 재연결시 중복 방지)
+      if (joinEmittedRef.current) return;
+      joinEmittedRef.current = true;
       socket.emit("join_room", { roomId, nickname: name, userId });
     });
 
@@ -190,8 +194,8 @@ export default function ChatRoomDetailPage() {
 
     socket.on("receive_message", (msg) => {
       setMessages((prev) => {
-        // 중복 방지 (이미 목록에 있는 메시지면 무시)
         if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+        if (msg.isSystem && prev.some((m) => m.isSystem && String(m.userId) === String(msg.userId) && m.content === msg.content)) return prev;
         if (msg.clientTempId) {
           const pendingIndex = prev.findIndex(
             (m) => m.clientTempId === msg.clientTempId,
@@ -258,21 +262,31 @@ export default function ChatRoomDetailPage() {
     });
 
     socket.on("load_messages", (rawMessages) => {
-      const formatted = rawMessages.map((msg) => ({
-        id: msg.id,
-        roomId: msg.room_id,
-        userId: msg.user_id,
-        nickname: msg.nickname,
-        profileImg: msg.profileImg,
-        content: msg.content,
-        isSystem: msg.is_system === 1,
-        isEdited: msg.is_edited === 1,
-        isDeleted: msg.is_deleted === 1,
-        parentId: msg.parent_id,
-        reactions: msg.reactions || [],
-        readCount: msg.readCount || 0,
-        time: msg.created_at,
-      }));
+      const seen = new Map();
+      const formatted = [];
+      for (const msg of rawMessages) {
+        const isSystem = msg.is_system === 1;
+        if (isSystem) {
+          const key = `${msg.user_id}:${msg.content}`;
+          if (seen.has(key)) continue;
+          seen.set(key, true);
+        }
+        formatted.push({
+          id: msg.id,
+          roomId: msg.room_id,
+          userId: msg.user_id,
+          nickname: msg.nickname,
+          profileImg: msg.profileImg,
+          content: msg.content,
+          isSystem,
+          isEdited: msg.is_edited === 1,
+          isDeleted: msg.is_deleted === 1,
+          parentId: msg.parent_id,
+          reactions: msg.reactions || [],
+          readCount: msg.readCount || 0,
+          time: msg.created_at,
+        });
+      }
       setMessages(formatted);
 
       if (formatted.length > 0) {
@@ -371,7 +385,10 @@ export default function ChatRoomDetailPage() {
       clearTimeout(typingTimerRef.current);
     });
 
-    return () => socket.disconnect();
+    return () => {
+      joinEmittedRef.current = false;
+      socket.disconnect();
+    };
   }, [roomId, userId, name, navigate, isParticipant]);
 
   useEffect(() => {
@@ -1762,11 +1779,8 @@ export default function ChatRoomDetailPage() {
               });
               setRoomAppointment(normalizeRoomAppointment(updatedPost));
             }
-            socketRef.current?.emit("join_room", {
-              roomId,
-              nickname: name,
-              userId,
-            });
+            // 서버에서 emitPostRoomUpdate로 room_info를 이미 브로드캐스트하므로
+            // 별도 join_room 중복 emit 불필요
           }}
         />
       )}

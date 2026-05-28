@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import { useAuth } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
-import { getImageUrl } from "../../api/instance";
+import { BASE_URL, getImageUrl } from "../../api/instance";
 import instance from "../../api/instance";
 import styles from "./ChatRoomsPage.module.css";
 import itemStyles from "../../components/chat_components/ChatRoomItem.module.css";
@@ -81,6 +82,33 @@ const DMsPage = () => {
   const [dms, setDms] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const onlineSocketRef = useRef(null);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const socket = io(BASE_URL, {
+      auth: { token: localStorage.getItem("token") },
+    });
+    onlineSocketRef.current = socket;
+
+    socket.emit("get_online_friends", (friendIds) => {
+      setOnlineUsers(new Set(friendIds.map(Number)));
+    });
+
+    socket.on("friend_online_status", ({ userId: friendId, online }) => {
+      setOnlineUsers((prev) => {
+        const next = new Set(prev);
+        if (online) next.add(Number(friendId));
+        else next.delete(Number(friendId));
+        return next;
+      });
+    });
+
+    return () => socket.disconnect();
+  }, [userId]);
+
   const unreadByRoomId = useMemo(
     () =>
       new Map(
@@ -133,16 +161,30 @@ const DMsPage = () => {
                 onClick={() => navigate(`/dms/${dm.roomId}`)}
                 style={{ cursor: "pointer" }}
               >
-              <div
-                className={itemStyles.roomAvatar}
-                style={{
-                  backgroundImage: dm.targetProfileImg
-                    ? `url(${getImageUrl(dm.targetProfileImg)})`
-                    : "none",
-                }}
-              >
-                {!dm.targetProfileImg && (
-                  <div className={itemStyles.noImage}></div>
+              <div style={{ position: "relative" }}>
+                <div
+                  className={itemStyles.roomAvatar}
+                  style={{
+                    backgroundImage: dm.targetProfileImg
+                      ? `url(${getImageUrl(dm.targetProfileImg)})`
+                      : "none",
+                  }}
+                >
+                  {!dm.targetProfileImg && (
+                    <div className={itemStyles.noImage}></div>
+                  )}
+                </div>
+                {onlineUsers.has(Number(dm.targetId)) && (
+                  <div style={{
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    background: "#31c48d",
+                    border: "2px solid var(--color-bg, #1a1a2e)",
+                  }} />
                 )}
               </div>
 
