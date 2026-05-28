@@ -192,7 +192,16 @@ export default function DMDetailPage() {
     socket.on("receive_message", (msg) => {
       setMessages((prev) => {
         if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
-        if (msg.isSystem && prev.some((m) => m.isSystem && String(m.userId) === String(msg.userId) && m.content === msg.content)) return prev;
+        if (
+          msg.isSystem &&
+          prev.some(
+            (m) =>
+              m.isSystem &&
+              String(m.userId) === String(msg.userId) &&
+              m.content === msg.content,
+          )
+        )
+          return prev;
         if (msg.clientTempId) {
           const pendingIndex = prev.findIndex(
             (m) => m.clientTempId === msg.clientTempId,
@@ -743,24 +752,31 @@ export default function DMDetailPage() {
             <span className={styles.headerHashIcon}>👤</span>
           )}
         </button>
-        <span className={styles.headerName} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span
+          className={styles.headerName}
+          style={{ display: "flex", alignItems: "center", gap: 6 }}
+        >
           {targetNickname || "사용자"}
           {targetOnline && (
-            <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: 11,
-              color: "#31c48d",
-              fontWeight: 600,
-            }}>
-              <span style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: "#31c48d",
-                display: "inline-block",
-              }} />
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 11,
+                color: "#31c48d",
+                fontWeight: 600,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "#31c48d",
+                  display: "inline-block",
+                }}
+              />
               온라인
             </span>
           )}
@@ -820,7 +836,9 @@ export default function DMDetailPage() {
             let parsed = null;
             try {
               parsed = JSON.parse(msg.content);
-            } catch { /* not JSON */ }
+            } catch {
+              /* not JSON */
+            }
 
             const isSharePost = parsed?.kind === "share_post";
             let displayText = msg.content;
@@ -858,12 +876,15 @@ export default function DMDetailPage() {
                       </div>
                     )}
                     <div className={styles.sharedPostContent}>
-                      <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
+                      <span className={styles.sharedPostEyebrow}>
+                        공유된 게시글
+                      </span>
                       <strong className={styles.sharedPostTitle}>
                         {parsed.postTitle || "게시글"}
                       </strong>
                       <span className={styles.sharedPostMeta}>
-                        {parsed.sharerNickname || "알 수 없음"}님이 공유했습니다.
+                        {parsed.sharerNickname || "알 수 없음"}님이
+                        공유했습니다.
                       </span>
                     </div>
                   </button>
@@ -1210,12 +1231,14 @@ export default function DMDetailPage() {
 
       {/* ── Typing indicator ── */}
       {typingNickname && (
-        <div style={{
-          padding: "4px 16px",
-          fontSize: 12,
-          color: "var(--color-text-secondary, #888)",
-          fontStyle: "italic",
-        }}>
+        <div
+          style={{
+            padding: "4px 16px",
+            fontSize: 12,
+            color: "var(--color-text-secondary, #888)",
+            fontStyle: "italic",
+          }}
+        >
           {typingNickname}님이 입력중입니다...
         </div>
       )}
@@ -1320,12 +1343,17 @@ export default function DMDetailPage() {
             onChange={(e) => {
               setInput(e.target.value);
               if (!e.target.value.trim()) {
-                socketRef.current?.emit("stop_typing", { roomId: socketRoomId });
+                socketRef.current?.emit("stop_typing", {
+                  roomId: socketRoomId,
+                });
               } else {
                 const now = Date.now();
                 if (now - typingEmitRef.current > 2000) {
                   typingEmitRef.current = now;
-                  socketRef.current?.emit("typing", { roomId: socketRoomId, nickname: name });
+                  socketRef.current?.emit("typing", {
+                    roomId: socketRoomId,
+                    nickname: name,
+                  });
                 }
               }
             }}

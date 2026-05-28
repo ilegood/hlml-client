@@ -95,7 +95,9 @@ export const parseSystemMessagePayload = (content) => {
 
   try {
     const parsed = JSON.parse(content);
-    return parsed?.kind === "appointment_change" ? parsed : null;
+    return ["appointment_change", "share_post"].includes(parsed?.kind)
+      ? parsed
+      : null;
   } catch {
     return null;
   }

@@ -114,6 +114,9 @@ const ModalWrapper = styled.div`
         border-color: #eb4d4b;
       }
     }
+    select {
+      padding-right: 44px;
+    }
     textarea {
       height: 120px;
       resize: none;
@@ -303,18 +306,6 @@ export default function ReportModal({
             onChange={(e) => setContent(e.target.value)}
           />
         </div>
-
-        <button
-          className="submit-btn"
-          disabled={loading}
-          onClick={handleSubmit}
-        >
-          <textarea
-            placeholder="구체적인 상황을 설명해주세요"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-        </button>
 
         <button
           className="submit-btn"

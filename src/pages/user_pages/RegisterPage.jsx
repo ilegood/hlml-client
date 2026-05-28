@@ -72,7 +72,10 @@ const getNicknameValidationMessage = (nickname) => {
 const getPasswordCriteria = (password, { nickname = "", email = "" } = {}) => {
   const value = String(password || "");
   const lowered = value.toLowerCase();
-  const emailName = String(email || "").split("@")[0]?.toLowerCase() || "";
+  const emailName =
+    String(email || "")
+      .split("@")[0]
+      ?.toLowerCase() || "";
   const nicknameValue = String(nickname || "").toLowerCase();
 
   return [
@@ -97,7 +100,9 @@ const getPasswordCriteria = (password, { nickname = "", email = "" } = {}) => {
 
 const getPasswordValidationMessage = (password, context) => {
   if (!password) return "비밀번호를 입력해주세요.";
-  const unmet = getPasswordCriteria(password, context).filter((item) => !item.met);
+  const unmet = getPasswordCriteria(password, context).filter(
+    (item) => !item.met,
+  );
   return unmet.length ? `미충족: ${unmet[0].label}` : "";
 };
 
@@ -158,12 +163,14 @@ const RegisterPage = () => {
       : "";
   const genderError =
     touched.gender && !form.gender ? "성별을 선택해주세요." : "";
-  const displayNicknameAvail = (nicknameError || !nickname)
-    ? { checking: false, available: null, message: "" }
-    : availability.nickname;
-  const displayEmailAvail = (emailError || !email)
-    ? { checking: false, available: null, message: "" }
-    : availability.email;
+  const displayNicknameAvail =
+    nicknameError || !nickname
+      ? { checking: false, available: null, message: "" }
+      : availability.nickname;
+  const displayEmailAvail =
+    emailError || !email
+      ? { checking: false, available: null, message: "" }
+      : availability.email;
   const nicknameAvailabilityMessage =
     !nicknameError && nickname
       ? displayNicknameAvail.checking
@@ -243,11 +250,18 @@ const RegisterPage = () => {
   };
 
   useEffect(() => {
-    if (nicknameError || !nickname) return;
+    if (nicknameError || !nickname) {
+      return;
+    }
 
     let cancelled = false;
 
     const timer = setTimeout(async () => {
+      setAvailability((prev) => ({
+        ...prev,
+        nickname: { checking: true, available: null, message: "" },
+      }));
+
       try {
         const { data } = await instance.get("/users/register/check", {
           params: { nickname },
@@ -281,11 +295,18 @@ const RegisterPage = () => {
   }, [nickname, nicknameError]);
 
   useEffect(() => {
-    if (emailError || !email) return;
+    if (emailError || !email) {
+      return;
+    }
 
     let cancelled = false;
 
     const timer = setTimeout(async () => {
+      setAvailability((prev) => ({
+        ...prev,
+        email: { checking: true, available: null, message: "" },
+      }));
+
       try {
         const { data } = await instance.get("/users/register/check", {
           params: { email },
@@ -360,7 +381,9 @@ const RegisterPage = () => {
 
     try {
       await instance.post("/users/register", body);
-      toast.success("회원가입이 완료되었습니다. 이메일을 확인하여 계정을 인증해주세요.");
+      toast.success(
+        "회원가입이 완료되었습니다. 이메일을 확인하여 계정을 인증해주세요.",
+      );
       navigate("/login"); // User will need to verify email before logging in
     } catch (error) {
       toast.error(
@@ -455,7 +478,9 @@ const RegisterPage = () => {
                 {passwordCriteria.map((item) => (
                   <span
                     key={item.label}
-                    className={item.met ? styles.criteriaMet : styles.criteriaUnmet}
+                    className={
+                      item.met ? styles.criteriaMet : styles.criteriaUnmet
+                    }
                   >
                     {item.met ? "✓" : "•"} {item.label}
                   </span>
@@ -517,7 +542,9 @@ const RegisterPage = () => {
                 name="year"
                 value={form.birthday.year}
                 onChange={handleBirthChange}
-                onBlur={() => setTouched((prev) => ({ ...prev, birthday: true }))}
+                onBlur={() =>
+                  setTouched((prev) => ({ ...prev, birthday: true }))
+                }
               >
                 <option value="">년</option>
                 {years.map((y) => (
@@ -531,7 +558,9 @@ const RegisterPage = () => {
                 name="month"
                 value={form.birthday.month}
                 onChange={handleBirthChange}
-                onBlur={() => setTouched((prev) => ({ ...prev, birthday: true }))}
+                onBlur={() =>
+                  setTouched((prev) => ({ ...prev, birthday: true }))
+                }
               >
                 <option value="">월</option>
                 {months.map((m) => (
@@ -545,7 +574,9 @@ const RegisterPage = () => {
                 name="day"
                 value={form.birthday.day}
                 onChange={handleBirthChange}
-                onBlur={() => setTouched((prev) => ({ ...prev, birthday: true }))}
+                onBlur={() =>
+                  setTouched((prev) => ({ ...prev, birthday: true }))
+                }
               >
                 <option value="">일</option>
                 {days.map((d) => (
