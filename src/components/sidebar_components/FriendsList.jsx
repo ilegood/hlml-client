@@ -38,6 +38,7 @@ const FriendsList = () => {
     cardTop,
     requests,
     menuRef,
+    onlineUsers,
   } = useFriendManagement();
 
   const sidebarRef = useRef(null); // Ref to get sidebar dimensions for cardTop calculation
@@ -122,14 +123,16 @@ const FriendsList = () => {
                     onClick={(e) => handleClick(e, friend)}
                   >
                     <td className={styles.avatarCell}>
-                      <div
-                        className={styles.avatar}
-                        style={{
-                          backgroundImage: friend.profile_img
-                            ? `url(${getImageUrl(friend.profile_img)})`
-                            : "none",
-                        }}
-                      />
+                      <div className={styles.avatarWrap}>
+                        <div
+                          className={`${styles.avatar} ${onlineUsers.has(Number(friend.id)) ? styles.avatarOnline : ""}`}
+                          style={{
+                            backgroundImage: friend.profile_img
+                              ? `url(${getImageUrl(friend.profile_img)})`
+                              : "none",
+                          }}
+                        />
+                      </div>
                     </td>
                     <td className={styles.nameCell}>{friend.name}</td>
                     <td
@@ -175,17 +178,21 @@ const FriendsList = () => {
           style={{ top: `${cardTop}px` }}
         >
           <div className={styles.detailHeader}>
-            <div
-              className={styles.detailAvatarLarge}
-              style={{
-                backgroundImage: selectedFriend?.profile_img
-                  ? `url(${getImageUrl(selectedFriend.profile_img)})`
-                  : "none",
-              }}
-            />
+            <div className={styles.detailAvatarWrap}>
+              <div
+                className={`${styles.detailAvatarLarge} ${onlineUsers.has(Number(selectedFriend?.id)) ? styles.avatarLargeOnline : ""}`}
+                style={{
+                  backgroundImage: selectedFriend?.profile_img
+                    ? `url(${getImageUrl(selectedFriend.profile_img)})`
+                    : "none",
+                }}
+              />
+            </div>
           </div>
           <div className={styles.detailBody}>
-            <h4>{selectedFriend?.name}</h4>
+            <h4>
+              {selectedFriend?.name}
+            </h4>
             <p>{selectedFriend?.statusMessage || "상태 메시지가 없습니다."}</p>
 
             {memos[selectedFriend?.id] && !isEditingMemo && (

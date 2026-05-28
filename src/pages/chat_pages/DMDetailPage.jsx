@@ -741,12 +741,13 @@ export default function DMDetailPage() {
           disabled={!targetUserId}
           onClick={() => setSelectedProfileId(targetUserId)}
           title="프로필 보기"
+          style={targetOnline ? { boxShadow: "0 0 0 3px #31c48d" } : {}}
         >
           {targetProfileImg ? (
             <img
               src={getImageUrl(targetProfileImg)}
               alt="target"
-              style={{ backgroundColor: "white" }}
+              style={{ backgroundColor: "white", borderRadius: "50%" }}
             />
           ) : (
             <span className={styles.headerHashIcon}>👤</span>
@@ -757,29 +758,6 @@ export default function DMDetailPage() {
           style={{ display: "flex", alignItems: "center", gap: 6 }}
         >
           {targetNickname || "사용자"}
-          {targetOnline && (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                fontSize: 11,
-                color: "#31c48d",
-                fontWeight: 600,
-              }}
-            >
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: "#31c48d",
-                  display: "inline-block",
-                }}
-              />
-              온라인
-            </span>
-          )}
         </span>
         <div className={styles.headerDivider} />
         <span className={styles.headerDesc}>

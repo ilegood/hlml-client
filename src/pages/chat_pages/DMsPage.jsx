@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+
 import { useAuth } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
@@ -164,28 +165,21 @@ const DMsPage = () => {
               <div style={{ position: "relative" }}>
                 <div
                   className={itemStyles.roomAvatar}
-                  style={{
-                    backgroundImage: dm.targetProfileImg
-                      ? `url(${getImageUrl(dm.targetProfileImg)})`
-                      : "none",
-                  }}
+                  style={Object.assign(
+                    {
+                      backgroundImage: dm.targetProfileImg
+                        ? `url(${getImageUrl(dm.targetProfileImg)})`
+                        : "none",
+                    },
+                    onlineUsers.has(Number(dm.targetId))
+                      ? { boxShadow: "0 0 0 3px #31c48d" }
+                      : {},
+                  )}
                 >
                   {!dm.targetProfileImg && (
                     <div className={itemStyles.noImage}></div>
                   )}
                 </div>
-                {onlineUsers.has(Number(dm.targetId)) && (
-                  <div style={{
-                    position: "absolute",
-                    bottom: 0,
-                    right: 0,
-                    width: 12,
-                    height: 12,
-                    borderRadius: "50%",
-                    background: "#31c48d",
-                    border: "2px solid var(--color-bg, #1a1a2e)",
-                  }} />
-                )}
               </div>
 
               <div className={itemStyles.roomInfo}>

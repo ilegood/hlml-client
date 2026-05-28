@@ -160,14 +160,31 @@
   text-align: center;
 }
 
+.avatarWrap {
+  position: relative;
+  display: inline-block;
+}
+
 .avatar {
   width: 32px;
   height: 32px;
   background-color: #555;
   border-radius: 50%;
-  display: inline-block;
+  display: block;
   background-size: cover;
   background-position: center;
+}
+
+.avatarOnline {
+  box-shadow: 0 0 0 3px #31c48d;
+}
+
+.detailAvatarWrap {
+  display: inline-block;
+}
+
+.avatarLargeOnline {
+  border-color: #31c48d !important;
 }
 
 .nameCell {

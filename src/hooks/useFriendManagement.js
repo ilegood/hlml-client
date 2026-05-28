@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import { useAuth } from "../context/auth";
 import {
   getFriends,
@@ -9,12 +10,13 @@ import {
   blockUser,
   updateFriendMemo,
 } from "../api/friends";
+import { BASE_URL } from "../api/instance";
 import instance from "../api/instance";
 import { toast } from "sonner";
 
 export const useFriendManagement = () => {
   const navigate = useNavigate();
-  const { token, userId } = useAuth(); // Assuming userId is also available from useAuth
+  const { token, userId } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -27,8 +29,32 @@ export const useFriendManagement = () => {
   const [isEditingMemo, setIsEditingMemo] = useState(false);
   const [tempMemo, setTempMemo] = useState("");
   const [cardTop, setCardTop] = useState(0);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
 
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const socket = io(BASE_URL, {
+      auth: { token: localStorage.getItem("token") },
+    });
+
+    socket.emit("get_online_friends", (friendIds) => {
+      setOnlineUsers(new Set(friendIds.map(Number)));
+    });
+
+    socket.on("friend_online_status", ({ userId: friendId, online }) => {
+      setOnlineUsers((prev) => {
+        const next = new Set(prev);
+        if (online) next.add(Number(friendId));
+        else next.delete(Number(friendId));
+        return next;
+      });
+    });
+
+    return () => socket.disconnect();
+  }, [userId]);
 
   const fetchAll = useCallback(async () => {
     if (!token) return;
@@ -211,6 +237,7 @@ export const useFriendManagement = () => {
     cardTop,
     setCardTop,
     menuRef,
+    onlineUsers,
     fetchAll,
     handleAccept,
     handleReject,
@@ -224,6 +251,6 @@ export const useFriendManagement = () => {
     handleSaveMemo,
     handleCancelMemo,
     handleStartDM,
-    userId, // Export userId for use in child components if needed
+    userId,
   };
 };
