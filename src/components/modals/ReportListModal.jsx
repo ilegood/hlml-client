@@ -250,6 +250,10 @@ const ModalWrapper = styled.div`
     font-family: inherit;
   }
 
+  select {
+    padding-right: 44px;
+  }
+
   input:focus,
   select:focus,
   textarea:focus {

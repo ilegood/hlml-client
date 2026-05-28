@@ -238,20 +238,17 @@ const RegisterPage = () => {
 
   useEffect(() => {
     if (nicknameError || !nickname) {
-      setAvailability((prev) => ({
-        ...prev,
-        nickname: { checking: false, available: null, message: "" },
-      }));
       return;
     }
 
     let cancelled = false;
-    setAvailability((prev) => ({
-      ...prev,
-      nickname: { checking: true, available: null, message: "" },
-    }));
 
     const timer = setTimeout(async () => {
+      setAvailability((prev) => ({
+        ...prev,
+        nickname: { checking: true, available: null, message: "" },
+      }));
+
       try {
         const { data } = await instance.get("/users/register/check", {
           params: { nickname },
@@ -286,20 +283,17 @@ const RegisterPage = () => {
 
   useEffect(() => {
     if (emailError || !email) {
-      setAvailability((prev) => ({
-        ...prev,
-        email: { checking: false, available: null, message: "" },
-      }));
       return;
     }
 
     let cancelled = false;
-    setAvailability((prev) => ({
-      ...prev,
-      email: { checking: true, available: null, message: "" },
-    }));
 
     const timer = setTimeout(async () => {
+      setAvailability((prev) => ({
+        ...prev,
+        email: { checking: true, available: null, message: "" },
+      }));
+
       try {
         const { data } = await instance.get("/users/register/check", {
           params: { email },

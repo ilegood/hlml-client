@@ -1155,23 +1155,25 @@ export default function ChatRoomDetailPage() {
                     </span>
                   </div>
                 )}
-                <div
-                  className={
-                    msg.isDeletionWarning
-                      ? styles.deletionWarningMsg
-                      : styles.systemMsg
-                  }
-                >
-                  <span>{displaySystemText}</span>
-                  {hasMap && (
-                    <div className={styles.systemMsgMap}>
-                      <MapPreview
-                        latitude={systemPayload.latitude}
-                        longitude={systemPayload.longitude}
-                      />
-                    </div>
-                  )}
-                </div>
+                {isSharePost && (
+                  <div
+                    className={
+                      msg.isDeletionWarning
+                        ? styles.deletionWarningMsg
+                        : styles.systemMsg
+                    }
+                  >
+                    <span>{displaySystemText}</span>
+                    {hasMap && (
+                      <div className={styles.systemMsgMap}>
+                        <MapPreview
+                          latitude={systemPayload.latitude}
+                          longitude={systemPayload.longitude}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
                 {isSharePost && (
                   <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
                     <button
