@@ -36,6 +36,8 @@ import {
 } from "../../utils/chatHelpers";
 import borderImg from "../../assets/border.png";
 
+// ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
+
 // Avatar 컴포넌트
 function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
   const url = getImageUrl(profileImg);
@@ -104,12 +106,16 @@ export default function ChatRoomDetailPage() {
   const [isParticipant, setIsParticipant] = useState(false);
   const [joining, setJoining] = useState(false);
   const [loadingPost, setLoadingPost] = useState(true);
+  const [typingNickname, setTypingNickname] = useState("");
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const typingTimerRef = useRef(null);
+  const typingEmitRef = useRef(0);
+  const joinEmittedRef = useRef(false);
   const {
     pendingFiles,
     showAttachMenu,
@@ -144,7 +150,6 @@ export default function ChatRoomDetailPage() {
     notificationsMutedRef.current = notificationsMuted;
   }, [notificationsMuted]);
 
-  // Prevent browser's default file drop behavior
   useEffect(() => {
     const preventBrowserDrop = (event) => {
       event.preventDefault();
@@ -176,6 +181,9 @@ export default function ChatRoomDetailPage() {
 
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
+      // join_room은 한 번만 emit (소켓 재연결시 중복 방지)
+      if (joinEmittedRef.current) return;
+      joinEmittedRef.current = true;
       socket.emit("join_room", { roomId, nickname: name, userId });
     });
 
@@ -186,8 +194,8 @@ export default function ChatRoomDetailPage() {
 
     socket.on("receive_message", (msg) => {
       setMessages((prev) => {
-        // 중복 방지 (이미 목록에 있는 메시지면 무시)
         if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+        if (msg.isSystem && prev.some((m) => m.isSystem && String(m.userId) === String(msg.userId) && m.content === msg.content)) return prev;
         if (msg.clientTempId) {
           const pendingIndex = prev.findIndex(
             (m) => m.clientTempId === msg.clientTempId,
@@ -254,21 +262,31 @@ export default function ChatRoomDetailPage() {
     });
 
     socket.on("load_messages", (rawMessages) => {
-      const formatted = rawMessages.map((msg) => ({
-        id: msg.id,
-        roomId: msg.room_id,
-        userId: msg.user_id,
-        nickname: msg.nickname,
-        profileImg: msg.profileImg,
-        content: msg.content,
-        isSystem: msg.is_system === 1,
-        isEdited: msg.is_edited === 1,
-        isDeleted: msg.is_deleted === 1,
-        parentId: msg.parent_id,
-        reactions: msg.reactions || [],
-        readCount: msg.readCount || 0,
-        time: msg.created_at,
-      }));
+      const seen = new Map();
+      const formatted = [];
+      for (const msg of rawMessages) {
+        const isSystem = msg.is_system === 1;
+        if (isSystem) {
+          const key = `${msg.user_id}:${msg.content}`;
+          if (seen.has(key)) continue;
+          seen.set(key, true);
+        }
+        formatted.push({
+          id: msg.id,
+          roomId: msg.room_id,
+          userId: msg.user_id,
+          nickname: msg.nickname,
+          profileImg: msg.profileImg,
+          content: msg.content,
+          isSystem,
+          isEdited: msg.is_edited === 1,
+          isDeleted: msg.is_deleted === 1,
+          parentId: msg.parent_id,
+          reactions: msg.reactions || [],
+          readCount: msg.readCount || 0,
+          time: msg.created_at,
+        });
+      }
       setMessages(formatted);
 
       if (formatted.length > 0) {
@@ -354,7 +372,23 @@ export default function ChatRoomDetailPage() {
       window.dispatchEvent(new Event("chat:rooms-changed"));
     });
 
-    return () => socket.disconnect();
+    socket.on("typing", ({ nickname }) => {
+      if (nickname !== name) {
+        setTypingNickname(displayName(nickname));
+        clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = setTimeout(() => setTypingNickname(""), 2500);
+      }
+    });
+
+    socket.on("stop_typing", () => {
+      setTypingNickname("");
+      clearTimeout(typingTimerRef.current);
+    });
+
+    return () => {
+      joinEmittedRef.current = false;
+      socket.disconnect();
+    };
   }, [roomId, userId, name, navigate, isParticipant]);
 
   useEffect(() => {
@@ -423,11 +457,6 @@ export default function ChatRoomDetailPage() {
     const start = inputRef.current.selectionStart;
     const end = inputRef.current.selectionEnd;
     const text = input;
-    setInput(
-      text.substring(0, start) +
-        emoji.native +
-        text.substring(end, text.length),
-    );
     const before = text.substring(0, start);
     const after = text.substring(end, text.length);
     setInput(before + emoji.native + after);
@@ -446,10 +475,6 @@ export default function ChatRoomDetailPage() {
   const handleScroll = () => {
     const container = messagesRef.current;
     if (!container) return;
-    setShowScrollBtn(
-      container.scrollHeight - container.scrollTop >
-        container.clientHeight + 200,
-    );
     const isUp =
       container.scrollHeight - container.scrollTop >
       container.clientHeight + 200;
@@ -518,7 +543,8 @@ export default function ChatRoomDetailPage() {
               userId,
               nickname: name,
               profileImg,
-              content: input.trim() || (isUploadingMessage ? "파일 업로드 중..." : ""),
+              content:
+                input.trim() || (isUploadingMessage ? "파일 업로드 중..." : ""),
               isSystem: false,
               isPending: true,
               isUploading: isUploadingMessage,
@@ -582,7 +608,12 @@ export default function ChatRoomDetailPage() {
             setMessages((prev) =>
               prev.map((m) =>
                 m.clientTempId === clientTempId
-                  ? { ...m, isPending: false, isUploading: false, isFailed: true }
+                  ? {
+                      ...m,
+                      isPending: false,
+                      isUploading: false,
+                      isFailed: true,
+                    }
                   : m,
               ),
             );
@@ -600,6 +631,7 @@ export default function ChatRoomDetailPage() {
         setSending(false);
       }
       setInput("");
+      socketRef.current?.emit("stop_typing", { roomId });
       inputRef.current?.focus();
     },
     [
@@ -659,8 +691,6 @@ export default function ChatRoomDetailPage() {
     });
     setShowEmojiPicker(null);
   };
-
-  const getParentMsg = (parentId) => messages.find((m) => m.id === parentId);
 
   const scrollToMessage = (msgId) => {
     const el = document.getElementById(`msg-${msgId}`);
@@ -903,7 +933,7 @@ export default function ChatRoomDetailPage() {
   return (
     <div
       className={styles.chatWrap}
-      onDrop={(e) => handleDrop(e, addPendingFiles)}
+      onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
     >
       {blockWarning && (
@@ -991,14 +1021,15 @@ export default function ChatRoomDetailPage() {
           >
             📎
           </button>
-          <button
-            className={styles.headerIconBtn}
-            title="지도보기"
-            style={{ display: "none" }}
-            onClick={openRoomMap}
-          >
-            🗺️
-          </button>
+          {roomLocation?.latitude && (
+            <button
+              className={styles.headerIconBtn}
+              title="지도보기"
+              onClick={openRoomMap}
+            >
+              🗺️
+            </button>
+          )}
           <button
             className={styles.headerIconBtn}
             title="멤버보기"
@@ -1083,7 +1114,9 @@ export default function ChatRoomDetailPage() {
           const showDateDivider = !isSameDay(prevMsg?.time, msg.time);
           const compact = !showDateDivider && isCompact(prevMsg, msg);
           const isMine = String(msg.userId) === String(userId);
-          const parentMsg = msg.parentId ? getParentMsg(msg.parentId) : null;
+          const parentMsg = msg.parentId
+            ? messages.find((m) => m.id === msg.parentId)
+            : null;
           const msgNickname = displayName(msg.nickname);
 
           // 리액션 집계
@@ -1097,20 +1130,67 @@ export default function ChatRoomDetailPage() {
 
           if (msg.isSystem) {
             const systemPayload = parseSystemMessagePayload(msg.content);
+            const hasMap =
+              systemPayload?.kind === "appointment_change" &&
+              systemPayload.showMap &&
+              Number.isFinite(systemPayload.latitude) &&
+              Number.isFinite(systemPayload.longitude);
             const isSharePost = systemPayload?.kind === "share_post";
-            const isAppointmentChange = systemPayload?.kind === "appointment_change";
+            const isAppointmentChange =
+              systemPayload?.kind === "appointment_change";
             let displaySystemText = systemPayload?.text || msg.content;
 
             if (isSharePost) {
-                const sharer = systemPayload.sharerNickname || "알 수 없음";
-                const title = systemPayload.postTitle || "게시글";
-                displaySystemText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
+              const sharer = systemPayload.sharerNickname || "알 수 없음";
+              const title = systemPayload.postTitle || "게시글";
+              displaySystemText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
             }
 
             return (
               <div key={msg.id || idx}>
                 {showDateDivider && (
                   <div className={styles.dateDivider}>
+                    <span className={styles.dateDividerText}>
+                      {formatDate(msg.time)}
+                    </span>
+                  </div>
+                )}
+                <div
+                  className={
+                    msg.isDeletionWarning
+                      ? styles.deletionWarningMsg
+                      : styles.systemMsg
+                  }
+                >
+                  <span>{displaySystemText}</span>
+                  {hasMap && (
+                    <div className={styles.systemMsgMap}>
+                      <MapPreview
+                        latitude={systemPayload.latitude}
+                        longitude={systemPayload.longitude}
+                      />
+                    </div>
+                  )}
+                </div>
+                {isSharePost && (
+                  <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/chat-rooms/${systemPayload.postId}`)}
+                      style={{
+                        height: 32,
+                        padding: "0 16px",
+                        border: "none",
+                        borderRadius: 6,
+                        background: "var(--color-active)",
+                        color: "#fff",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: "pointer",
+                      }}
+                    >
+                      참여하기
+                    </button>
                     <span className={styles.dateDividerText}>
                       {formatDate(msg.time)}
                     </span>
@@ -1133,12 +1213,15 @@ export default function ChatRoomDetailPage() {
                       </div>
                     )}
                     <div className={styles.sharedPostContent}>
-                      <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
+                      <span className={styles.sharedPostEyebrow}>
+                        공유된 게시글
+                      </span>
                       <strong className={styles.sharedPostTitle}>
                         {systemPayload.postTitle || "게시글"}
                       </strong>
                       <span className={styles.sharedPostMeta}>
-                        {systemPayload.sharerNickname || "알 수 없음"}님이 공유했습니다. 클릭하면 게시글로 이동합니다.
+                        {systemPayload.sharerNickname || "알 수 없음"}님이
+                        공유했습니다. 클릭하면 게시글로 이동합니다.
                       </span>
                     </div>
                   </button>
@@ -1151,11 +1234,17 @@ export default function ChatRoomDetailPage() {
                     }
                   >
                     <span>{displaySystemText}</span>
-                    {isAppointmentChange && systemPayload.showMap && Number.isFinite(systemPayload.latitude) && Number.isFinite(systemPayload.longitude) && (
-                      <div className={styles.systemMsgMap}>
-                        <MapPreview latitude={systemPayload.latitude} longitude={systemPayload.longitude} />
-                      </div>
-                    )}
+                    {isAppointmentChange &&
+                      systemPayload.showMap &&
+                      Number.isFinite(systemPayload.latitude) &&
+                      Number.isFinite(systemPayload.longitude) && (
+                        <div className={styles.systemMsgMap}>
+                          <MapPreview
+                            latitude={systemPayload.latitude}
+                            longitude={systemPayload.longitude}
+                          />
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -1489,6 +1578,18 @@ export default function ChatRoomDetailPage() {
         </div>
       )}
 
+      {/* ── Typing indicator ── */}
+      {typingNickname && (
+        <div style={{
+          padding: "4px 16px",
+          fontSize: 12,
+          color: "var(--color-text-secondary, #888)",
+          fontStyle: "italic",
+        }}>
+          {typingNickname}님이 입력중입니다...
+        </div>
+      )}
+
       {/* ── Input area ── */}
       <div className={styles.inputArea}>
         {pendingFiles.length > 0 && (
@@ -1586,7 +1687,18 @@ export default function ChatRoomDetailPage() {
             ref={inputRef}
             className={styles.input}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              if (!e.target.value.trim()) {
+                socketRef.current?.emit("stop_typing", { roomId });
+              } else {
+                const now = Date.now();
+                if (now - typingEmitRef.current > 2000) {
+                  typingEmitRef.current = now;
+                  socketRef.current?.emit("typing", { roomId, nickname: name });
+                }
+              }
+            }}
             onInput={resizeInput}
             onCompositionEnd={resizeInput}
             onPaste={handlePaste}
@@ -1672,11 +1784,8 @@ export default function ChatRoomDetailPage() {
               });
               setRoomAppointment(normalizeRoomAppointment(updatedPost));
             }
-            socketRef.current?.emit("join_room", {
-              roomId,
-              nickname: name,
-              userId,
-            });
+            // 서버에서 emitPostRoomUpdate로 room_info를 이미 브로드캐스트하므로
+            // 별도 join_room 중복 emit 불필요
           }}
         />
       )}

@@ -47,10 +47,12 @@ const ModalWrapper = styled.div`
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 12px;
     background: var(--color-input-bg);
     border-radius: 12px;
     margin-bottom: 20px;
+    font-size: 14px;
+    border: 1px solid var(--color-border);
     img {
       width: 36px;
       height: 36px;

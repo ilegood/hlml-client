@@ -10,7 +10,7 @@ export const CATEGORY_MAP = {
   활동: ["식사", "운동", "수다", "게임", "공부", "창작", "휴식", "기타"],
 };
 
-export const STATUS_EMOJI = { [STATUS_OPEN]: "모집", [STATUS_CLOSED]: "완료" };
+export const STATUS_EMOJI = { [STATUS_OPEN]: "🟢", [STATUS_CLOSED]: "🔴" };
 export const STATUS_CLASS = {
   [STATUS_OPEN]: "status-open",
   [STATUS_CLOSED]: "status-full",

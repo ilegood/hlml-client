@@ -48,17 +48,6 @@ const formatDate = (isoString) => {
   return date.toLocaleDateString("ko-KR", options);
 };
 
-const parseSharedPostPayload = (content) => {
-  if (!content) return null;
-
-  try {
-    const parsed = typeof content === "string" ? JSON.parse(content) : content;
-    return parsed?.kind === "share_post" ? parsed : null;
-  } catch {
-    return null;
-  }
-};
-
 const isSameDay = (a, b) => {
   if (!a || !b) return false;
   const first = new Date(a);
@@ -114,6 +103,7 @@ export default function DMDetailPage() {
   const [targetUserId, setTargetUserId] = useState(null);
   const [targetNickname, setTargetNickname] = useState("");
   const [targetProfileImg, setTargetProfileImg] = useState("");
+  const [targetOnline, setTargetOnline] = useState(false);
 
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
@@ -127,12 +117,15 @@ export default function DMDetailPage() {
   );
   const [sending, setSending] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
+  const [typingNickname, setTypingNickname] = useState("");
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const typingTimerRef = useRef(null);
+  const typingEmitRef = useRef(0);
   const {
     pendingFiles,
     showAttachMenu,
@@ -160,6 +153,7 @@ export default function DMDetailPage() {
   const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
   const targetNicknameRef = useRef("");
+  const targetIdRef = useRef(null);
 
   const socketRoomId = `dm_${roomId}`;
 
@@ -198,6 +192,16 @@ export default function DMDetailPage() {
     socket.on("receive_message", (msg) => {
       setMessages((prev) => {
         if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+        if (
+          msg.isSystem &&
+          prev.some(
+            (m) =>
+              m.isSystem &&
+              String(m.userId) === String(msg.userId) &&
+              m.content === msg.content,
+          )
+        )
+          return prev;
         if (msg.clientTempId) {
           const pendingIndex = prev.findIndex(
             (m) => m.clientTempId === msg.clientTempId,
@@ -276,21 +280,31 @@ export default function DMDetailPage() {
     });
 
     socket.on("load_messages", (rawMessages) => {
-      const formatted = rawMessages.map((msg) => ({
-        id: msg.id,
-        roomId: msg.room_id,
-        userId: msg.user_id,
-        nickname: msg.nickname,
-        profileImg: msg.profileImg,
-        content: msg.content,
-        isSystem: msg.is_system === 1,
-        isEdited: msg.is_edited === 1,
-        isDeleted: msg.is_deleted === 1,
-        parentId: msg.parent_id,
-        reactions: msg.reactions || [],
-        readCount: msg.readCount || 0,
-        time: msg.created_at,
-      }));
+      const seen = new Map();
+      const formatted = [];
+      for (const msg of rawMessages) {
+        const isSystem = msg.is_system === 1;
+        if (isSystem) {
+          const key = `${msg.user_id}:${msg.content}`;
+          if (seen.has(key)) continue;
+          seen.set(key, true);
+        }
+        formatted.push({
+          id: msg.id,
+          roomId: msg.room_id,
+          userId: msg.user_id,
+          nickname: msg.nickname,
+          profileImg: msg.profileImg,
+          content: msg.content,
+          isSystem,
+          isEdited: msg.is_edited === 1,
+          isDeleted: msg.is_deleted === 1,
+          parentId: msg.parent_id,
+          reactions: msg.reactions || [],
+          readCount: msg.readCount || 0,
+          time: msg.created_at,
+        });
+      }
       setMessages(formatted);
 
       if (formatted.length > 0) {
@@ -349,6 +363,25 @@ export default function DMDetailPage() {
       );
     });
 
+    socket.on("typing", ({ nickname }) => {
+      if (nickname !== name && nickname) {
+        setTypingNickname(nickname);
+        clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = setTimeout(() => setTypingNickname(""), 2500);
+      }
+    });
+
+    socket.on("stop_typing", () => {
+      setTypingNickname("");
+      clearTimeout(typingTimerRef.current);
+    });
+
+    socket.on("friend_online_status", ({ userId: friendId, online }) => {
+      if (targetIdRef.current && Number(friendId) === targetIdRef.current) {
+        setTargetOnline(online);
+      }
+    });
+
     return () => socket.disconnect();
   }, [roomId, userId, name, navigate, socketRoomId]);
 
@@ -364,6 +397,7 @@ export default function DMDetailPage() {
         setTargetUserId(data.targetId || null);
         setTargetNickname(data.targetNickname || "");
         setTargetProfileImg(data.targetProfileImg || "");
+        targetIdRef.current = data.targetId ? Number(data.targetId) : null;
       } catch (err) {
         if (!mounted) return;
         if (err?.response?.status === 404) {
@@ -594,6 +628,7 @@ export default function DMDetailPage() {
         setSending(false);
       }
       setInput("");
+      socketRef.current?.emit("stop_typing", { roomId: socketRoomId });
       inputRef.current?.focus();
     },
     [
@@ -717,7 +752,35 @@ export default function DMDetailPage() {
             <span className={styles.headerHashIcon}>👤</span>
           )}
         </button>
-        <span className={styles.headerName}>{targetNickname || "사용자"}</span>
+        <span
+          className={styles.headerName}
+          style={{ display: "flex", alignItems: "center", gap: 6 }}
+        >
+          {targetNickname || "사용자"}
+          {targetOnline && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 11,
+                color: "#31c48d",
+                fontWeight: 600,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "#31c48d",
+                  display: "inline-block",
+                }}
+              />
+              온라인
+            </span>
+          )}
+        </span>
         <div className={styles.headerDivider} />
         <span className={styles.headerDesc}>
           {targetNickname}님과의 대화입니다.
@@ -770,7 +833,21 @@ export default function DMDetailPage() {
           }, {});
 
           if (msg.isSystem) {
-            const sharedPost = parseSharedPostPayload(msg.content);
+            let parsed = null;
+            try {
+              parsed = JSON.parse(msg.content);
+            } catch {
+              /* not JSON */
+            }
+
+            const isSharePost = parsed?.kind === "share_post";
+            let displayText = msg.content;
+
+            if (isSharePost) {
+              const sharer = parsed.sharerNickname || "알 수 없음";
+              const title = parsed.postTitle || "게시글";
+              displayText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
+            }
 
             return (
               <div key={msg.id || idx}>
@@ -781,12 +858,13 @@ export default function DMDetailPage() {
                     </span>
                   </div>
                 )}
-                {sharedPost ? (
+                <div className={styles.systemMsg}>{displayText}</div>
+                {isSharePost ? (
                   <button
                     type="button"
                     className={styles.sharedPostCard}
-                    onClick={() => navigate(`/detail/${sharedPost.postId}`)}
-                    disabled={!sharedPost.postId}
+                    onClick={() => navigate(`/detail/${parsed.postId}`)}
+                    disabled={!parsed.postId}
                   >
                     {sharedPost.postImage && (
                       <div className={styles.sharedPostImageContainer}>
@@ -798,18 +876,19 @@ export default function DMDetailPage() {
                       </div>
                     )}
                     <div className={styles.sharedPostContent}>
-                      <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
+                      <span className={styles.sharedPostEyebrow}>
+                        공유된 게시글
+                      </span>
                       <strong className={styles.sharedPostTitle}>
                         {sharedPost.postTitle || "게시글"}
                       </strong>
                       <span className={styles.sharedPostMeta}>
-                        {sharedPost.sharerNickname || "알 수 없음"}님이 공유했습니다.
+                        {sharedPost.sharerNickname || "알 수 없음"}님이
+                        공유했습니다.
                       </span>
                     </div>
                   </button>
-                ) : (
-                  <div className={styles.systemMsg}>{msg.content}</div>
-                )}
+                ) : null}
               </div>
             );
           }
@@ -1150,6 +1229,20 @@ export default function DMDetailPage() {
         </div>
       )}
 
+      {/* ── Typing indicator ── */}
+      {typingNickname && (
+        <div
+          style={{
+            padding: "4px 16px",
+            fontSize: 12,
+            color: "var(--color-text-secondary, #888)",
+            fontStyle: "italic",
+          }}
+        >
+          {typingNickname}님이 입력중입니다...
+        </div>
+      )}
+
       {/* ── Input area ── */}
       <div className={styles.inputArea}>
         {pendingFiles.length > 0 && (
@@ -1247,7 +1340,23 @@ export default function DMDetailPage() {
             ref={inputRef}
             className={styles.input}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              if (!e.target.value.trim()) {
+                socketRef.current?.emit("stop_typing", {
+                  roomId: socketRoomId,
+                });
+              } else {
+                const now = Date.now();
+                if (now - typingEmitRef.current > 2000) {
+                  typingEmitRef.current = now;
+                  socketRef.current?.emit("typing", {
+                    roomId: socketRoomId,
+                    nickname: name,
+                  });
+                }
+              }
+            }}
             onInput={resizeInput}
             onCompositionEnd={resizeInput}
             onPaste={handlePaste}
