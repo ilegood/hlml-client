@@ -21,7 +21,6 @@ const FriendsList = () => {
     handleReject,
     filteredFriends,
     selectedFriend,
-    reportedFriend,
     handleFriendClick,
     activeMenuId,
     setActiveMenuId,
