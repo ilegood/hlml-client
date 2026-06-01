@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import { useAuth } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
-import { getImageUrl } from "../../api/instance";
+import { BASE_URL, getImageUrl } from "../../api/instance";
 import instance from "../../api/instance";
 import styles from "./ChatRoomsPage.module.css";
 import itemStyles from "../../components/chat_components/ChatRoomItem.module.css";
@@ -24,6 +25,12 @@ const formatLastMessage = (content) => {
 
   try {
     const parsed = JSON.parse(content);
+    if (parsed?.kind === "share_post") {
+      const sharer = parsed.sharerNickname || "알 수 없음";
+      const title = parsed.postTitle || "게시글";
+      return `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
+    }
+
     const attachments =
       parsed?.kind === "chat_payload" && Array.isArray(parsed.attachments)
         ? parsed.attachments
@@ -53,12 +60,20 @@ const formatTime = (isoString) => {
     return date.toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
+      hourCycle: "h23",
     });
   }
-  return date.toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-};
 
-const isMuted = (roomId) => localStorage.getItem(`dm-muted:${roomId}`) === "1";
+  const options = {
+    month: "2-digit",
+    day: "2-digit",
+  };
+  if (date.getFullYear() !== now.getFullYear()) {
+    options.year = "numeric";
+  }
+
+  return date.toLocaleDateString("ko-KR", options);
+};
 
 const DMsPage = () => {
   const navigate = useNavigate();
@@ -66,6 +81,33 @@ const DMsPage = () => {
   const { summary, refresh } = useChatNotifications() || {};
   const [dms, setDms] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const onlineSocketRef = useRef(null);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const socket = io(BASE_URL, {
+      auth: { token: localStorage.getItem("token") },
+    });
+    onlineSocketRef.current = socket;
+
+    socket.emit("get_online_friends", (friendIds) => {
+      setOnlineUsers(new Set(friendIds.map(Number)));
+    });
+
+    socket.on("friend_online_status", ({ userId: friendId, online }) => {
+      setOnlineUsers((prev) => {
+        const next = new Set(prev);
+        if (online) next.add(Number(friendId));
+        else next.delete(Number(friendId));
+        return next;
+      });
+    });
+
+    return () => socket.disconnect();
+  }, [userId]);
 
   const unreadByRoomId = useMemo(
     () =>
@@ -108,11 +150,9 @@ const DMsPage = () => {
         ) : dms.length > 0 ? (
           dms.map((dm) => {
             const roomKey = String(dm.roomId);
-            const muted = isMuted(roomKey);
             const unreadCount = unreadByRoomId.has(roomKey)
               ? unreadByRoomId.get(roomKey)
               : dm.unreadCount || 0;
-            const displayUnreadCount = muted ? 0 : unreadCount;
 
             return (
               <div
@@ -121,16 +161,30 @@ const DMsPage = () => {
                 onClick={() => navigate(`/dms/${dm.roomId}`)}
                 style={{ cursor: "pointer" }}
               >
-              <div
-                className={itemStyles.roomAvatar}
-                style={{
-                  backgroundImage: dm.targetProfileImg
-                    ? `url(${getImageUrl(dm.targetProfileImg)})`
-                    : "none",
-                }}
-              >
-                {!dm.targetProfileImg && (
-                  <div className={itemStyles.noImage}></div>
+              <div style={{ position: "relative" }}>
+                <div
+                  className={itemStyles.roomAvatar}
+                  style={{
+                    backgroundImage: dm.targetProfileImg
+                      ? `url(${getImageUrl(dm.targetProfileImg)})`
+                      : "none",
+                  }}
+                >
+                  {!dm.targetProfileImg && (
+                    <div className={itemStyles.noImage}></div>
+                  )}
+                </div>
+                {onlineUsers.has(Number(dm.targetId)) && (
+                  <div style={{
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    background: "#31c48d",
+                    border: "2px solid var(--color-bg, #1a1a2e)",
+                  }} />
                 )}
               </div>
 
@@ -145,11 +199,11 @@ const DMsPage = () => {
                 <div className={itemStyles.dateTime}>
                   {dm.lastMessageTime && formatTime(dm.lastMessageTime)}
                 </div>
-                {displayUnreadCount > 0 && (
+                {unreadCount > 0 && (
                   <span className={itemStyles.unreadBadge}>
-                    {displayUnreadCount > 99
+                    {unreadCount > 99
                       ? "99+"
-                      : displayUnreadCount}
+                      : unreadCount}
                   </span>
                 )}
               </div>

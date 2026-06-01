@@ -111,6 +111,63 @@
   flex-wrap: wrap;
 }
 
+.sortRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paginationBar {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pageNumbers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pageBtn {
+  min-width: 38px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-sidebar);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+
+.pageBtn:hover:not(:disabled) {
+  border-color: var(--color-active);
+  color: var(--color-active);
+}
+
+.pageBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pageBtnActive {
+  border-color: var(--color-active);
+  background: var(--color-active);
+  color: white;
+}
+
 /* ── Card List ── */
 .cardList {
   display: grid;

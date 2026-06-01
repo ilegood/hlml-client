@@ -14,6 +14,8 @@ const FriendsList = () => {
     setIsAddModalOpen,
     isReportModalOpen,
     setIsReportModalOpen,
+    reportedFriend,
+    setReportedFriend,
     handleToggleSidebar,
     handleAccept,
     handleReject,
@@ -48,7 +50,10 @@ const FriendsList = () => {
 
   return (
     <div className={styles.sidebarWrapper}>
-      <div ref={sidebarRef} className={`${styles.friendSidebar} ${isOpen ? styles.active : ""}`}>
+      <div
+        ref={sidebarRef}
+        className={`${styles.friendSidebar} ${isOpen ? styles.active : ""}`}
+      >
         <button className={styles.toggleBtn} onClick={handleToggleSidebar}>
           {isOpen ? "〉" : "〈"}
         </button>
@@ -233,8 +238,11 @@ const FriendsList = () => {
         <AddFriendModal onClose={() => setIsAddModalOpen(false)} />
       )}
       {isReportModalOpen && (
-        <ReportModal 
-          onClose={() => setIsReportModalOpen(false)} 
+        <ReportModal
+          onClose={() => {
+            setIsReportModalOpen(false);
+            setReportedFriend(null);
+          }}
           targetUserId={reportedFriend?.id}
           targetName={reportedFriend?.name}
         />

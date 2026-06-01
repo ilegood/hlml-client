@@ -14,6 +14,14 @@ const parseMessagePayload = (content) => {
     if (parsed?.kind === "chat_attachment") {
       return { text: "", attachments: [parsed] };
     }
+    if (parsed?.kind === "share_post") {
+      const sharer = parsed.sharerNickname || "알 수 없음";
+      const title = parsed.postTitle || "게시글";
+      return {
+        text: `${sharer}님이 "${title}" 게시글을 공유했습니다.`,
+        attachments: [],
+      };
+    }
   } catch {
     return null;
   }
@@ -44,5 +52,7 @@ export const formatChatPreview = (content) => {
     return getAttachmentLabel(payload.attachments[0]);
   }
 
-  return `${getAttachmentLabel(payload.attachments[0])} 외 ${payload.attachments.length - 1}개`;
+  return `${getAttachmentLabel(payload.attachments[0])} 외 ${
+    payload.attachments.length - 1
+  }개`;
 };

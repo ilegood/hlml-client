@@ -1,5 +1,4 @@
 import {
-  STATUS_EMOJI,
   STATUS_CLASS,
   countComments,
   formatDateTime,
@@ -51,7 +50,7 @@ export default function PostCard({
         <div className={styles.cardBody}>
           <div className={styles.cardHeaderRow}>
             <span className={`${styles.statusBadge} ${badgeClass}`}>
-              {STATUS_EMOJI[status]} {status}
+              {status}
             </span>
             {Boolean(post.edited) && (
               <span className={styles.editedBadge}>수정됨</span>

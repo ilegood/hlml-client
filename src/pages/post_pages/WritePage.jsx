@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -17,16 +17,13 @@ import styles from "./WritePage.module.css";
 
 const WRITE_CATEGORY_EXCLUDES = ["인원"];
 
-const TIME_GROUPS = [
-  { label: "오전", start: 0, end: 11 },
-  { label: "오후", start: 12, end: 23 },
-];
+const HOURS = Array.from({ length: 24 }, (_, index) =>
+  String(index).padStart(2, "0"),
+);
 
-const TIME_SLOTS = Array.from({ length: 48 }, (_, index) => {
-  const hour = Math.floor(index / 2);
-  const minute = index % 2 === 0 ? "00" : "30";
-  return `${String(hour).padStart(2, "0")}:${minute}`;
-});
+const MINUTES = Array.from({ length: 60 }, (_, index) =>
+  String(index).padStart(2, "0"),
+);
 
 const formatTimeLabel = (value) => {
   const [hourText, minute] = String(value).split(":");
@@ -60,20 +57,7 @@ const createDateFromKey = (value) => {
   return new Date(year, month - 1, day);
 };
 
-const getNextHalfHourTime = () => {
-  const now = new Date();
-  const next = new Date(now);
-  next.setSeconds(0, 0);
-  next.setMinutes(now.getMinutes() <= 30 ? 30 : 60);
-
-  if (next.getDate() !== now.getDate()) {
-    return currentTimeString();
-  }
-
-  return `${String(next.getHours()).padStart(2, "0")}:${String(
-    next.getMinutes(),
-  ).padStart(2, "0")}`;
-};
+const getDefaultTime = () => currentTimeString();
 
 function DatePickerModal({
   calendarMonth,
@@ -176,53 +160,88 @@ function DatePickerModal({
 }
 
 function TimePickerModal({
-  groupedTimeSlots,
   isPastTimeSlot,
   onClose,
   onSelect,
   selectedTime,
 }) {
+  const [selectedHour, setSelectedHour] = useState(
+    String(selectedTime || getDefaultTime()).slice(0, 2),
+  );
+  const [selectedMinute, setSelectedMinute] = useState(
+    String(selectedTime || getDefaultTime()).slice(3, 5),
+  );
+  const nextTime = `${selectedHour}:${selectedMinute}`;
+  const confirmDisabled = isPastTimeSlot(nextTime);
+  const isHourDisabled = (hour) =>
+    MINUTES.every((minute) => isPastTimeSlot(`${hour}:${minute}`));
+  const isMinuteDisabled = (minute) =>
+    isPastTimeSlot(`${selectedHour}:${minute}`);
+
   return (
     <div className={styles.pickerOverlay} onMouseDown={onClose}>
       <div className={styles.pickerModal} onMouseDown={(e) => e.stopPropagation()}>
         <div className={styles.pickerHeader}>
           <div>
             <span>약속 시간</span>
-            <h3>{selectedTime ? formatTimeLabel(selectedTime) : "시간 선택"}</h3>
+            <h3>{formatTimeLabel(nextTime)}</h3>
           </div>
           <button type="button" className={styles.pickerCloseBtn} onClick={onClose}>
             &times;
           </button>
         </div>
 
-        <div className={styles.modalTimeGroups}>
-          {groupedTimeSlots.map((group) => (
-            <section className={styles.modalTimeGroup} key={group.label}>
-              <div className={styles.modalTimeGroupLabel}>{group.label}</div>
-              <div className={styles.modalTimeGrid}>
-                {group.slots.map((slot) => {
-                  const disabled = isPastTimeSlot(slot);
-                  return (
-                    <button
-                      type="button"
-                      key={slot}
-                      className={`${styles.timeSlotBtn} ${
-                        selectedTime === slot ? styles.timeSlotBtnActive : ""
-                      }`}
-                      onClick={() => {
-                        onSelect(slot);
-                        onClose();
-                      }}
-                      disabled={disabled}
-                    >
-                      {slot}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+        <div className={styles.timeDial}>
+          <div className={styles.timeDialColumn}>
+            <span className={styles.timeDialLabel}>시</span>
+            <div className={styles.timeDialList}>
+              {HOURS.map((hour) => (
+                <button
+                  type="button"
+                  key={hour}
+                  className={`${styles.timeDialBtn} ${
+                    selectedHour === hour ? styles.timeDialBtnActive : ""
+                  }`}
+                  disabled={isHourDisabled(hour)}
+                  onClick={() => setSelectedHour(hour)}
+                >
+                  {hour}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.timeDialDivider}>:</div>
+          <div className={styles.timeDialColumn}>
+            <span className={styles.timeDialLabel}>분</span>
+            <div className={styles.timeDialList}>
+              {MINUTES.map((minute) => (
+                <button
+                  type="button"
+                  key={minute}
+                  className={`${styles.timeDialBtn} ${
+                    selectedMinute === minute ? styles.timeDialBtnActive : ""
+                  }`}
+                  disabled={isMinuteDisabled(minute)}
+                  onClick={() => setSelectedMinute(minute)}
+                >
+                  {minute}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
+
+        <button
+          type="button"
+          className={styles.timeConfirmBtn}
+          disabled={confirmDisabled}
+          onClick={() => {
+            onSelect(nextTime);
+            onClose();
+          }}
+        >
+          선택 완료
+        </button>
       </div>
     </div>
   );
@@ -237,7 +256,7 @@ export default function WritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [date, setDate] = useState(todayString());
-  const [time, setTime] = useState(() => getNextHalfHourTime());
+  const [time, setTime] = useState(() => getDefaultTime());
   const [place, setPlace] = useState("");
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
@@ -248,34 +267,22 @@ export default function WritePage() {
   const [image, setImage] = useState(null);
   const [existingImage, setExistingImage] = useState("");
   const [isLoading, setIsLoading] = useState(isEdit);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
-
   const [calendarMonth, setCalendarMonth] = useState(() =>
     createDateFromKey(todayString()),
   );
   const today = todayString();
   const maxDate = nextYearTodayString();
   const currentTime = currentTimeString();
-  const groupedTimeSlots = useMemo(
-    () =>
-      TIME_GROUPS.map((group) => ({
-        ...group,
-        slots: TIME_SLOTS.filter((slot) => {
-          const hour = Number(slot.slice(0, 2));
-          return hour >= group.start && hour <= group.end;
-        }),
-      })),
-    [],
-  );
   const isPastTimeSlot = (slot) => !isEdit && date === today && slot < currentTime;
 
   const handleDateChange = (nextDate) => {
     setDate(nextDate);
     setCalendarMonth(createDateFromKey(nextDate));
     if (!isEdit && nextDate === today && time < currentTime) {
-      setTime(getNextHalfHourTime());
+      setTime(getDefaultTime());
     }
   };
 
@@ -323,6 +330,8 @@ export default function WritePage() {
   };
 
   const handleSubmit = async () => {
+    if (isSaving) return;
+
     if (!title.trim() || !content.trim()) {
       toast.error("제목과 내용을 입력해주세요.");
       return;
@@ -346,8 +355,6 @@ export default function WritePage() {
       return;
     }
 
-    if (isSubmitting) return;
-
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("content", content.trim());
@@ -369,8 +376,8 @@ export default function WritePage() {
       formData.append("existingImage", "");
     }
 
-    setIsSubmitting(true);
     try {
+      setIsSaving(true);
       if (isEdit) {
         await updatePost(id, formData);
         toast.success("게시글을 수정했습니다.");
@@ -384,7 +391,7 @@ export default function WritePage() {
       console.error("Failed to save post:", err);
       toast.error(err.response?.data?.message || "저장에 실패했습니다.");
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
@@ -532,12 +539,13 @@ export default function WritePage() {
           />
         </div>
 
-        <button 
-          className={styles.submitBtn} 
+        <button
+          className={`${styles.submitBtn} ${isSaving ? styles.savingBtn : ""}`}
           onClick={handleSubmit}
-          disabled={isSubmitting}
+          disabled={isSaving}
+          data-saving-label={image?.file ? "이미지 업로드 중..." : "저장 중..."}
         >
-          {isSubmitting ? (isEdit ? "수정 중..." : "등록 중...") : (isEdit ? "수정 완료" : "등록하기")}
+          {isEdit ? "수정 완료" : "등록하기"}
         </button>
       </div>
 
@@ -562,7 +570,6 @@ export default function WritePage() {
 
       {isTimePickerOpen && (
         <TimePickerModal
-          groupedTimeSlots={groupedTimeSlots}
           isPastTimeSlot={isPastTimeSlot}
           selectedTime={time}
           onSelect={setTime}

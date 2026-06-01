@@ -9,9 +9,12 @@ const ChatRoomItem = ({ room, onDelete, hideUnreadBadge = false }) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
     if (Number.isNaN(date.getTime())) return "";
+    const now = new Date();
+    if (date.getFullYear() !== now.getFullYear()) {
+      return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    }
     return `${date.getMonth() + 1}월 ${date.getDate()}일`;
   };
-
   const formatTime = (timeStr) => {
     if (!timeStr) return "";
     return String(timeStr).slice(0, 5);

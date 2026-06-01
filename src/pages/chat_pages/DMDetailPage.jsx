@@ -8,10 +8,14 @@ import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { ChatMessageContent } from "../../components/chat_components/ChatAttachment";
+import {
+  ChatMessageContent,
+  MessageRowErrorBoundary,
+} from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import { formatChatPreview } from "../../utils/chatPreview";
+import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 const formatTime = (isoString) => {
@@ -19,6 +23,7 @@ const formatTime = (isoString) => {
   return new Date(isoString).toLocaleTimeString("ko-KR", {
     hour: "2-digit",
     minute: "2-digit",
+    hourCycle: "h23",
   });
 };
 
@@ -31,11 +36,16 @@ const formatDate = (isoString) => {
 
   if (date.toDateString() === today.toDateString()) return "오늘";
   if (date.toDateString() === yesterday.toDateString()) return "어제";
-  return date.toLocaleDateString("ko-KR", {
-    year: "numeric",
+
+  const options = {
     month: "long",
     day: "numeric",
-  });
+  };
+  if (date.getFullYear() !== today.getFullYear()) {
+    options.year = "numeric";
+  }
+
+  return date.toLocaleDateString("ko-KR", options);
 };
 
 const isSameDay = (a, b) => {
@@ -58,11 +68,6 @@ const isCompact = (prev, curr) => {
   return diff >= 0 && diff < 2 * 60 * 1000;
 };
 
-const createPendingFileId = (file) =>
-  `${file.name}-${file.size}-${file.lastModified}-${
-    crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`
-  }`;
-
 const createClientMessageId = () =>
   `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
 
@@ -74,7 +79,12 @@ function Avatar({ profileImg, nickname, size = 40, onClick }) {
     <div
       className={styles.msgAvatar}
       onClick={onClick}
-      style={{ width: size, height: size, fontSize: size * 0.3, cursor: onClick ? "pointer" : "default" }}
+      style={{
+        width: size,
+        height: size,
+        fontSize: size * 0.3,
+        cursor: onClick ? "pointer" : "default",
+      }}
     >
       {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
     </div>
@@ -90,8 +100,10 @@ export default function DMDetailPage() {
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [targetUserId, setTargetUserId] = useState(null);
   const [targetNickname, setTargetNickname] = useState("");
   const [targetProfileImg, setTargetProfileImg] = useState("");
+  const [targetOnline, setTargetOnline] = useState(false);
 
   const [replyTo, setReplyTo] = useState(null);
   const [editId, setEditId] = useState(null);
@@ -99,43 +111,55 @@ export default function DMDetailPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(null);
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
-  const [pendingFiles, setPendingFiles] = useState([]);
   const [showFileGallery, setShowFileGallery] = useState(false);
-  const [showAttachMenu, setShowAttachMenu] = useState(false);
-  const [fileAccept, setFileAccept] = useState("");
   const [notificationsMuted, setNotificationsMuted] = useState(
     () => localStorage.getItem(`dm-muted:${roomId}`) === "1",
   );
   const [sending, setSending] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
+  const [typingNickname, setTypingNickname] = useState("");
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
-  const pendingFilesRef = useRef([]);
+  const typingTimerRef = useRef(null);
+  const typingEmitRef = useRef(0);
+  const {
+    pendingFiles,
+    showAttachMenu,
+    setShowAttachMenu,
+    fileAccept,
+    clearPendingFiles,
+    addPendingFiles,
+    openFilePicker,
+    removePendingFile,
+  } = usePendingChatFiles({ inputRef, fileInputRef });
+
+  const resizeInput = useCallback(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(textarea.scrollHeight, 160);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY = textarea.scrollHeight > 160 ? "auto" : "hidden";
+  }, []);
+
+  useEffect(() => {
+    resizeInput();
+  }, [input, resizeInput]);
   const sendingRef = useRef(false);
   const notificationsMutedRef = useRef(notificationsMuted);
   const targetNicknameRef = useRef("");
+  const targetIdRef = useRef(null);
 
   const socketRoomId = `dm_${roomId}`;
 
   useEffect(() => {
-    pendingFilesRef.current = pendingFiles;
-  }, [pendingFiles]);
-
-  useEffect(() => {
     notificationsMutedRef.current = notificationsMuted;
   }, [notificationsMuted]);
-
-  useEffect(() => {
-    return () => {
-      pendingFilesRef.current.forEach((item) =>
-        URL.revokeObjectURL(item.previewUrl),
-      );
-    };
-  }, []);
 
   useEffect(() => {
     const preventBrowserDrop = (event) => {
@@ -168,6 +192,16 @@ export default function DMDetailPage() {
     socket.on("receive_message", (msg) => {
       setMessages((prev) => {
         if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
+        if (
+          msg.isSystem &&
+          prev.some(
+            (m) =>
+              m.isSystem &&
+              String(m.userId) === String(msg.userId) &&
+              m.content === msg.content,
+          )
+        )
+          return prev;
         if (msg.clientTempId) {
           const pendingIndex = prev.findIndex(
             (m) => m.clientTempId === msg.clientTempId,
@@ -205,11 +239,17 @@ export default function DMDetailPage() {
         String(msg.userId) !== String(userId) &&
         !notificationsMutedRef.current
       ) {
-        toast(`${targetNicknameRef.current || "상대방"}님이 새 메시지를 보냈습니다.`);
+        toast(
+          `${targetNicknameRef.current || "상대방"}님이 새 메시지를 보냈습니다.`,
+        );
       }
 
       if (!msg.isSystem && String(msg.userId) !== String(userId)) {
-        socket.emit("mark_read", { messageId: msg.id, userId, roomId: socketRoomId });
+        socket.emit("mark_read", {
+          messageId: msg.id,
+          userId,
+          roomId: socketRoomId,
+        });
       }
 
       const isMine = String(msg.userId) === String(userId);
@@ -239,30 +279,42 @@ export default function DMDetailPage() {
       navigate("/dms", { replace: true });
     });
 
-    socket.emit("join_room", { roomId: socketRoomId, nickname: name, userId });
-
     socket.on("load_messages", (rawMessages) => {
-      const formatted = rawMessages.map((msg) => ({
-        id: msg.id,
-        roomId: msg.room_id,
-        userId: msg.user_id,
-        nickname: msg.nickname,
-        profileImg: msg.profileImg,
-        content: msg.content,
-        isSystem: msg.is_system === 1,
-        isEdited: msg.is_edited === 1,
-        isDeleted: msg.is_deleted === 1,
-        parentId: msg.parent_id,
-        reactions: msg.reactions || [],
-        readCount: msg.readCount || 0,
-        time: msg.created_at,
-      }));
+      const seen = new Map();
+      const formatted = [];
+      for (const msg of rawMessages) {
+        const isSystem = msg.is_system === 1;
+        if (isSystem) {
+          const key = `${msg.user_id}:${msg.content}`;
+          if (seen.has(key)) continue;
+          seen.set(key, true);
+        }
+        formatted.push({
+          id: msg.id,
+          roomId: msg.room_id,
+          userId: msg.user_id,
+          nickname: msg.nickname,
+          profileImg: msg.profileImg,
+          content: msg.content,
+          isSystem,
+          isEdited: msg.is_edited === 1,
+          isDeleted: msg.is_deleted === 1,
+          parentId: msg.parent_id,
+          reactions: msg.reactions || [],
+          readCount: msg.readCount || 0,
+          time: msg.created_at,
+        });
+      }
       setMessages(formatted);
 
       if (formatted.length > 0) {
         formatted.forEach((m) => {
           if (!m.isSystem && String(m.userId) !== String(userId)) {
-            socket.emit("mark_read", { messageId: m.id, userId, roomId: socketRoomId });
+            socket.emit("mark_read", {
+              messageId: m.id,
+              userId,
+              roomId: socketRoomId,
+            });
           }
         });
         setTimeout(
@@ -271,6 +323,8 @@ export default function DMDetailPage() {
         );
       }
     });
+
+    socket.emit("join_room", { roomId: socketRoomId, nickname: name, userId });
 
     socket.on("message_edited", ({ messageId, content }) => {
       setMessages((prev) =>
@@ -309,6 +363,25 @@ export default function DMDetailPage() {
       );
     });
 
+    socket.on("typing", ({ nickname }) => {
+      if (nickname !== name && nickname) {
+        setTypingNickname(nickname);
+        clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = setTimeout(() => setTypingNickname(""), 2500);
+      }
+    });
+
+    socket.on("stop_typing", () => {
+      setTypingNickname("");
+      clearTimeout(typingTimerRef.current);
+    });
+
+    socket.on("friend_online_status", ({ userId: friendId, online }) => {
+      if (targetIdRef.current && Number(friendId) === targetIdRef.current) {
+        setTargetOnline(online);
+      }
+    });
+
     return () => socket.disconnect();
   }, [roomId, userId, name, navigate, socketRoomId]);
 
@@ -321,8 +394,10 @@ export default function DMDetailPage() {
         if (!mounted) return;
 
         targetNicknameRef.current = data.targetNickname || "";
+        setTargetUserId(data.targetId || null);
         setTargetNickname(data.targetNickname || "");
         setTargetProfileImg(data.targetProfileImg || "");
+        targetIdRef.current = data.targetId ? Number(data.targetId) : null;
       } catch (err) {
         if (!mounted) return;
         if (err?.response?.status === 404) {
@@ -411,47 +486,6 @@ export default function DMDetailPage() {
     }
   };
 
-  const clearPendingFiles = useCallback(() => {
-    setPendingFiles((prev) => {
-      prev.forEach((item) => URL.revokeObjectURL(item.previewUrl));
-      return [];
-    });
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
-
-  const addPendingFiles = useCallback((fileList) => {
-    const files = Array.from(fileList || []);
-    if (files.length === 0) return;
-
-    setPendingFiles((prev) => [
-      ...prev,
-      ...files.map((file) => ({
-        id: createPendingFileId(file),
-        file,
-        previewUrl: URL.createObjectURL(file),
-      })),
-    ]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    window.setTimeout(() => inputRef.current?.focus(), 0);
-  }, []);
-
-  const openFilePicker = useCallback((accept) => {
-    setFileAccept(accept);
-    setShowAttachMenu(false);
-    window.setTimeout(() => fileInputRef.current?.click(), 0);
-  }, []);
-
-  const removePendingFile = useCallback((id) => {
-    setPendingFiles((prev) => {
-      const next = [];
-      prev.forEach((item) => {
-        if (item.id === id) URL.revokeObjectURL(item.previewUrl);
-        else next.push(item);
-      });
-      return next;
-    });
-  }, []);
-
   const buildMessageContent = useCallback(async () => {
     const text = input.trim();
     if (pendingFiles.length === 0) return text;
@@ -496,32 +530,33 @@ export default function DMDetailPage() {
         let clientTempId = null;
         try {
           const isUploadingMessage = pendingFiles.length > 0;
-          clientTempId = createClientMessageId();
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: clientTempId,
-              clientTempId,
-              roomId: socketRoomId,
-              userId,
-              nickname: name,
-              profileImg,
-              content: input.trim(),
-              isSystem: false,
-              isPending: true,
-              isUploading: isUploadingMessage,
-              isFailed: false,
-              parentId: replyTo?.id || null,
-              reactions: [],
-              readCount: 0,
-              time: new Date().toISOString(),
-            },
-          ]);
-          setTimeout(
-            () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
-            0,
-          );
-
+          if (!isUploadingMessage) {
+            clientTempId = createClientMessageId();
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: clientTempId,
+                clientTempId,
+                roomId: socketRoomId,
+                userId,
+                nickname: name,
+                profileImg,
+                content: input.trim(),
+                isSystem: false,
+                isPending: true,
+                isUploading: false,
+                isFailed: false,
+                parentId: replyTo?.id || null,
+                reactions: [],
+                readCount: 0,
+                time: new Date().toISOString(),
+              },
+            ]);
+            setTimeout(
+              () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+              0,
+            );
+          }
           const content = await buildMessageContent();
           if (clientTempId) {
             setMessages((prev) =>
@@ -550,7 +585,7 @@ export default function DMDetailPage() {
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.clientTempId === clientTempId
-                      ? { ...m, isPending: false, isUploading: false, isFailed: true }
+                      ? { ...m, isPending: false, isFailed: true }
                       : m,
                   ),
                 );
@@ -560,12 +595,23 @@ export default function DMDetailPage() {
           );
           setReplyTo(null);
           clearPendingFiles();
+          if (!clientTempId) {
+            setTimeout(
+              () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+              0,
+            );
+          }
         } catch (error) {
           if (clientTempId) {
             setMessages((prev) =>
               prev.map((m) =>
                 m.clientTempId === clientTempId
-                  ? { ...m, isPending: false, isUploading: false, isFailed: true }
+                  ? {
+                      ...m,
+                      isPending: false,
+                      isUploading: false,
+                      isFailed: true,
+                    }
                   : m,
               ),
             );
@@ -582,6 +628,7 @@ export default function DMDetailPage() {
         setSending(false);
       }
       setInput("");
+      socketRef.current?.emit("stop_typing", { roomId: socketRoomId });
       inputRef.current?.focus();
     },
     [
@@ -688,15 +735,51 @@ export default function DMDetailPage() {
     >
       {/* ── Header ── */}
       <div className={styles.header}>
-        <div className={styles.headerThumb}>
+        <button
+          type="button"
+          className={`${styles.headerThumb} ${styles.headerProfileButton}`}
+          disabled={!targetUserId}
+          onClick={() => setSelectedProfileId(targetUserId)}
+          title="프로필 보기"
+        >
           {targetProfileImg ? (
-            <img src={getImageUrl(targetProfileImg)} alt="target" />
+            <img
+              src={getImageUrl(targetProfileImg)}
+              alt="target"
+              style={{ backgroundColor: "white" }}
+            />
           ) : (
             <span className={styles.headerHashIcon}>👤</span>
           )}
-        </div>
-        <span className={styles.headerName}>
+        </button>
+        <span
+          className={styles.headerName}
+          style={{ display: "flex", alignItems: "center", gap: 6 }}
+        >
           {targetNickname || "사용자"}
+          {targetOnline && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 11,
+                color: "#31c48d",
+                fontWeight: 600,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "#31c48d",
+                  display: "inline-block",
+                }}
+              />
+              온라인
+            </span>
+          )}
         </span>
         <div className={styles.headerDivider} />
         <span className={styles.headerDesc}>
@@ -750,6 +833,22 @@ export default function DMDetailPage() {
           }, {});
 
           if (msg.isSystem) {
+            let parsed = null;
+            try {
+              parsed = JSON.parse(msg.content);
+            } catch {
+              /* not JSON */
+            }
+
+            const isSharePost = parsed?.kind === "share_post";
+            let displayText = msg.content;
+
+            if (isSharePost) {
+              const sharer = parsed.sharerNickname || "알 수 없음";
+              const title = parsed.postTitle || "게시글";
+              displayText = `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
+            }
+
             return (
               <div key={msg.id || idx}>
                 {showDateDivider && (
@@ -759,7 +858,37 @@ export default function DMDetailPage() {
                     </span>
                   </div>
                 )}
-                <div className={styles.systemMsg}>{msg.content}</div>
+                <div className={styles.systemMsg}>{displayText}</div>
+                {isSharePost ? (
+                  <button
+                    type="button"
+                    className={styles.sharedPostCard}
+                    onClick={() => navigate(`/detail/${parsed.postId}`)}
+                    disabled={!parsed.postId}
+                  >
+                    {parsed.postImage && (
+                      <div className={styles.sharedPostImageContainer}>
+                        <img
+                          src={getImageUrl(parsed.postImage)}
+                          alt=""
+                          className={styles.sharedPostImage}
+                        />
+                      </div>
+                    )}
+                    <div className={styles.sharedPostContent}>
+                      <span className={styles.sharedPostEyebrow}>
+                        공유된 게시글
+                      </span>
+                      <strong className={styles.sharedPostTitle}>
+                        {parsed.postTitle || "게시글"}
+                      </strong>
+                      <span className={styles.sharedPostMeta}>
+                        {parsed.sharerNickname || "알 수 없음"}님이
+                        공유했습니다.
+                      </span>
+                    </div>
+                  </button>
+                ) : null}
               </div>
             );
           }
@@ -841,18 +970,20 @@ export default function DMDetailPage() {
                   )}
 
                   {/* 메시지 본문 */}
-                  <div
-                    className={`${styles.msgBubble} ${
-                      msg.isDeleted ? styles.deleted : ""
-                    } ${msg.isPending ? styles.pendingMessage : ""} ${
-                      msg.isUploading ? styles.uploadingMessage : ""
-                    } ${msg.isFailed ? styles.failedMessage : ""}`}
-                  >
-                    <ChatMessageContent content={msg.content} />
-                    {msg.isEdited && !msg.isDeleted && (
-                      <span className={styles.editedTag}>(수정됨)</span>
-                    )}
-                  </div>
+                  <MessageRowErrorBoundary fallbackText={msg.content}>
+                    <div
+                      className={`${styles.msgBubble} ${
+                        msg.isDeleted ? styles.deleted : ""
+                      } ${msg.isPending ? styles.pendingMessage : ""} ${
+                        msg.isFailed ? styles.failedMessage : ""
+                      }`}
+                    >
+                      <ChatMessageContent content={msg.content} />
+                      {msg.isEdited && !msg.isDeleted && (
+                        <span className={styles.editedTag}>(수정됨)</span>
+                      )}
+                    </div>
+                  </MessageRowErrorBoundary>
 
                   {/* 읽음 수 */}
                   {isMine && msg.readCount > 0 && (
@@ -887,123 +1018,123 @@ export default function DMDetailPage() {
                   !msg.isDeleted &&
                   !msg.isPending &&
                   !msg.isFailed && (
-                  <div
-                    className={styles.msgActions}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {/* 빠른 반응 */}
-                    <div className={styles.quickReactions}>
-                      {["👍", "❤️", "😂"].map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          title={emoji}
-                          onClick={() => toggleReaction(msg.id, emoji)}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className={styles.actionDivider} />
-
-                    {/* 반응 더 추가 */}
-                    <button
-                      type="button"
-                      title="반응 추가"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowEmojiPicker(msg.id);
-                      }}
-                      style={{ position: "relative" }}
+                    <div
+                      className={styles.msgActions}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      😊
-                      {showEmojiPicker === msg.id && (
-                        <div
-                          className={styles.emojiPickerPopup}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Picker
-                            data={data}
-                            onEmojiSelect={(emoji) =>
-                              toggleReaction(msg.id, emoji.native)
-                            }
-                            theme="dark"
-                            locale="ko"
-                          />
-                        </div>
-                      )}
-                    </button>
+                      {/* 빠른 반응 */}
+                      <div className={styles.quickReactions}>
+                        {["👍", "❤️", "😂"].map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            title={emoji}
+                            onClick={() => toggleReaction(msg.id, emoji)}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
 
-                    {/* 답장 */}
-                    <button
-                      type="button"
-                      title="답장"
-                      onClick={() => startReply(msg)}
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <div className={styles.actionDivider} />
+
+                      {/* 반응 더 추가 */}
+                      <button
+                        type="button"
+                        title="반응 추가"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowEmojiPicker(msg.id);
+                        }}
+                        style={{ position: "relative" }}
                       >
-                        <polyline points="9 17 4 12 9 7" />
-                        <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
-                      </svg>
-                    </button>
+                        😊
+                        {showEmojiPicker === msg.id && (
+                          <div
+                            className={styles.emojiPickerPopup}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Picker
+                              data={data}
+                              onEmojiSelect={(emoji) =>
+                                toggleReaction(msg.id, emoji.native)
+                              }
+                              theme="dark"
+                              locale="ko"
+                            />
+                          </div>
+                        )}
+                      </button>
 
-                    {isMine && (
-                      <>
-                        {/* 수정 */}
-                        <button
-                          type="button"
-                          title="수정"
-                          onClick={() => startEdit(msg)}
+                      {/* 답장 */}
+                      <button
+                        type="button"
+                        title="답장"
+                        onClick={() => startReply(msg)}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                          <polyline points="9 17 4 12 9 7" />
+                          <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                        </svg>
+                      </button>
+
+                      {isMine && (
+                        <>
+                          {/* 수정 */}
+                          <button
+                            type="button"
+                            title="수정"
+                            onClick={() => startEdit(msg)}
                           >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                        {/* 삭제 */}
-                        <button
-                          type="button"
-                          title="삭제"
-                          onClick={() => handleDelete(msg.id)}
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          {/* 삭제 */}
+                          <button
+                            type="button"
+                            title="삭제"
+                            onClick={() => handleDelete(msg.id)}
                           >
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                            <path d="M10 11v6M14 11v6" />
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                          </svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                              <path d="M10 11v6M14 11v6" />
+                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                            </svg>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
               </div>
             </div>
           );
@@ -1017,17 +1148,19 @@ export default function DMDetailPage() {
           className={styles.scrollToBottom}
           onClick={scrollToBottom}
           title="최신 메시지 보기"
+          aria-label="맨 밑으로 내려가기"
         >
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.5"
+            strokeWidth="2.4"
           >
             <polyline points="6 9 12 15 18 9" />
           </svg>
+          <span>맨 밑으로</span>
         </button>
       )}
 
@@ -1071,7 +1204,9 @@ export default function DMDetailPage() {
             <div className={styles.contextText}>
               {replyTo
                 ? formatChatPreview(replyTo.content)
-                : formatChatPreview(messages.find((m) => m.id === editId)?.content)}
+                : formatChatPreview(
+                    messages.find((m) => m.id === editId)?.content,
+                  )}
             </div>
           </div>
           <button
@@ -1091,6 +1226,20 @@ export default function DMDetailPage() {
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
+        </div>
+      )}
+
+      {/* ── Typing indicator ── */}
+      {typingNickname && (
+        <div
+          style={{
+            padding: "4px 16px",
+            fontSize: 12,
+            color: "var(--color-text-secondary, #888)",
+            fontStyle: "italic",
+          }}
+        >
+          {typingNickname}님이 입력중입니다...
         </div>
       )}
 
@@ -1138,12 +1287,22 @@ export default function DMDetailPage() {
                   type="button"
                   className={styles.pendingRemove}
                   title="첨부 삭제"
+                  disabled={sending}
                   onClick={() => removePendingFile(item.id)}
                 >
                   ×
                 </button>
               </div>
             ))}
+            {sending && (
+              <div className={styles.uploadStatus} role="status">
+                {pendingFiles.some((item) =>
+                  item.file.type.startsWith("image/"),
+                )
+                  ? "이미지 업로드 중..."
+                  : "파일 업로드 중..."}
+              </div>
+            )}
           </div>
         )}
         <div className={styles.inputBox}>
@@ -1157,7 +1316,10 @@ export default function DMDetailPage() {
           />
           {showAttachMenu && (
             <div className={styles.attachMenu}>
-              <button type="button" onClick={() => openFilePicker("image/*,video/*")}>
+              <button
+                type="button"
+                onClick={() => openFilePicker("image/*,video/*")}
+              >
                 이미지/동영상 선택
               </button>
               <button type="button" onClick={() => openFilePicker("")}>
@@ -1174,11 +1336,29 @@ export default function DMDetailPage() {
           >
             +
           </button>
-          <input
+          <textarea
             ref={inputRef}
             className={styles.input}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              if (!e.target.value.trim()) {
+                socketRef.current?.emit("stop_typing", {
+                  roomId: socketRoomId,
+                });
+              } else {
+                const now = Date.now();
+                if (now - typingEmitRef.current > 2000) {
+                  typingEmitRef.current = now;
+                  socketRef.current?.emit("typing", {
+                    roomId: socketRoomId,
+                    nickname: name,
+                  });
+                }
+              }
+            }}
+            onInput={resizeInput}
+            onCompositionEnd={resizeInput}
             onPaste={handlePaste}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -1193,6 +1373,7 @@ export default function DMDetailPage() {
                   ? `@${replyTo.nickname}님에게 답장...`
                   : `${targetNickname}님에게 메시지 보내기`
             }
+            rows={1}
           />
           <div className={styles.inputActions}>
             <button

@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import {
   STATUS_CLOSED,
-  STATUS_EMOJI,
   STATUS_CLASS,
   countComments,
   formatDateTime,
@@ -22,6 +21,7 @@ import {
 import { CommentItem } from "../../components/post_components/CommentItem";
 import MapPreview from "../../components/post_components/MapPreview";
 import ReportModal from "../../components/modals/ReportModal";
+import SharePostModal from "../../components/modals/SharePostModal";
 import styles from "./DetailPage.module.css";
 
 export default function DetailPage() {
@@ -33,9 +33,10 @@ export default function DetailPage() {
   const [commentText, setCommentText] = useState("");
   const [commentImage, setCommentImage] = useState(null);
   const [commentImagePreview, setCommentImagePreview] = useState(null);
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [targetComment, setTargetComment] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [needsContentTruncation, setNeedsContentTruncation] = useState(false);
   const contentRef = useRef(null);
@@ -180,13 +181,6 @@ export default function DetailPage() {
     handleFile(e.target.files[0]);
   };
 
-  const handlePaste = (e) => {
-    const file = e.clipboardData?.files[0];
-    if (file && file.type.startsWith("image/")) {
-      handleFile(file);
-    }
-  };
-
   const onDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -209,24 +203,26 @@ export default function DetailPage() {
   };
 
   const addComment = async () => {
+    if (isCommentSubmitting) return;
+
     if (!token) {
       toast.error("로그인이 필요한 서비스입니다.");
       navigate("/login");
       return;
     }
     if (!commentText.trim() && !commentImage) return;
-    if (isSubmitting) return;
-
-    setIsSubmitting(true);
+    
     try {
+      setIsCommentSubmitting(true);
       await runPostAction(() => createComment(id, {
         content: commentText.trim(),
         image: commentImage
       }));
+
       setCommentText("");
       removeImage();
     } finally {
-      setIsSubmitting(false);
+      setIsCommentSubmitting(false);
     }
   };
 
@@ -357,6 +353,9 @@ export default function DetailPage() {
           </button>
           {showMoreMenu && (
             <div className={styles.moreMenu}>
+              <div className={styles.moreItem} onClick={() => { setIsShareModalOpen(true); setShowMoreMenu(false); }}>
+                공유하기
+              </div>
               {isAuthor ? (
                 <>
                   <div className={styles.moreItem} onClick={() => navigate(`/edit/${id}`)}>
@@ -383,7 +382,7 @@ export default function DetailPage() {
 
         <div className={styles.statusRow}>
           <span className={`${styles.statusBadge} ${statusBadgeClass}`}>
-            {STATUS_EMOJI[status]} {status}
+            {status}
           </span>
           {Boolean(post.edited) && <span className={styles.editedBadge}>수정됨</span>}
         </div>
@@ -464,7 +463,15 @@ export default function DetailPage() {
             작성자 {post.authorNickname || post.author || "이름 없음"}
           </span>
           <span className={styles.detailTime}>
-            {post.createdAt ? new Date(post.createdAt).toLocaleString("ko-KR") : ""}
+            {post.createdAt ? (() => {
+              const date = new Date(post.createdAt);
+              const now = new Date();
+              const options = { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+              if (date.getFullYear() !== now.getFullYear()) {
+                options.year = 'numeric';
+              }
+              return date.toLocaleString("ko-KR", options);
+            })() : ""}
           </span>
         </div>
 
@@ -478,6 +485,17 @@ export default function DetailPage() {
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
             찜하기 {post.likes || 0}
+          </button>
+          <button
+            className={styles.actionBtnLg}
+            onClick={() => setIsShareModalOpen(true)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+            공유하기
           </button>
           <button
             className={`${styles.actionBtnLg}${joined ? ` ${styles.joined}` : ""}`}
@@ -546,6 +564,7 @@ export default function DetailPage() {
             <button 
               className={styles.imageBtn} 
               onClick={() => fileInputRef.current.click()}
+              disabled={isCommentSubmitting}
               title="이미지 첨부"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -558,15 +577,16 @@ export default function DetailPage() {
               placeholder={isDragging ? "여기에 이미지를 놓으세요" : "댓글을 입력하세요."}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
+              disabled={isCommentSubmitting}
               onKeyDown={(e) => e.key === "Enter" && addComment()}
-              onPaste={handlePaste}
             />
-            <button 
-              className={styles.commentSubmit} 
+            <button
+              className={`${styles.commentSubmit} ${isCommentSubmitting ? styles.savingBtn : ""}`}
               onClick={addComment}
-              disabled={isSubmitting}
+              disabled={isCommentSubmitting}
+              data-saving-label={commentImage ? "이미지 업로드 중..." : "등록 중..."}
             >
-              {isSubmitting ? "등록 중..." : "등록"}
+              등록
             </button>
           </div>
         </div>
@@ -582,7 +602,15 @@ export default function DetailPage() {
           targetCommentId={targetComment?.id}
           targetUserId={targetComment ? targetComment.userId : post.user_id}
           targetName={targetComment ? targetComment.authorNickname : null}
-          targetContent={targetComment ? targetComment.text : null}
+          targetContent={targetComment ? targetComment.text : post.content}
+        />
+      )}
+      {isShareModalOpen && (
+        <SharePostModal
+          postId={id}
+          postTitle={post.title}
+          postImage={post.image}
+          onClose={() => setIsShareModalOpen(false)}
         />
       )}
     </main>

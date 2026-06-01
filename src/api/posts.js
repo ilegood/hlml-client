@@ -1,8 +1,7 @@
-import instance from "./instance";
+import instance, { BASE_URL } from "./instance";
 import { normalizeStatus } from "./homeConstants";
 
 const API_URL = "/posts";
-const BASE_URL = "http://localhost:4000";
 
 const MYSQL_DATETIME_RE = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/;
 
@@ -123,8 +122,13 @@ const toPostFormData = (data) => {
   return formData;
 };
 
-export const getPosts = async () => {
-  const res = await instance.get(API_URL);
+export const getPosts = async (options = {}) => {
+  const params = new URLSearchParams();
+  if (options.visibleOnly) params.set("visibleOnly", "1");
+
+  const res = await instance.get(
+    params.toString() ? `${API_URL}?${params.toString()}` : API_URL,
+  );
   return res.data.map(normalizePost);
 };
 
@@ -140,7 +144,10 @@ export const createPost = async (formData) => {
 
 export const updatePost = async (id, data) => {
   const res = await instance.patch(`${API_URL}/${id}`, toPostFormData(data));
-  return res.data;
+  return {
+    ...res.data,
+    post: res.data?.post ? normalizePost(res.data.post) : undefined,
+  };
 };
 
 export const deletePost = async (id) => {

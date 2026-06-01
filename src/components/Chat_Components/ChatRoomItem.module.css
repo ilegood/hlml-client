@@ -23,7 +23,6 @@
   width: 70px;
   height: 70px;
   border-radius: 18px;
-  background-color: var(--color-input-bg);
   flex-shrink: 0;
   background-size: cover;
   background-position: center;
