@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getPosts } from "../../api/posts";
+import { getMyChatRooms } from "../../api/posts";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth";
 import styles from "./MapModal.module.css";
@@ -14,14 +14,10 @@ const MapModal = ({ onClose }) => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const data = await getPosts();
+        const data = await getMyChatRooms();
         const filtered = data.filter((p) => {
           const hasLocation = p.latitude && p.longitude;
-          const isAuthor = String(p.user_id) === String(currentUserId);
-          const isLiked = (p.likedBy || []).includes(String(currentUserId));
-          const isJoined = (p.joinedUserIds || []).includes(String(currentUserId));
-
-          return hasLocation && (isAuthor || isLiked || isJoined);
+          return hasLocation;
         });
         setPosts(filtered);
       } catch (err) {

@@ -8,13 +8,13 @@ import { getRoomBlockWarning, uploadChatFile } from "../../api/chat";
 import { leavePost, getPost, togglePostJoin } from "../../api/posts";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
 import {
   ChatMessageContent,
   MessageRowErrorBoundary,
 } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
+import ChatAvatar from "../../components/chat_components/ChatAvatar";
+import LazyEmojiPicker from "../../components/chat_components/LazyEmojiPicker";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
@@ -34,40 +34,10 @@ import {
   normalizeRoomAppointment,
   parseSystemMessagePayload,
 } from "../../utils/chatHelpers";
-import borderImg from "../../assets/border.png";
 
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
 // Avatar 컴포넌트
-function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
-  const url = getImageUrl(profileImg);
-  const label = displayName(nickname);
-  return (
-    <div
-      className={styles.avatarWrapSmall}
-      onClick={onClick}
-      style={{ cursor: onClick ? "pointer" : "default" }}
-    >
-      {isHost && (
-        <img
-          src={borderImg}
-          className={styles.avatarBorderSmall}
-          alt="host-border"
-        />
-      )}
-      <div
-        className={styles.msgAvatar}
-        style={{ width: size, height: size, fontSize: size * 0.3 }}
-      >
-        {url ? (
-          <img src={url} alt={label} style={{ backgroundColor: "white" }} />
-        ) : (
-          label.slice(0, 2)
-        )}
-      </div>
-    </div>
-  );
-}
 
 // Main Component
 export default function ChatRoomDetailPage() {
@@ -1275,7 +1245,7 @@ export default function ChatRoomDetailPage() {
                       {formatTime(msg.time)}
                     </span>
                   ) : (
-                    <Avatar
+                    <ChatAvatar
                       profileImg={msg.profileImg}
                       nickname={msgNickname}
                       isHost={msgNickname === roomAuthor}
@@ -1407,8 +1377,7 @@ export default function ChatRoomDetailPage() {
                             className={styles.emojiPickerPopup}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Picker
-                              data={data}
+                            <LazyEmojiPicker
                               onEmojiSelect={(emoji) =>
                                 toggleReaction(msg.id, emoji.native)
                               }
@@ -1735,8 +1704,7 @@ export default function ChatRoomDetailPage() {
                 className={styles.mainEmojiPicker}
                 onClick={(e) => e.stopPropagation()}
               >
-                <Picker
-                  data={data}
+                <LazyEmojiPicker
                   onEmojiSelect={handleEmojiSelect}
                   theme="dark"
                   locale="ko"

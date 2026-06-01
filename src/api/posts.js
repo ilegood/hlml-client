@@ -132,6 +132,11 @@ export const getPosts = async (options = {}) => {
   return res.data.map(normalizePost);
 };
 
+export const getMyChatRooms = async () => {
+  const res = await instance.get(`${API_URL}/my-rooms`);
+  return res.data.map(normalizePost);
+};
+
 export const getPost = async (id) => {
   const res = await instance.get(`${API_URL}/${id}`);
   return normalizePost(res.data);

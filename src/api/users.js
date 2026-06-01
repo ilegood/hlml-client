@@ -5,6 +5,28 @@ export const login = async (form) => {
   return data;
 };
 
+export const register = async (body) => {
+  const { data } = await instance.post("/users/register", body);
+  return data;
+};
+
+export const checkRegistrationAvailability = async (params) => {
+  const { data } = await instance.get("/users/register/check", { params });
+  return data;
+};
+
+export const getMyStats = async () => {
+  const { data } = await instance.get("/users/me/stats");
+  return data;
+};
+
+export const searchUsers = async (query) => {
+  const { data } = await instance.get(
+    `/users/search?q=${encodeURIComponent(query)}`,
+  );
+  return data;
+};
+
 export const requestPasswordReset = async (email) => {
   const { data } = await instance.post("/users/password/forgot", { email });
   return data;

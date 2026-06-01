@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import instance, { getImageUrl } from "../../api/instance";
+import { getImageUrl } from "../../api/instance";
+import { getMyStats } from "../../api/users";
 import ProfileEditModal from "../../components/modals/ProfileEditModal";
 import AppointmentModal from "../../components/modals/AppointmentModal";
 import BlockedListModal from "../../components/modals/BlockedListModal";
@@ -36,7 +37,7 @@ export default function UserPage() {
     if (!userId && !nickname) return;
 
     try {
-      const { data } = await instance.get("/users/me/stats");
+      const data = await getMyStats();
       setStats({
         posts: Number(data.posts) || 0,
         appointments: Number(data.appointments) || 0,

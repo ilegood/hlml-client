@@ -1,6 +1,5 @@
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
 import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
+import LazyEmojiPicker from "./LazyEmojiPicker";
 
 export default function ChatInputArea({
   input,
@@ -168,8 +167,7 @@ export default function ChatInputArea({
                 className={styles.mainEmojiPicker}
                 onClick={(event) => event.stopPropagation()}
               >
-                <Picker
-                  data={data}
+                <LazyEmojiPicker
                   onEmojiSelect={handleEmojiSelect}
                   theme="dark"
                   locale="ko"

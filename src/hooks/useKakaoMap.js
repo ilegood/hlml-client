@@ -1,74 +1,85 @@
 import { useEffect } from "react";
-import { getPosts } from "../api/posts"; // Assuming getPosts is in this path
+import { getMyChatRooms } from "../api/posts";
 
 export const useKakaoMap = (mapRef, token, currentUserId) => {
   useEffect(() => {
-    if (token && window.kakao && window.kakao.maps && mapRef.current) {
-      const fetchAndDraw = async () => {
-        try {
-          const data = await getPosts();
-          const filtered = data.filter((p) => {
-            const hasLocation = p.latitude && p.longitude;
-            const isAuthor = String(p.user_id) === String(currentUserId);
-            const isLiked = (p.likedBy || []).includes(String(currentUserId));
-            const isJoined = (p.joinedUserIds || []).includes(String(currentUserId));
-            return hasLocation && (isAuthor || isLiked || isJoined);
-          });
+    if (!token) return;
 
-          const container = mapRef.current;
-          if (!container) return;
+    let cancelled = false;
+    let retryTimer = null;
 
-          window.kakao.maps.load(() => {
-            const options = {
-              center: new window.kakao.maps.LatLng(37.5665, 126.978),
-              level: 4,
-            };
-            const map = new window.kakao.maps.Map(container, options);
-            const bounds = new window.kakao.maps.LatLngBounds();
-            let hasPoints = false;
+    const drawMap = async () => {
+      if (cancelled) return;
 
-            filtered.forEach((post) => {
-              const lat = Number(post.latitude);
-              const lng = Number(post.longitude);
-              if (!isNaN(lat) && !isNaN(lng)) {
-                const position = new window.kakao.maps.LatLng(lat, lng);
-                const isAuthor = String(post.user_id) === String(currentUserId);
+      if (!window.kakao?.maps || !mapRef.current) {
+        retryTimer = window.setTimeout(drawMap, 100);
+        return;
+      }
 
-                let markerImage = null;
-                if (isAuthor) {
-                  const imageSrc =
-                    "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
-                  const imageSize = new window.kakao.maps.Size(20, 30);
-                  markerImage = new window.kakao.maps.MarkerImage(
-                    imageSrc,
-                    imageSize,
-                  );
-                }
-
-                new window.kakao.maps.Marker({
-                  position: position,
-                  map: map,
-                  image: markerImage,
-                });
-                bounds.extend(position);
-                hasPoints = true;
-              }
-            });
-
-            if (hasPoints) {
-              map.setBounds(bounds);
-            }
-
-            map.setDraggable(false);
-            map.setZoomable(false);
-          });
-        } catch (err) {
-          console.error("Preview map error:", err);
-        }
+      const container = mapRef.current;
+      const options = {
+        center: new window.kakao.maps.LatLng(37.5665, 126.978),
+        level: 7,
       };
 
-      const timer = setTimeout(fetchAndDraw, 100);
-      return () => clearTimeout(timer);
-    }
+      const map = new window.kakao.maps.Map(container, options);
+      map.setDraggable(false);
+      map.setZoomable(false);
+
+      try {
+        const data = await getMyChatRooms();
+        if (cancelled) return;
+
+        const filtered = data.filter((p) => p.latitude && p.longitude);
+
+        window.kakao.maps.load(() => {
+          if (cancelled || !mapRef.current) return;
+
+          const bounds = new window.kakao.maps.LatLngBounds();
+          let hasPoints = false;
+
+          filtered.forEach((post) => {
+            const lat = Number(post.latitude);
+            const lng = Number(post.longitude);
+            if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+              const position = new window.kakao.maps.LatLng(lat, lng);
+              const isAuthor = String(post.user_id) === String(currentUserId);
+
+              let markerImage = null;
+              if (isAuthor) {
+                const imageSrc =
+                  "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+                const imageSize = new window.kakao.maps.Size(20, 30);
+                markerImage = new window.kakao.maps.MarkerImage(
+                  imageSrc,
+                  imageSize,
+                );
+              }
+
+              new window.kakao.maps.Marker({
+                position,
+                map,
+                image: markerImage,
+              });
+              bounds.extend(position);
+              hasPoints = true;
+            }
+          });
+
+          if (hasPoints) {
+            map.setBounds(bounds);
+          }
+        });
+      } catch (err) {
+        console.error("Preview map error:", err);
+      }
+    };
+
+    drawMap();
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+    };
   }, [mapRef, token, currentUserId]);
 };

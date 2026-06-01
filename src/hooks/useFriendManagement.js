@@ -9,7 +9,7 @@ import {
   blockUser,
   updateFriendMemo,
 } from "../api/friends";
-import instance from "../api/instance";
+import { createDmRoom } from "../api/chat";
 import { toast } from "sonner";
 
 export const useFriendManagement = () => {
@@ -171,10 +171,8 @@ export const useFriendManagement = () => {
 
   const handleStartDM = async () => {
     try {
-      const res = await instance.post("/chat/dm", {
-        targetId: selectedFriend.id,
-      });
-      navigate(`/dms/${res.data.roomId}`);
+      const data = await createDmRoom(selectedFriend.id);
+      navigate(`/dms/${data.roomId}`);
       setIsOpen(false);
       setSelectedFriend(null);
     } catch (err) {

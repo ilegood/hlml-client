@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import styled from "styled-components";
-import instance, { getImageUrl } from "../../api/instance";
+import { getImageUrl } from "../../api/instance";
+import { createReport } from "../../api/reports";
 
 const ModalWrapper = styled.div`
   position: fixed;
@@ -178,7 +179,7 @@ export default function ReportModal({
 
     setLoading(true);
     try {
-      await instance.post("/reports", {
+      await createReport({
         targetUserId: targetUserId || targetUser?.user_id,
         targetPostId,
         targetCommentId,

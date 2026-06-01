@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { toast } from "sonner";
-import instance, { getImageUrl } from "../../api/instance";
+import { getImageUrl } from "../../api/instance";
+import { createReport, getMyReports } from "../../api/reports";
+import { searchUsers as searchUsersApi } from "../../api/users";
 import { useAuth } from "../../context/auth";
 
 const ModalWrapper = styled.div`
@@ -395,7 +397,7 @@ export default function ReportListModal({ onClose, onChanged }) {
     if (!token) return;
 
     try {
-      const { data } = await instance.get("/reports/my");
+      const data = await getMyReports();
       setReports(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Report list load failed:", err);
@@ -404,7 +406,11 @@ export default function ReportListModal({ onClose, onChanged }) {
   }, [token]);
 
   useEffect(() => {
-    fetchReports();
+    const timer = window.setTimeout(() => {
+      fetchReports();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [fetchReports]);
 
   useEffect(() => {
@@ -416,9 +422,7 @@ export default function ReportListModal({ onClose, onChanged }) {
 
       setIsSearching(true);
       try {
-        const { data } = await instance.get(
-          `/users/search?q=${encodeURIComponent(targetUser)}`,
-        );
+        const data = await searchUsersApi(targetUser);
         setSearchResults(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Search failed:", err);
@@ -471,7 +475,7 @@ export default function ReportListModal({ onClose, onChanged }) {
     }
 
     try {
-      await instance.post("/reports", {
+      await createReport({
         targetUserId,
         reason,
         content: content.trim(),

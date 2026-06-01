@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import instance from "../../api/instance";
+import { checkRegistrationAvailability, register } from "../../api/users";
 import styles from "./RegisterPage.module.css";
 
 const currentYear = new Date().getFullYear();
@@ -250,9 +250,7 @@ const RegisterPage = () => {
       }));
 
       try {
-        const { data } = await instance.get("/users/register/check", {
-          params: { nickname },
-        });
+        const data = await checkRegistrationAvailability({ nickname });
         if (cancelled) return;
         setAvailability((prev) => ({
           ...prev,
@@ -295,9 +293,7 @@ const RegisterPage = () => {
       }));
 
       try {
-        const { data } = await instance.get("/users/register/check", {
-          params: { email },
-        });
+        const data = await checkRegistrationAvailability({ email });
         if (cancelled) return;
         setAvailability((prev) => ({
           ...prev,
@@ -367,7 +363,7 @@ const RegisterPage = () => {
     };
 
     try {
-      await instance.post("/users/register", body);
+      await register(body);
       toast.success("회원가입이 완료되었습니다. 이메일을 확인하여 계정을 인증해주세요.");
       navigate("/login"); // User will need to verify email before logging in
     } catch (error) {

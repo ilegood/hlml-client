@@ -35,12 +35,6 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
   const isAtCapacity = Number(capacity) <= Number(currentParticipants);
 
   useEffect(() => {
-    if (isAtCapacity && status !== STATUS_CLOSED) {
-      setStatus(STATUS_CLOSED);
-    }
-  }, [isAtCapacity, status]);
-
-  useEffect(() => {
     const fetchRoomData = async () => {
       try {
         const post = await getPost(roomId);
@@ -238,7 +232,7 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
               <label className={styles.formLabel}>상태</label>
               <select
                 className={styles.formSelect}
-                value={status}
+                value={isAtCapacity ? STATUS_CLOSED : status}
                 onChange={(e) => setStatus(e.target.value)}
               >
                 <option value={STATUS_OPEN} disabled={isAtCapacity}>

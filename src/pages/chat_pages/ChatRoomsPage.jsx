@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
-import { deletePostBan, getKickedPosts, getPosts } from "../../api/posts";
+import { deletePostBan, getKickedPosts, getMyChatRooms } from "../../api/posts";
 import ChatRoomItem from "../../components/chat_components/ChatRoomItem";
 import styles from "./ChatRoomsPage.module.css";
 
@@ -44,18 +44,11 @@ const ChatRoomsPage = () => {
     setLoading(true);
     try {
       const [allPosts, kickedPosts] = await Promise.all([
-        getPosts(),
+        getMyChatRooms(),
         getKickedPosts(),
       ]);
 
       const myJoinedRooms = allPosts
-        .filter((post) => {
-          const isAuthor = String(post.user_id) === String(userId);
-          const isParticipant = (post.joinedUserIds || [])
-            .map(Number)
-            .includes(Number(userId));
-          return isAuthor || isParticipant;
-        })
         .map((room) => ({ ...room, isKicked: false }));
 
       const combined = [...myJoinedRooms];
@@ -75,7 +68,11 @@ const ChatRoomsPage = () => {
   }, [userId]);
 
   useEffect(() => {
-    fetchChatRooms();
+    const timer = window.setTimeout(() => {
+      fetchChatRooms();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [fetchChatRooms]);
 
   useEffect(() => {

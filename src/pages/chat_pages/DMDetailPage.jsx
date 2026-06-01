@@ -2,94 +2,27 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { AuthContext } from "../../context/auth";
-import instance, { BASE_URL, getImageUrl } from "../../api/instance";
-import { uploadChatFile } from "../../api/chat";
+import { BASE_URL, getImageUrl } from "../../api/instance";
+import { deleteDmRoom, getDmRoom, uploadChatFile } from "../../api/chat";
 import { toast } from "sonner";
 import styles from "./ChatRoomDetail.module.css";
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
 import {
   ChatMessageContent,
   MessageRowErrorBoundary,
 } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
+import ChatAvatar from "../../components/chat_components/ChatAvatar";
+import LazyEmojiPicker from "../../components/chat_components/LazyEmojiPicker";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import { formatChatPreview } from "../../utils/chatPreview";
 import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
-
-// ── 헬퍼 ──────────────────────────────────────────────────────────────────────
-const formatTime = (isoString) => {
-  if (!isoString) return "";
-  return new Date(isoString).toLocaleTimeString("ko-KR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  });
-};
-
-const formatDate = (isoString) => {
-  if (!isoString) return "";
-  const date = new Date(isoString);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-
-  if (date.toDateString() === today.toDateString()) return "오늘";
-  if (date.toDateString() === yesterday.toDateString()) return "어제";
-
-  const options = {
-    month: "long",
-    day: "numeric",
-  };
-  if (date.getFullYear() !== today.getFullYear()) {
-    options.year = "numeric";
-  }
-
-  return date.toLocaleDateString("ko-KR", options);
-};
-
-const isSameDay = (a, b) => {
-  if (!a || !b) return false;
-  const first = new Date(a);
-  const second = new Date(b);
-
-  return (
-    first.getFullYear() === second.getFullYear() &&
-    first.getMonth() === second.getMonth() &&
-    first.getDate() === second.getDate()
-  );
-};
-
-const isCompact = (prev, curr) => {
-  if (!prev || prev.isSystem || curr.isSystem) return false;
-  if (String(prev.userId) !== String(curr.userId)) return false;
-
-  const diff = new Date(curr.time) - new Date(prev.time);
-  return diff >= 0 && diff < 2 * 60 * 1000;
-};
-
-const createClientMessageId = () =>
-  `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
-
-// ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
-
-function Avatar({ profileImg, nickname, size = 40, onClick }) {
-  const url = getImageUrl(profileImg);
-  return (
-    <div
-      className={styles.msgAvatar}
-      onClick={onClick}
-      style={{
-        width: size,
-        height: size,
-        fontSize: size * 0.3,
-        cursor: onClick ? "pointer" : "default",
-      }}
-    >
-      {url ? <img src={url} alt={nickname} /> : nickname?.slice(0, 2)}
-    </div>
-  );
-}
+import {
+  createClientMessageId,
+  formatDate,
+  formatTime,
+  isCompact,
+  isSameDay,
+} from "../../utils/chatHelpers";
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
@@ -390,7 +323,7 @@ export default function DMDetailPage() {
 
     const loadRoom = async () => {
       try {
-        const { data } = await instance.get(`/chat/dm/${roomId}`);
+        const data = await getDmRoom(roomId);
         if (!mounted) return;
 
         targetNicknameRef.current = data.targetNickname || "";
@@ -472,7 +405,7 @@ export default function DMDetailPage() {
     }
 
     try {
-      await instance.delete(`/chat/dm/${roomId}`);
+      await deleteDmRoom(roomId);
       toast.success("대화 기록을 삭제하고 나갔습니다.");
       navigate("/dms", { replace: true });
     } catch (err) {
@@ -916,7 +849,7 @@ export default function DMDetailPage() {
                       {formatTime(msg.time)}
                     </span>
                   ) : (
-                    <Avatar
+                    <ChatAvatar
                       profileImg={msg.profileImg}
                       nickname={msg.nickname}
                       onClick={() => setSelectedProfileId(msg.userId)}
@@ -1054,8 +987,7 @@ export default function DMDetailPage() {
                             className={styles.emojiPickerPopup}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Picker
-                              data={data}
+                            <LazyEmojiPicker
                               onEmojiSelect={(emoji) =>
                                 toggleReaction(msg.id, emoji.native)
                               }
@@ -1391,8 +1323,7 @@ export default function DMDetailPage() {
                 className={styles.mainEmojiPicker}
                 onClick={(e) => e.stopPropagation()}
               >
-                <Picker
-                  data={data}
+                <LazyEmojiPicker
                   onEmojiSelect={handleEmojiSelect}
                   theme="dark"
                   locale="ko"

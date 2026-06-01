@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 import { useAuth } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
-import instance from "../../api/instance";
+import { getDmRooms } from "../../api/chat";
 import styles from "./ChatRoomsPage.module.css";
 import itemStyles from "../../components/chat_components/ChatRoomItem.module.css";
 
@@ -123,8 +123,7 @@ const DMsPage = () => {
   useEffect(() => {
     const fetchDMs = async () => {
       try {
-        const res = await instance.get("/chat/dm");
-        setDms(res.data);
+        setDms(await getDmRooms());
         refresh?.();
       } catch (err) {
         console.error("DM 목록 조회 실패", err);

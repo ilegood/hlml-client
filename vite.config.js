@@ -5,6 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ["emoji-mart", "@emoji-mart/react", "@emoji-mart/data"],
+    include: ["@emoji-mart/react", "@emoji-mart/data"],
   },
 })
