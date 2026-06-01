@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { deletePostBan, getKickedPosts, getPosts } from "../../api/posts";
-import ChatRoomItem from "../../components/chat_components/ChatRoomItem";
+import ChatRoomItem from "../../components/Chat_Components/ChatRoomItem";
 import styles from "./ChatRoomsPage.module.css";
 
 const sortByAppointment = (rooms) =>

@@ -1,4 +1,4 @@
-import PostCard from "../../components/post_components/PostCard";
+import PostCard from "../../components/Post_Components/PostCard";
 import styles from "../../pages/post_pages/MainPage.module.css";
 
 export default function PostListDisplay({

@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { STATUS_CLOSED, STATUS_OPEN } from "../api/homeConstants";
 import { getPost, updatePost } from "../api/posts";
-import CategorySelector from "./post_components/CategorySelector";
-import ImageDropZone from "./post_components/ImageDropZone";
-import MapPreview from "./post_components/MapPreview";
+import CategorySelector from "./Post_Components/CategorySelector";
+import ImageDropZone from "./Post_Components/ImageDropZone";
+import MapPreview from "./Post_Components/MapPreview";
 import PlaceSearchModal from "./modals/PlaceSearchModal";
 import styles from "./RoomSettingsModal.module.css";
 
