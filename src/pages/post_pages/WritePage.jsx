@@ -9,9 +9,9 @@ import {
 } from "../../api/homeConstants";
 import { useAuth } from "../../context/auth";
 import { createPost, getPost, updatePost } from "../../api/posts";
-import CategorySelector from "../../components/Post_Components/CategorySelector";
-import ImageDropZone from "../../components/Post_Components/ImageDropZone";
-import MapPreview from "../../components/Post_Components/MapPreview";
+import CategorySelector from "../../components/post_components/CategorySelector";
+import ImageDropZone from "../../components/post_components/ImageDropZone";
+import MapPreview from "../../components/post_components/MapPreview";
 import PlaceSearchModal from "../../components/modals/PlaceSearchModal";
 import styles from "./WritePage.module.css";
 

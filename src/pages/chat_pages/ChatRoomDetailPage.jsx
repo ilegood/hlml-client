@@ -13,13 +13,13 @@ import Picker from "@emoji-mart/react";
 import {
   ChatMessageContent,
   MessageRowErrorBoundary,
-} from "../../components/Chat_Components/ChatAttachment";
-import ChatFileGallery from "../../components/Chat_Components/ChatFileGallery";
+} from "../../components/chat_components/ChatAttachment";
+import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
-import ChatInputArea from "../../components/Chat_Components/ChatInputArea";
-import MapPreview from "../../components/Post_Components/MapPreview";
+import ChatInputArea from "../../components/chat_components/ChatInputArea";
+import MapPreview from "../../components/post_components/MapPreview";
 import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
 
 import { formatChatPreview } from "../../utils/chatPreview";

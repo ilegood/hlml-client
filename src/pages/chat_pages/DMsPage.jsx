@@ -6,7 +6,7 @@ import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
 import instance from "../../api/instance";
 import styles from "./ChatRoomsPage.module.css";
-import itemStyles from "../../components/Chat_Components/ChatRoomItem.module.css";
+import itemStyles from "../../components/chat_components/ChatRoomItem.module.css";
 
 const mediaLabelByMime = (mimeType) => {
   if (mimeType?.startsWith("image/")) return "이미지를 보냈습니다.";

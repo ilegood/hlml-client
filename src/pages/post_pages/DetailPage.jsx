@@ -18,8 +18,8 @@ import {
   togglePostLike,
   updateComment as updatePostComment,
 } from "../../api/posts";
-import { CommentItem } from "../../components/Post_Components/CommentItem";
-import MapPreview from "../../components/Post_Components/MapPreview";
+import { CommentItem } from "../../components/post_components/CommentItem";
+import MapPreview from "../../components/post_components/MapPreview";
 import ReportModal from "../../components/modals/ReportModal";
 import SharePostModal from "../../components/modals/SharePostModal";
 import styles from "./DetailPage.module.css";

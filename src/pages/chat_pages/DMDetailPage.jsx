@@ -11,8 +11,8 @@ import Picker from "@emoji-mart/react";
 import {
   ChatMessageContent,
   MessageRowErrorBoundary,
-} from "../../components/Chat_Components/ChatAttachment";
-import ChatFileGallery from "../../components/Chat_Components/ChatFileGallery";
+} from "../../components/chat_components/ChatAttachment";
+import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import { formatChatPreview } from "../../utils/chatPreview";
 import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
