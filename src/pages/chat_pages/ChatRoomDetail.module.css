@@ -521,7 +521,6 @@
   max-width: min(420px, 100%);
 }
 
-.attachmentImage,
 .attachmentVideo {
   display: block;
   max-width: 100%;
@@ -529,7 +528,6 @@
   border-radius: 8px;
   border: 1px solid var(--color-border);
   background: #000;
-  object-fit: contain;
 }
 
 .attachmentName {
@@ -918,6 +916,7 @@
   border: none;
   padding: 0;
   cursor: pointer;
+  background: none;
 }
 
 .mediaGridSingle .mediaGridItem {
@@ -1183,7 +1182,6 @@
   aspect-ratio: 1 / 1;
   display: block;
   object-fit: cover;
-  background: #111;
 }
 
 .fileGalleryMediaItem span {
@@ -1608,13 +1606,12 @@
   border: 1px solid var(--color-border);
   border-radius: 6px;
   overflow: hidden;
-  background: #111;
 }
 
 .pendingThumb {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
