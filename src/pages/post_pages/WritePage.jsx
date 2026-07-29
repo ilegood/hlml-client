@@ -9,7 +9,7 @@ import {
 } from "../../api/homeConstants";
 import { useAuth } from "../../context/auth";
 import { createPost, getPost, updatePost } from "../../api/posts";
-import CategorySelector from "../../components/post_components/CategorySelector";
+import CategorySelector from "../../hooks/CategorySelector";
 import ImageDropZone from "../../components/post_components/ImageDropZone";
 import MapPreview from "../../components/post_components/MapPreview";
 import PlaceSearchModal from "../../components/modals/PlaceSearchModal";

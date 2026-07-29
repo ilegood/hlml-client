@@ -16,7 +16,7 @@ import {
 } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/modals/RoomSettingsModal";
-import ChatMembersModal from "../../components/modals/ChatMembersModal";
+import ChatMembersModal from "../../hooks/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import ChatInputArea from "../../components/chat_components/ChatInputArea";
 import MapPreview from "../../components/post_components/MapPreview";

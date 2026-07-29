@@ -1,0 +1,57 @@
+@reference "tailwindcss";
+
+.modalOverlay {
+  @apply fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 pointer-events-auto;
+}
+
+.modalContent {
+  @apply w-[350px] rounded-xl border border-[var(--color-border)] bg-[var(--color-sidebar)] p-[25px] text-[var(--color-text)] shadow-[0_8px_24px_rgba(0,0,0,0.3)];
+}
+
+.title {
+  @apply mt-0 mb-5 text-center text-[18px];
+}
+
+.searchBox {
+  @apply mb-5 flex gap-2;
+}
+
+.searchInput {
+  @apply flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] p-2.5 text-[var(--color-text)] outline-none focus:border-[var(--color-active)];
+}
+
+.resultsList {
+  @apply mb-5 max-h-[250px] overflow-y-auto;
+}
+
+.resultsList::-webkit-scrollbar {
+  @apply w-[5px];
+}
+
+.resultsList::-webkit-scrollbar-thumb {
+  @apply rounded-[10px] bg-[var(--color-active)];
+}
+
+.userItem {
+  @apply flex items-center gap-3 rounded-lg p-2.5 transition-colors duration-200 hover:bg-[var(--color-item-hover)];
+}
+
+.avatar {
+  @apply h-10 w-10 rounded-full bg-[#555] bg-cover bg-center;
+}
+
+.nickname {
+  @apply flex-1 text-[14px] font-medium;
+}
+
+.addButton {
+  @apply cursor-pointer rounded-md border-0 bg-[var(--color-active)] px-3 py-1.5 text-[12px] font-bold text-white hover:opacity-90;
+}
+
+.emptyMessage {
+  @apply py-5 text-center text-[13px] opacity-60;
+}
+
+.closeButton {
+  @apply w-full cursor-pointer rounded-md border-0 bg-[var(--color-border)] p-2.5 text-[14px] text-[var(--color-text)] hover:opacity-80;
+}

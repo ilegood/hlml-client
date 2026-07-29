@@ -1,0 +1,109 @@
+@reference "tailwindcss";
+
+.overlay {
+  @apply fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 backdrop-blur-[4px];
+}
+
+.modalContent {
+  @apply relative flex h-[min(760px,90vh)] w-[480px] flex-col overflow-hidden rounded-[24px] bg-[var(--color-sidebar)] p-[30px] text-[var(--color-text)] shadow-[0_20px_40px_rgba(0,0,0,0.3)];
+}
+
+.header {
+  @apply mb-[25px] flex flex-none items-center justify-between;
+}
+
+.header h2 {
+  @apply text-[20px] font-extrabold text-[var(--color-active)];
+}
+
+.closeBtn {
+  @apply cursor-pointer border-0 bg-transparent text-[var(--color-deactive)] hover:text-[var(--color-active)];
+}
+
+.calendarContainer {
+  @apply mb-5 flex-none rounded-[16px] border border-[var(--color-border)] bg-[var(--color-input-bg)] p-5;
+}
+
+.calHeader {
+  @apply mb-[15px] flex items-center justify-between font-bold;
+}
+
+.navBtn {
+  @apply flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent p-0 text-[var(--color-text)] transition-[background,color,opacity] duration-150 hover:not-disabled:bg-[var(--color-input-focus-bg)] hover:not-disabled:text-[var(--color-active)] disabled:cursor-not-allowed disabled:opacity-20;
+}
+
+.daysGrid {
+  @apply grid grid-cols-7 grid-rows-[20px_repeat(6,44px)] gap-[5px] text-center text-[12px];
+}
+
+.dayLabel {
+  @apply flex h-5 items-center justify-center font-bold opacity-50;
+}
+
+.dayCell {
+  @apply relative flex h-[44px] w-full cursor-pointer flex-col items-center justify-center rounded-lg transition-all duration-200 hover:bg-[var(--color-border)];
+}
+
+.today {
+  @apply border-[1.5px] border-[var(--color-active)];
+}
+
+.selected {
+  @apply bg-[var(--color-active)] text-white;
+}
+
+.otherMonth {
+  @apply pointer-events-none opacity-20;
+}
+
+.dot {
+  @apply absolute bottom-1 h-1.5 w-1.5 rounded-full bg-[#ffdb58];
+}
+
+.apptList {
+  @apply flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1;
+}
+
+.apptList h3 {
+  @apply mb-[5px] flex-none text-[14px];
+}
+
+.apptItem {
+  @apply flex cursor-pointer items-center gap-[15px] rounded-xl border border-[var(--color-border)] bg-[var(--color-input-bg)] p-[15px] transition-transform duration-100 active:scale-[0.98];
+}
+
+.timeTag {
+  @apply whitespace-nowrap rounded-md bg-[var(--color-active)] px-2 py-1 text-[11px] font-bold text-white;
+}
+
+.info {
+  @apply flex-1;
+}
+
+.infoTitle {
+  @apply mb-0.5 text-[14px] font-bold;
+}
+
+.infoPlace {
+  @apply text-[12px] opacity-60;
+}
+
+.emptyMsg {
+  @apply flex min-h-[112px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-[30px] text-center text-[14px] text-[var(--color-deactive)];
+}
+
+.dotPopup {
+  @apply absolute top-full left-1/2 z-[100] min-w-[160px] -translate-x-1/2 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-sidebar)] px-1 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.25)];
+}
+
+.dotPopupItem {
+  @apply flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] transition-colors duration-150 hover:bg-[var(--color-border)];
+}
+
+.dotPopupTime {
+  @apply whitespace-nowrap font-bold text-[var(--color-active)];
+}
+
+.dotPopupTitle {
+  @apply overflow-hidden text-ellipsis whitespace-nowrap;
+}

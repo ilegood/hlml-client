@@ -1,0 +1,49 @@
+@reference "tailwindcss";
+
+.modalWrapper {
+  @apply fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 backdrop-blur-[4px];
+}
+
+.modalContent {
+  @apply w-[400px] rounded-[24px] bg-[var(--color-sidebar)] p-[30px] text-[var(--color-text)];
+}
+
+.header {
+  @apply mb-5 flex items-center justify-between;
+}
+
+.header h2 {
+  @apply text-[20px] font-extrabold text-[#ff4757];
+}
+
+.closeButton {
+  @apply cursor-pointer border-0 bg-transparent text-[var(--color-deactive)];
+}
+
+.list {
+  @apply flex max-h-[400px] flex-col gap-2.5 overflow-y-auto;
+}
+
+.item {
+  @apply flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-input-bg)] px-4 py-3;
+}
+
+.userInfo {
+  @apply flex items-center gap-2.5;
+}
+
+.image {
+  @apply h-8 w-8 rounded-full bg-[#ddd] bg-cover bg-center;
+}
+
+.name {
+  @apply text-[14px] font-semibold;
+}
+
+.unblockButton {
+  @apply cursor-pointer rounded-lg border-[1.5px] border-[var(--color-border)] bg-white px-3 py-1.5 text-[12px] font-semibold hover:border-[#ff4757] hover:text-[#ff4757];
+}
+
+.empty {
+  @apply py-10 text-center text-[14px] text-[var(--color-deactive)];
+}

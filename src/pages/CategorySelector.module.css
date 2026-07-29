@@ -1,0 +1,45 @@
+@reference "tailwindcss";
+
+.categoryRow {
+  @apply flex flex-wrap gap-2;
+}
+
+.categoryWrapper {
+  @apply relative;
+}
+
+.categoryTitle {
+  @apply flex cursor-pointer select-none items-center gap-[5px] whitespace-nowrap rounded-[20px] border-[1.5px] border-[var(--color-border)] bg-[var(--color-sidebar)] px-3 py-1.5 text-[13px] font-medium text-[var(--color-text)] transition-[border-color,color] duration-150 hover:border-[var(--color-active)] hover:text-[var(--color-active)];
+}
+
+.hasSelection {
+  @apply border-[var(--color-active)] bg-[var(--color-active)] text-white;
+}
+
+.selectedDot {
+  @apply inline-block h-1.5 w-1.5 rounded-full bg-white;
+}
+
+.categoryDropdown {
+  @apply absolute top-[calc(100%+6px)] left-0 z-[100] min-w-[110px] rounded-xl border-[1.5px] border-[var(--color-active)] bg-[var(--color-dropdown-bg)] p-1.5 text-[var(--color-dropdown-text)] shadow-[0_10px_28px_var(--color-dropdown-shadow)] animate-[dropIn_0.12s_ease];
+}
+
+@keyframes dropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tagButton {
+  @apply cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-bold text-[var(--color-dropdown-text)] transition-colors duration-100 hover:bg-[var(--color-dropdown-hover-bg)] hover:text-[var(--color-dropdown-hover-text)];
+}
+
+.active {
+  @apply bg-[var(--color-active)] text-white;
+}

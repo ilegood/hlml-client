@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth";
 import { getPosts } from "../../api/posts";
-import PostCard from "../../components/post_components/PostCard";
+import PostCard from "../../hooks/PostCard";
 import styles from "./MyPostsPage.module.css";
 
 export default function MyPostsPage() {

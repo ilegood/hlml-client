@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { STATUS_CLOSED, STATUS_OPEN } from "../../api/homeConstants";
 import { getPost, updatePost } from "../../api/posts";
-import CategorySelector from "../post_components/CategorySelector";
+import CategorySelector from "../../hooks/CategorySelector";
 import ImageDropZone from "../post_components/ImageDropZone";
 import MapPreview from "../post_components/MapPreview";
 import PlaceSearchModal from "./PlaceSearchModal";

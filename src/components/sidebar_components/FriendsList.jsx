@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import styles from "./FriendsList.module.css";
 import { getImageUrl } from "../../api/instance";
-import AddFriendModal from "../modals/AddFriendModal";
+import AddFriendModal from "../../hooks/friend/AddFriendModal";
 import ReportModal from "../modals/ReportModal";
 import { useFriendManagement } from "../../hooks/useFriendManagement";
 

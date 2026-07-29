@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import { togglePostLike } from "../../api/posts";
-import CategorySelector from "../../components/post_components/CategorySelector";
+import CategorySelector from "../../hooks/CategorySelector";
 import SortDropdown from "../../components/post_components/SortDropdown";
 import CentralMapBar from "../../components/post_components/CentralMapBar";
 import styles from "./MainPage.module.css";
