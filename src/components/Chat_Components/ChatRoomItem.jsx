@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import styles from "./ChatRoomItem.module.css";
+import styles from "./chatStyles.js";
 
 const ChatRoomItem = ({ room, onDelete, hideUnreadBadge = false }) => {
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { getImageUrl } from "../../api/instance";
 import { MediaLightbox } from "./ChatAttachment";
-import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
+import styles from "./chatStyles.js";
 
 const countHangul = (value) =>
   (String(value).match(/[\uAC00-\uD7A3]/g) || []).length;

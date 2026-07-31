@@ -1,9 +1,9 @@
 ﻿import { useNavigate } from "react-router-dom";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
-import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
+import styles from "./chatStyles.js";
 import { getImageUrl } from "../../api/instance";
-import { ChatMessageContent } from "./ChatAttachment";
+import { ChatMessageContent, MessageRowErrorBoundary } from "./ChatAttachment";
 import { formatChatPreview } from "../../utils/chatPreview";
 import {
   formatTime,
@@ -116,36 +116,38 @@ function ActionToolbar({
             {emoji}
           </button>
         ))}
-        <button
-          type="button"
-          className={styles.editReactionBtn}
-          title="반응 커스터마이즈"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowCustomizer(true);
-          }}
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        {setShowCustomizer && (
+          <button
+            type="button"
+            className={styles.editReactionBtn}
+            title="반응 커스터마이즈"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCustomizer(true);
+            }}
           >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 1v2" />
-            <path d="M12 21v2" />
-            <path d="M4.22 4.22l1.42 1.42" />
-            <path d="M18.36 18.36l1.42 1.42" />
-            <path d="M1 12h2" />
-            <path d="M21 12h2" />
-            <path d="M4.22 19.78l1.42-1.42" />
-            <path d="M18.36 5.64l1.42-1.42" />
-          </svg>
-        </button>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v2" />
+              <path d="M12 21v2" />
+              <path d="M4.22 4.22l1.42 1.42" />
+              <path d="M18.36 18.36l1.42-1.42" />
+              <path d="M1 12h2" />
+              <path d="M21 12h2" />
+              <path d="M4.22 19.78l1.42-1.42" />
+              <path d="M18.36 5.64l-1.42-1.42" />
+            </svg>
+          </button>
+        )}
       </div>
 
       <div className={styles.actionDivider} />
@@ -300,6 +302,9 @@ export default function ChatMessageItem({
           </div>
         )}
         {parsed?.kind === "share_post" && (
+          <div className={styles.systemMsg}>{systemText}</div>
+        )}
+        {parsed?.kind === "share_post" && (
           <button
             type="button"
             onClick={() => navigate(`/detail/${parsed.postId}`)}
@@ -400,7 +405,9 @@ export default function ChatMessageItem({
           <div
             className={`${styles.msgBubble} ${msg.isDeleted ? styles.deleted : ""} ${msg.isPending ? styles.pendingMessage : ""} ${msg.isFailed ? styles.failedMessage : ""}`}
           >
-            <ChatMessageContent content={msg.content} />
+            <MessageRowErrorBoundary fallbackText={msg.content}>
+              <ChatMessageContent content={msg.content} />
+            </MessageRowErrorBoundary>
             {msg.isEdited && !msg.isDeleted && (
               <span className={styles.editedTag}>(수정됨)</span>
             )}
