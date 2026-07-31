@@ -5,19 +5,6 @@ export const login = async (form) => {
   return data;
 };
 
-export const requestPasswordReset = async (email) => {
-  const { data } = await instance.post("/users/password/forgot", { email });
-  return data;
-};
-
-export const resetPassword = async ({ token, password }) => {
-  const { data } = await instance.post("/users/password/reset", {
-    token,
-    password,
-  });
-  return data;
-};
-
 export const updateProfile = async (profileData) => {
   let dataToSend;
   let headers = {};

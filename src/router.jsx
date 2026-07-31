@@ -5,7 +5,6 @@ import DetailPage from "./pages/post_pages/DetailPage";
 import WritePage from "./pages/post_pages/WritePage";
 import LoginPage from "./pages/user_pages/LoginPage";
 import RegisterPage from "./pages/user_pages/RegisterPage";
-import ResetPasswordPage from "./pages/user_pages/ResetPasswordPage";
 import UserPage from "./pages/user_pages/UserPage";
 import LikesPage from "./pages/my_pages/LikesPage";
 import MyPostsPage from "./pages/my_pages/MyPostsPage";
@@ -25,7 +24,6 @@ const router = createBrowserRouter([
       { path: "/edit/:id", element: <WritePage /> },
       { path: "/register", element: <RegisterPage /> },
       { path: "/login", element: <LoginPage /> },
-      { path: "/reset-password", element: <ResetPasswordPage /> },
       { path: "/user", element: <UserPage /> },
       { path: "/likes", element: <LikesPage /> },
       { path: "/my-posts", element: <MyPostsPage /> },

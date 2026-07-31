@@ -1,4 +1,7 @@
 /* 리셋.css */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+
 * {
   box-sizing: border-box;
   padding: 0;
