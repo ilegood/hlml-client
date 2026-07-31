@@ -52,9 +52,11 @@ export default function ChatInputArea({
           <button
             type="button"
             className={styles.closeBtn}
+            aria-label="닫기"
+            title="닫기"
             onClick={cancelContext}
           >
-            X
+            ×
           </button>
         </div>
       )}
@@ -170,7 +172,7 @@ export default function ChatInputArea({
                 setShowMainEmojiPicker((prev) => !prev);
               }}
             >
-              이모지
+              🙂
             </button>
             {showMainEmojiPicker && (
               <div
