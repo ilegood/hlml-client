@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth";
 import { getPosts, togglePostLike } from "../../api/posts";
 import PostCard from "../../components/post_components/PostCard";
-import styles from "./LikesPage.module.css";
 
 export default function LikesPage() {
   const navigate = useNavigate();
@@ -49,9 +48,12 @@ export default function LikesPage() {
   };
 
   return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>
+    <div className="mx-auto max-w-[900px] px-5 py-10">
+      <div className="mb-[30px] flex items-center gap-[15px]">
+        <button
+          className="cursor-pointer border-0 bg-transparent text-[var(--color-text)]"
+          onClick={() => navigate(-1)}
+        >
           <svg
             width="24"
             height="24"
@@ -63,11 +65,11 @@ export default function LikesPage() {
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <h2>찜 목록</h2>
+        <h2 className="text-[24px] font-extrabold">찜 목록</h2>
       </div>
 
       {likedPosts.length > 0 ? (
-        <div className={styles.grid}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
           {likedPosts.map((post) => (
             <PostCard
               key={post.id}
@@ -80,8 +82,8 @@ export default function LikesPage() {
           ))}
         </div>
       ) : (
-        <div className={styles.empty}>
-          <div className={styles.emptyIcon}>⭐</div>
+        <div className="py-[100px] text-center text-[var(--color-deactive)]">
+          <div className="mb-[10px] text-[48px]">⭐</div>
           <p>찜한 게시글이 없습니다.</p>
         </div>
       )}
