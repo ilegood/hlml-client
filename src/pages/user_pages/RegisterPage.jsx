@@ -368,8 +368,8 @@ const RegisterPage = () => {
 
     try {
       await instance.post("/users/register", body);
-      toast.success("회원가입이 완료되었습니다. 이메일을 확인하여 계정을 인증해주세요.");
-      navigate("/login"); // User will need to verify email before logging in
+      toast.success("회원가입이 완료되었습니다.");
+      navigate("/login");
     } catch (error) {
       toast.error(
         error.response?.data?.message || "서버와 통신 중 오류가 발생했습니다.",

@@ -13,9 +13,6 @@ import ChatRoomDetailPage from "./pages/chat_pages/ChatRoomDetailPage";
 import ChatRoomsPage from "./pages/chat_pages/ChatRoomsPage";
 import DMsPage from "./pages/chat_pages/DMsPage";
 import DMDetailPage from "./pages/chat_pages/DMDetailPage";
-import EmailVerificationSuccessPage from "./pages/user_pages/EmailVerificationSuccessPage";
-import EmailVerificationFailPage from "./pages/user_pages/EmailVerificationFailPage";
-import EmailVerificationPendingPage from "./pages/user_pages/EmailVerificationPendingPage";
 
 const router = createBrowserRouter([
   {
@@ -29,9 +26,6 @@ const router = createBrowserRouter([
       { path: "/register", element: <RegisterPage /> },
       { path: "/login", element: <LoginPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },
-      { path: "/verify-email", element: <EmailVerificationSuccessPage /> },
-      { path: "/verify-email/fail", element: <EmailVerificationFailPage /> },
-      { path: "/email-verification-pending", element: <EmailVerificationPendingPage /> },
       { path: "/user", element: <UserPage /> },
       { path: "/likes", element: <LikesPage /> },
       { path: "/my-posts", element: <MyPostsPage /> },

@@ -54,13 +54,3 @@ export const getUserActivity = async (id) => {
   const { data } = await instance.get(`/users/${id}/activity`);
   return data;
 };
-
-export const verifyEmail = async (token) => {
-  const { data } = await instance.post("/users/verify-email", { token });
-  return data;
-};
-
-export const resendVerificationEmail = async (email) => {
-  const { data } = await instance.post("/users/resend-verification-email", { email });
-  return data;
-};

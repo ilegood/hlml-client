@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import {
   login as loginAPI,
   requestPasswordReset as requestPasswordResetAPI,
-  resendVerificationEmail as resendVerificationEmailAPI,
 } from "../../api/users";
 import { useAuth } from "../../context/auth";
 import styles from "./LoginPage.module.css";
@@ -16,7 +15,6 @@ const LoginPage = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [showResetForm, setShowResetForm] = useState(false);
   const [isResetSubmitting, setIsResetSubmitting] = useState(false);
-  const [showResendVerification, setShowResendVerification] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,12 +28,7 @@ const LoginPage = () => {
       login(data);
       navigate("/");
     } catch (error) {
-      if (error.response?.data?.code === "EMAIL_NOT_VERIFIED") {
-        toast.error(error.response.data.message);
-        setShowResendVerification(true);
-      } else {
-        toast.error(error.response?.data?.message || "로그인에 실패했습니다.");
-      }
+      toast.error(error.response?.data?.message || "로그인에 실패했습니다.");
     }
   };
 
@@ -57,23 +50,6 @@ const LoginPage = () => {
       );
     } finally {
       setIsResetSubmitting(false);
-    }
-  };
-
-  const handleResendVerificationEmail = async () => {
-    const emailToResend = form.email.trim();
-    if (!emailToResend) {
-      toast.error("이메일 주소를 입력해주세요.");
-      return;
-    }
-    try {
-      await resendVerificationEmailAPI(emailToResend);
-      toast.success("인증 이메일을 다시 보냈습니다. 받은 편지함을 확인해주세요.");
-      setShowResendVerification(false);
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message || "인증 이메일 재전송에 실패했습니다.",
-      );
     }
   };
 
@@ -109,19 +85,6 @@ const LoginPage = () => {
           <button type="submit" className={styles.loginBtn}>
             로그인
           </button>
-
-          {showResendVerification && (
-            <div className={styles.resendPanel}>
-              <p>이메일이 인증되지 않았습니다. 인증 이메일을 다시 보내시겠습니까?</p>
-              <button
-                type="button"
-                className={styles.resendBtn}
-                onClick={handleResendVerificationEmail}
-              >
-                인증 이메일 다시 보내기
-              </button>
-            </div>
-          )}
 
           <button
             type="button"
