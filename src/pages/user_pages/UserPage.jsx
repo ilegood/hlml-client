@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import instance, { getImageUrl } from "../../api/instance";
 import ProfileEditModal from "../../components/modals/ProfileEditModal";
-import AppointmentModal from "../../hooks/friend/AppointmentModal";
-import BlockedListModal from "../../hooks/friend/BlockedListModal";
+import AppointmentModal from "../../components/sidebar_components/js/AppointmentModal";
+import BlockedListModal from "../../components/sidebar_components/js/BlockedListModal";
 import ReportListModal from "../../components/modals/ReportListModal";
 import QAModal from "../../components/modals/QAModal";
 

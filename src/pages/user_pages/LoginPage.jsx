@@ -28,7 +28,7 @@ const LoginPage = () => {
   return (
     <div className="flex h-[calc(100vh-25px)] items-center justify-center">
       <form onSubmit={handleSubmit}>
-        <div className="flex w-[480px] flex-col rounded-2xl bg-[var(--color-sidebar)] px-9 pt-10 pb-8 shadow-[0_4px_24px_rgba(0,0,0,0.1)]">
+        <div className="flex w-[480px] flex-col rounded-2xl bg-[var(--color-sidebar)] p-[40px_36px_32px] shadow-[0_4px_24px_rgba(0,0,0,0.1)]">
           <div className="mb-[30px] flex flex-col gap-5">
             <label className="flex flex-col gap-2 text-[13px] font-semibold text-[var(--color-text)]">
               이메일

@@ -10,6 +10,9 @@ const addFriendModalJsx = {
       id.endsWith('/src/hooks/friend/AddFriendModal.js') ||
       id.endsWith('/src/hooks/friend/AppointmentModal.js') ||
       id.endsWith('/src/hooks/friend/BlockedListModal.js') ||
+      id.endsWith('/src/components/sidebar_components/js/AddFriendModal.js') ||
+      id.endsWith('/src/components/sidebar_components/js/AppointmentModal.js') ||
+      id.endsWith('/src/components/sidebar_components/js/BlockedListModal.js') ||
       id.endsWith('/src/hooks/ChatMembersModal.js') ||
       id.endsWith('/src/hooks/CategorySelector.js')
       || id.endsWith('/src/hooks/PostCard.js')

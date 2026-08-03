@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth";
 import { getPosts, togglePostLike } from "../../api/posts";
-import PostCard from "../../hooks/PostCard";
+import PostCard from "../../components/post_components/PostCard";
 import styles from "./LikesPage.module.css";
 
 export default function LikesPage() {
