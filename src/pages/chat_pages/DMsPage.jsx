@@ -5,8 +5,7 @@ import { useAuth } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
 import instance from "../../api/instance";
-import styles from "./ChatRoomsPage.module.css";
-import itemStyles from "../../components/chat_components/ChatRoomItem.module.css";
+import itemStyles from "../../components/chat_components/chatStyles.js";
 
 const mediaLabelByMime = (mimeType) => {
   if (mimeType?.startsWith("image/")) return "이미지를 보냈습니다.";
@@ -139,14 +138,14 @@ const DMsPage = () => {
   }, [userId, refresh]);
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h2>개인 메시지</h2>
+    <div className="mx-auto flex min-h-[calc(100vh-25px)] max-w-[900px] flex-col bg-[var(--color-bg)] p-5">
+      <div className="mb-[25px] border-b border-[var(--color-border)] pb-[15px]">
+        <h2 className="m-0 text-[24px] font-extrabold text-[var(--color-active)]">개인 메시지</h2>
       </div>
 
-      <div className={styles.chatRoomList}>
+      <div className="flex flex-1 flex-col gap-4 px-[5px] pb-[30px] pt-[5px]">
         {loading ? (
-          <div className={styles.empty}>메시지를 불러오는 중...</div>
+          <div className="mt-20 text-center text-[16px] font-semibold text-[var(--color-deactive)] opacity-70">메시지를 불러오는 중...</div>
         ) : dms.length > 0 ? (
           dms.map((dm) => {
             const roomKey = String(dm.roomId);
@@ -211,7 +210,7 @@ const DMsPage = () => {
             );
           })
         ) : (
-          <div className={styles.empty}>
+          <div className="mt-20 text-center text-[16px] font-semibold text-[var(--color-deactive)] opacity-70">
             진행 중인 대화가 없습니다.
             <br />
             친구 목록에서 메시지를 보내보세요.

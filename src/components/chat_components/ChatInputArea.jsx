@@ -1,6 +1,6 @@
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
+import styles from "./chatStyles.js";
 
 export default function ChatInputArea({
   input,
@@ -27,6 +27,9 @@ export default function ChatInputArea({
   roomId,
   formatChatPreview,
   messages,
+  onInputChange,
+  onInput,
+  onCompositionEnd,
 }) {
   const contextText = replyTo
     ? formatChatPreview(replyTo.content)
@@ -49,9 +52,11 @@ export default function ChatInputArea({
           <button
             type="button"
             className={styles.closeBtn}
+            aria-label="닫기"
+            title="닫기"
             onClick={cancelContext}
           >
-            X
+            ×
           </button>
         </div>
       )}
@@ -134,7 +139,13 @@ export default function ChatInputArea({
             ref={inputRef}
             className={styles.input}
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(event) =>
+              onInputChange
+                ? onInputChange(event)
+                : setInput(event.target.value)
+            }
+            onInput={onInput}
+            onCompositionEnd={onCompositionEnd}
             onPaste={handlePaste}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
@@ -161,7 +172,7 @@ export default function ChatInputArea({
                 setShowMainEmojiPicker((prev) => !prev);
               }}
             >
-              이모지
+              🙂
             </button>
             {showMainEmojiPicker && (
               <div
