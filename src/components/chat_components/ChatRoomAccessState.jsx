@@ -28,7 +28,7 @@ const ChatRoomAccessState = ({
           <div className={styles.warningModal}>
             <h3>게시글을 찾을 수 없습니다.</h3>
             <p>존재하지 않거나 삭제된 게시글입니다.</p>
-            <button type="button" onClick={() => onBack()}>
+            <button type="button" onClick={onBack}>
               뒤로 가기
             </button>
           </div>
@@ -45,16 +45,16 @@ const ChatRoomAccessState = ({
             <h2 style={{ marginTop: 0 }}>{postData.title}</h2>
             {(postData.date || postData.time) && (
               <p style={{ margin: "4px 0", color: "#888" }}>
-                📅 {postData.date || ""} {postData.time?.slice(0, 5) || ""}
+                {postData.date || ""} {postData.time?.slice(0, 5) || ""}
               </p>
             )}
             {postData.place && (
               <p style={{ margin: "4px 0", color: "#888" }}>
-                📍 {postData.place}
+                {postData.place}
               </p>
             )}
             <p style={{ margin: "4px 0", color: "#888" }}>
-              👥 {postData.participants || 1}/{postData.capacity || "∞"}
+              멤버 {postData.participants || 1}/{postData.capacity || "-"}
             </p>
             {postData.content && (
               <p
@@ -79,7 +79,7 @@ const ChatRoomAccessState = ({
                 margin: "16px 0",
               }}
             />
-            <h3 style={{ margin: "0 0 16px" }}>참여하겠습니까?</h3>
+            <h3 style={{ margin: "0 0 16px" }}>참여하시겠습니까?</h3>
             <div style={{ display: "flex", gap: 8 }}>
               <button
                 type="button"
@@ -105,7 +105,7 @@ const ChatRoomAccessState = ({
               </button>
               <button
                 type="button"
-                onClick={() => onBack()}
+                onClick={onBack}
                 style={{
                   flex: 1,
                   height: 40,
@@ -127,6 +127,7 @@ const ChatRoomAccessState = ({
     );
   }
 
+  return null;
 };
 
 export default ChatRoomAccessState;
