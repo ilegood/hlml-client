@@ -1,57 +1,27 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/auth";
-import { getPosts, togglePostLike } from "../../api/posts";
 import PostCard from "../../components/post_components/PostCard";
+<<<<<<< Updated upstream
 import styles from "./LikesPage.module.css";
+=======
+import { useLikedPosts } from "../../hooks/useLikedPosts";
+>>>>>>> Stashed changes
 
 export default function LikesPage() {
-  const navigate = useNavigate();
-  const { userId } = useAuth();
-  const [likedPosts, setLikedPosts] = useState([]);
-
-  useEffect(() => {
-    const fetchLikedPosts = async () => {
-      try {
-        const allPosts = await getPosts();
-        const currentUserId = userId || "me";
-        const filtered = allPosts.filter(
-          (p) =>
-            Array.isArray(p.likedBy) &&
-            p.likedBy.includes(String(currentUserId)),
-        );
-        setLikedPosts(filtered);
-      } catch (err) {
-        console.error("Failed to fetch liked posts:", err);
-      }
-    };
-    fetchLikedPosts();
-  }, [userId]);
-
-  const handleLike = async (post) => {
-    const currentUserId = userId || "me";
-    const previous = likedPosts;
-
-    setLikedPosts((prev) => prev.filter((p) => p.id !== post.id));
-
-    try {
-      const updated = await togglePostLike(post.id);
-      setLikedPosts((prev) =>
-        prev.filter(
-          (p) =>
-            p.id !== post.id || updated.likedBy.includes(String(currentUserId)),
-        ),
-      );
-    } catch (err) {
-      console.error("Failed to update like:", err);
-      setLikedPosts(previous);
-    }
-  };
+  const { currentUserId, goBack, handleLike, likedPosts, openPost } =
+    useLikedPosts();
 
   return (
+<<<<<<< Updated upstream
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
         <button className={styles.backBtn} onClick={() => navigate(-1)}>
+=======
+    <div className="mx-auto max-w-[900px] px-5 py-10">
+      <div className="mb-[30px] flex items-center gap-[15px]">
+        <button
+          className="cursor-pointer border-0 bg-transparent text-[var(--color-text)]"
+          onClick={goBack}
+        >
+>>>>>>> Stashed changes
           <svg
             width="24"
             height="24"
@@ -74,8 +44,8 @@ export default function LikesPage() {
               post={post}
               variant="likes"
               onLike={handleLike}
-              onOpen={(id) => navigate(`/detail/${id}`)}
-              currentUserId={userId || "me"}
+              onOpen={openPost}
+              currentUserId={currentUserId}
             />
           ))}
         </div>

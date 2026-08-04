@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
   STATUS_CLOSED,
   STATUS_CLASS,

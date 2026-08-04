@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "../../context/AuthContext.jsx";
 import { getPosts } from "../../api/posts";
 import styles from "./AppointmentModal.module.css";
 

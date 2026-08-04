@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ﻿import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -14,6 +15,14 @@ import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import ChatAvatar from "../../components/chat_components/ChatAvatar";
 import LazyEmojiPicker from "../../components/chat_components/LazyEmojiPicker";
 import UserProfileModal from "../../components/modals/UserProfileModal";
+=======
+import ChatMessageList from "../../components/chat_components/ChatMessageList";
+import ChatScrollButton from "../../components/chat_components/ChatScrollButton";
+import DMHeader from "../../components/chat_components/DMHeader";
+import ChatInputArea from "../../components/chat_components/ChatInputArea";
+import DMChatOverlays from "../../components/chat_components/DMChatOverlays";
+import useDMChat from "../../hooks/useDMChat";
+>>>>>>> Stashed changes
 import { formatChatPreview } from "../../utils/chatPreview";
 import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
 import {
@@ -24,12 +33,30 @@ import {
   isSameDay,
 } from "../../utils/chatHelpers";
 
-// ── Main Component ─────────────────────────────────────────────────────────────
+// Main Component
 
 export default function DMDetailPage() {
+<<<<<<< Updated upstream
   const { roomId } = useParams(); // Numeric ID from dm_rooms table
   const { name, userId, profileImg } = useContext(AuthContext);
   const navigate = useNavigate();
+=======
+  const {
+    roomId, userId, messages, input, setInput,
+    targetUserId, targetNickname, targetProfileImg, targetOnline,
+    replyTo, editId, hoveredMsgId, setHoveredMsgId, showEmojiPicker, setShowEmojiPicker,
+    showMainEmojiPicker, setShowMainEmojiPicker, showScrollBtn,
+    showFileGallery, setShowFileGallery, notificationsMuted, sending,
+    selectedProfileId, setSelectedProfileId,
+    bottomRef, messagesRef, inputRef, fileInputRef,
+    pendingFiles, showAttachMenu, setShowAttachMenu, fileAccept,
+    addPendingFiles, openFilePicker, removePendingFile, resizeInput,
+    handleEmojiSelect, handleScroll, scrollToBottom, toggleNotifications,
+    handleLeaveDM, handleSend, startEdit, startReply, handleDelete,
+    toggleReaction, scrollToMessage, cancelContext, handlePaste,
+    handleDrop, handleDragOver, handleInputChange,
+  } = useDMChat();
+>>>>>>> Stashed changes
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -664,8 +691,9 @@ export default function DMDetailPage() {
     <div
       className={styles.chatWrap}
       onDrop={handleDrop}
-      onDragOver={(e) => e.preventDefault()}
+      onDragOver={handleDragOver}
     >
+<<<<<<< Updated upstream
       {/* ── Header ── */}
       <div className={styles.header}>
         <button
@@ -742,6 +770,20 @@ export default function DMDetailPage() {
           </button>
         </div>
       </div>
+=======
+      {/* Header */}
+      <DMHeader
+        targetUserId={targetUserId}
+        targetProfileImg={targetProfileImg}
+        targetNickname={targetNickname}
+        targetOnline={targetOnline}
+        setSelectedProfileId={setSelectedProfileId}
+        notificationsMuted={notificationsMuted}
+        toggleNotifications={toggleNotifications}
+        setShowFileGallery={setShowFileGallery}
+        handleLeaveDM={handleLeaveDM}
+      />
+>>>>>>> Stashed changes
 
       {/* ── Message list ── */}
       <div
@@ -1096,6 +1138,7 @@ export default function DMDetailPage() {
         </button>
       )}
 
+<<<<<<< Updated upstream
       {/* ── Reply / Edit context bar ── */}
       {(replyTo || editId) && (
         <div className={styles.inputContext}>
@@ -1353,21 +1396,46 @@ export default function DMDetailPage() {
           </div>
         </div>
       </div>
+=======
+      <ChatInputArea
+        input={input}
+        setInput={setInput}
+        handleSend={handleSend}
+        sending={sending}
+        editId={editId}
+        replyTo={replyTo}
+        cancelContext={cancelContext}
+        pendingFiles={pendingFiles}
+        removePendingFile={removePendingFile}
+        addPendingFiles={addPendingFiles}
+        openFilePicker={openFilePicker}
+        handlePaste={handlePaste}
+        handleEmojiSelect={handleEmojiSelect}
+        inputRef={inputRef}
+        fileInputRef={fileInputRef}
+        fileAccept={fileAccept}
+        showAttachMenu={showAttachMenu}
+        setShowAttachMenu={setShowAttachMenu}
+        showMainEmojiPicker={showMainEmojiPicker}
+        setShowMainEmojiPicker={setShowMainEmojiPicker}
+        roomTitle={targetNickname}
+        roomId={roomId}
+        formatChatPreview={formatChatPreview}
+        messages={messages}
+        onInputChange={handleInputChange}
+        onInput={resizeInput}
+        onCompositionEnd={resizeInput}
+      />
+>>>>>>> Stashed changes
 
-      {selectedProfileId && (
-        <UserProfileModal
-          userId={selectedProfileId}
-          currentUserId={userId}
-          onClose={() => setSelectedProfileId(null)}
-        />
-      )}
-
-      {showFileGallery && (
-        <ChatFileGallery
-          messages={messages}
-          onClose={() => setShowFileGallery(false)}
-        />
-      )}
+      <DMChatOverlays
+        currentUserId={userId}
+        messages={messages}
+        selectedProfileId={selectedProfileId}
+        setSelectedProfileId={setSelectedProfileId}
+        setShowFileGallery={setShowFileGallery}
+        showFileGallery={showFileGallery}
+      />
     </div>
   );
 }

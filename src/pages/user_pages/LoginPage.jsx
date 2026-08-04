@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -76,6 +77,13 @@ const LoginPage = () => {
       );
     }
   };
+=======
+import { Link } from "react-router-dom";
+import { useLoginForm } from "../../hooks/useLoginForm";
+
+const LoginPage = () => {
+  const { form, handleChange, handleSubmit } = useLoginForm();
+>>>>>>> Stashed changes
 
   return (
     <div className={styles.page}>

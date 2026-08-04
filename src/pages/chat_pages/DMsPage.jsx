@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -136,6 +137,17 @@ const DMsPage = () => {
       fetchDMs();
     }
   }, [userId, refresh]);
+=======
+import { getImageUrl } from "../../api/instance";
+import itemStyles from "../../components/chat_components/chatStyles.js";
+import {
+  formatDMTime as formatTime,
+  formatLastMessage,
+  useDMList,
+} from "../../hooks/useDMList";
+const DMsPage = () => {
+  const { dms, loading, onlineUsers, openDMRoom, unreadByRoomId } = useDMList();
+>>>>>>> Stashed changes
 
   return (
     <div className={styles.container}>
@@ -157,7 +169,7 @@ const DMsPage = () => {
               <div
                 key={dm.roomId}
                 className={itemStyles.chatRoomItem}
-                onClick={() => navigate(`/dms/${dm.roomId}`)}
+                onClick={() => openDMRoom(dm.roomId)}
                 style={{ cursor: "pointer" }}
               >
               <div style={{ position: "relative" }}>

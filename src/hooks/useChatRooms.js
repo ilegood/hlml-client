@@ -1,11 +1,8 @@
-<<<<<<< Updated upstream
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "../../context/auth";
-import { useChatNotifications } from "../../context/ChatNotificationContext";
-import { deletePostBan, getKickedPosts, getMyChatRooms } from "../../api/posts";
-import ChatRoomItem from "../../components/chat_components/ChatRoomItem";
-import styles from "./ChatRoomsPage.module.css";
+import { deletePostBan, getKickedPosts, getPosts } from "../api/posts";
+import { useAuth } from "../context/AuthContext.jsx";
+import { useChatNotifications } from "../context/ChatNotificationContext";
 
 const sortByAppointment = (rooms) =>
   [...rooms].sort((a, b) => {
@@ -18,7 +15,7 @@ const sortByAppointment = (rooms) =>
     return dateA - dateB;
   });
 
-const ChatRoomsPage = () => {
+export const useChatRooms = () => {
   const { userId } = useAuth();
   const { summary } = useChatNotifications() || {};
   const [chatRooms, setChatRooms] = useState([]);
@@ -45,11 +42,18 @@ const ChatRoomsPage = () => {
     setLoading(true);
     try {
       const [allPosts, kickedPosts] = await Promise.all([
-        getMyChatRooms(),
+        getPosts(),
         getKickedPosts(),
       ]);
 
       const myJoinedRooms = allPosts
+        .filter((post) => {
+          const isAuthor = String(post.user_id) === String(userId);
+          const isParticipant = (post.joinedUserIds || [])
+            .map(Number)
+            .includes(Number(userId));
+          return isAuthor || isParticipant;
+        })
         .map((room) => ({ ...room, isKicked: false }));
 
       const combined = [...myJoinedRooms];
@@ -62,18 +66,14 @@ const ChatRoomsPage = () => {
       setChatRooms(sortByAppointment(combined));
     } catch (error) {
       console.error("Failed to fetch chat rooms:", error);
-      toast.error("채팅방 목록을 불러오지 못했습니다.");
+      toast.error("梨꾪똿諛?紐⑸줉??遺덈윭?ㅼ? 紐삵뻽?듬땲??");
     } finally {
       setLoading(false);
     }
   }, [userId]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      fetchChatRooms();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
+    fetchChatRooms();
   }, [fetchChatRooms]);
 
   useEffect(() => {
@@ -84,65 +84,23 @@ const ChatRoomsPage = () => {
   }, [fetchChatRooms]);
 
   const handleDeleteKickedRoom = async (postId) => {
-    if (!window.confirm("이 채팅방을 목록에서 삭제하시겠습니까?")) return;
+    if (!window.confirm("??梨꾪똿諛⑹쓣 紐⑸줉?먯꽌 ??젣?섏떆寃좎뒿?덇퉴?")) return;
 
     try {
       await deletePostBan(postId);
-      toast.success("목록에서 삭제했습니다.");
+      toast.success("紐⑸줉?먯꽌 ??젣?덉뒿?덈떎.");
       fetchChatRooms();
     } catch (err) {
       console.error("Failed to delete kicked room:", err);
-      toast.error("삭제에 실패했습니다.");
+      toast.error("??젣???ㅽ뙣?덉뒿?덈떎.");
     }
   };
-=======
-import ChatRoomItem from "../../components/chat_components/ChatRoomItem";
-import { useChatRooms } from "../../hooks/useChatRooms";
-const ChatRoomsPage = () => {
-  const {
+
+  return {
     chatRooms,
     handleDeleteKickedRoom,
     loading,
     unreadByRoomId,
     userId,
-  } = useChatRooms();
->>>>>>> Stashed changes
-
-  return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h2>채팅방 목록</h2>
-      </div>
-
-      <div className={styles.chatRoomList}>
-        {loading ? (
-          <div className={styles.empty}>채팅방을 불러오는 중...</div>
-        ) : chatRooms.length > 0 ? (
-          chatRooms.map((room) => {
-            const roomId = String(room.post_id || room.id);
-            return (
-              <ChatRoomItem
-                key={room.id}
-                room={{
-                  ...room,
-                  unreadCount: unreadByRoomId.get(roomId) || 0,
-                }}
-                onDelete={
-                  room.isKicked ? () => handleDeleteKickedRoom(room.id) : null
-                }
-              />
-            );
-          })
-        ) : (
-          <div className={styles.empty}>
-            {userId
-              ? "참여 중인 채팅방이 없습니다."
-              : "로그인하면 채팅방 목록을 확인할 수 있습니다."}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  };
 };
-
-export default ChatRoomsPage;

@@ -2,10 +2,15 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import styled from "styled-components";
+<<<<<<< Updated upstream
 import { getImageUrl } from "../../api/instance";
 import { sharePostToChat } from "../../api/chat";
 import { getFriends } from "../../api/friends";
 import { AuthContext } from "../../context/auth";
+=======
+import instance, { getImageUrl } from "../../api/instance";
+import { AuthContext } from "../../context/AuthContext.jsx";
+>>>>>>> Stashed changes
 
 const Overlay = styled.div`
   position: fixed;

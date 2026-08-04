@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -18,11 +19,21 @@ import LazyEmojiPicker from "../../components/chat_components/LazyEmojiPicker";
 import RoomSettingsModal from "../../components/RoomSettingsModal";
 import ChatMembersModal from "../../components/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
+=======
+import ChatRoomMessageList from "../../components/chat_components/ChatRoomMessageList";
+import ChatRoomAccessState from "../../components/chat_components/ChatRoomAccessState";
+import ChatBlockWarningModal from "../../components/chat_components/ChatBlockWarningModal";
+import ChatRoomHeader from "../../components/chat_components/ChatRoomHeader";
+import ChatRoomOverlays from "../../components/chat_components/ChatRoomOverlays";
+import ChatScrollButton from "../../components/chat_components/ChatScrollButton";
+import useChatRoomDetail from "../../hooks/useChatRoomDetail";
+>>>>>>> Stashed changes
 import ChatInputArea from "../../components/chat_components/ChatInputArea";
 import MapPreview from "../../components/post_components/MapPreview";
 import { usePendingChatFiles } from "../../hooks/usePendingChatFiles";
 
 import { formatChatPreview } from "../../utils/chatPreview";
+<<<<<<< Updated upstream
 import {
   formatAppointmentDateTime,
   formatTime,
@@ -45,6 +56,31 @@ export default function ChatRoomDetailPage() {
   const { name, userId, profileImg } = useContext(AuthContext);
   const { notifications } = useChatNotifications() || {};
   const navigate = useNavigate();
+=======
+import { formatAppointmentDateTime } from "../../utils/chatHelpers";
+// Main Component
+export default function ChatRoomDetailPage() {
+  const {
+    roomId, name, userId, profileImg, navigate, messages, input, setInput,
+    roomTitle, setRoomTitle, roomImage, setRoomImage, roomAuthor,
+    roomLocation, setRoomLocation, roomAppointment, setRoomAppointment,
+    showSettings, setShowSettings, showMembers, setShowMembers, roomMembers,
+    replyTo, editId, hoveredMsgId, setHoveredMsgId, showEmojiPicker,
+    setShowEmojiPicker, showMainEmojiPicker, setShowMainEmojiPicker,
+    showScrollBtn, showFileGallery, setShowFileGallery, notificationsMuted,
+    sending, blockWarning, selectedProfileId,
+    setSelectedProfileId, postData, isParticipant, joining, loadingPost,
+    typingNickname, bottomRef, messagesRef, inputRef, fileInputRef,
+    pendingFiles, showAttachMenu, setShowAttachMenu,
+    fileAccept, addPendingFiles, openFilePicker, removePendingFile,
+    resizeInput, appointmentReminder, handleEmojiSelect, handleScroll,
+    scrollToBottom, handleSend, startEdit, startReply, handleDelete,
+    toggleReaction, scrollToMessage, toggleMembers, cancelContext,
+    handleLeave, handleJoinChat, handlePaste, handleDrop, handleDragOver,
+    handleBack, handleInputChange, handleBlockWarningConfirm, handleKickMember,
+    toggleNotifications, openRoomMap, isFull,
+  } = useChatRoomDetail();
+>>>>>>> Stashed changes
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -784,6 +820,7 @@ export default function ChatRoomDetailPage() {
 
   if (loadingPost) {
     return (
+<<<<<<< Updated upstream
       <div className={styles.chatWrap}>
         <div className={styles.warningOverlay}>
           <div className={styles.warningModal}>
@@ -791,6 +828,17 @@ export default function ChatRoomDetailPage() {
           </div>
         </div>
       </div>
+=======
+      <ChatRoomAccessState
+        loadingPost={loadingPost}
+        postData={postData}
+        isParticipant={isParticipant}
+        joining={joining}
+        isFull={isFull}
+        onJoin={handleJoinChat}
+        onBack={handleBack}
+      />
+>>>>>>> Stashed changes
     );
   }
 
@@ -904,8 +952,9 @@ export default function ChatRoomDetailPage() {
     <div
       className={styles.chatWrap}
       onDrop={handleDrop}
-      onDragOver={(e) => e.preventDefault()}
+      onDragOver={handleDragOver}
     >
+<<<<<<< Updated upstream
       {blockWarning && (
         <div className={styles.warningOverlay}>
           <div className={styles.warningModal}>
@@ -928,6 +977,12 @@ export default function ChatRoomDetailPage() {
           </div>
         </div>
       )}
+=======
+      <ChatBlockWarningModal
+        warning={blockWarning}
+        onConfirm={handleBlockWarningConfirm}
+      />
+>>>>>>> Stashed changes
       {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.headerThumb}>
@@ -1562,6 +1617,7 @@ export default function ChatRoomDetailPage() {
       )}
 
       {/* ── Input area ── */}
+<<<<<<< Updated upstream
       <div className={styles.inputArea}>
         {pendingFiles.length > 0 && (
           <div className={styles.pendingAttachments}>
@@ -1786,6 +1842,58 @@ export default function ChatRoomDetailPage() {
             ),
           );
         }}
+=======
+      <ChatInputArea
+        input={input}
+        setInput={setInput}
+        handleSend={handleSend}
+        sending={sending}
+        editId={editId}
+        replyTo={replyTo}
+        cancelContext={cancelContext}
+        pendingFiles={pendingFiles}
+        removePendingFile={removePendingFile}
+        addPendingFiles={addPendingFiles}
+        openFilePicker={openFilePicker}
+        handlePaste={handlePaste}
+        handleEmojiSelect={handleEmojiSelect}
+        inputRef={inputRef}
+        fileInputRef={fileInputRef}
+        fileAccept={fileAccept}
+        showAttachMenu={showAttachMenu}
+        setShowAttachMenu={setShowAttachMenu}
+        showMainEmojiPicker={showMainEmojiPicker}
+        setShowMainEmojiPicker={setShowMainEmojiPicker}
+        roomTitle={roomTitle}
+        roomId={roomId}
+        formatChatPreview={formatChatPreview}
+        messages={messages}
+        onInputChange={handleInputChange}
+        onInput={resizeInput}
+        onCompositionEnd={resizeInput}
+      />
+
+      <ChatRoomOverlays
+        showSettings={showSettings}
+        setShowSettings={setShowSettings}
+        roomId={roomId}
+        roomTitle={roomTitle}
+        setRoomTitle={setRoomTitle}
+        setRoomImage={setRoomImage}
+        setRoomLocation={setRoomLocation}
+        setRoomAppointment={setRoomAppointment}
+        showFileGallery={showFileGallery}
+        setShowFileGallery={setShowFileGallery}
+        messages={messages}
+        showMembers={showMembers}
+        setShowMembers={setShowMembers}
+        roomMembers={roomMembers}
+        roomAuthor={roomAuthor}
+        userId={userId}
+        onKickMember={handleKickMember}
+        selectedProfileId={selectedProfileId}
+        setSelectedProfileId={setSelectedProfileId}
+>>>>>>> Stashed changes
       />
 
       {selectedProfileId && (

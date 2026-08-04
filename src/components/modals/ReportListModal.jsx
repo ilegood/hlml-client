@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { toast } from "sonner";
+<<<<<<< Updated upstream
 import { getImageUrl } from "../../api/instance";
 import { createReport, getMyReports } from "../../api/reports";
 import { searchUsers as searchUsersApi } from "../../api/users";
 import { useAuth } from "../../context/auth";
+=======
+import instance, { getImageUrl } from "../../api/instance";
+import { useAuth } from "../../context/AuthContext.jsx";
+>>>>>>> Stashed changes
 
 const ModalWrapper = styled.div`
   position: fixed;

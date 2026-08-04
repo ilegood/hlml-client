@@ -1,9 +1,7 @@
-<<<<<<< Updated upstream
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { checkRegistrationAvailability, register } from "../../api/users";
-import styles from "./RegisterPage.module.css";
+import instance from "../api/instance";
 
 const currentYear = new Date().getFullYear();
 const years = Array.from(
@@ -12,6 +10,10 @@ const years = Array.from(
 );
 const months = Array.from({ length: 12 }, (_, i) => i + 1);
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
+const selectArrowStyle = {
+  backgroundImage:
+    "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
+};
 
 const INITIAL_FORM = {
   nickname: "",
@@ -111,7 +113,8 @@ const getPhoneNumberValidationMessage = (phoneNumber) => {
   return "";
 };
 
-const RegisterPage = () => {
+export const useRegisterForm = () => {
+
   const navigate = useNavigate();
   const [form, setForm] = useState(INITIAL_FORM);
   const [touched, setTouched] = useState({});
@@ -237,6 +240,28 @@ const RegisterPage = () => {
     setTouched((prev) => ({ ...prev, birthday: true }));
   };
 
+  const handleBirthdayBlur = () => {
+    setTouched((prev) => ({ ...prev, birthday: true }));
+  };
+
+  const handleGenderChange = (event) => {
+    handleChange(event);
+    setTouched((prev) => ({ ...prev, gender: true }));
+  };
+
+  const handlePasswordFocus = () => {
+    setPasswordFocused(true);
+  };
+
+  const handlePasswordBlur = (event) => {
+    handleBlur(event);
+    setPasswordFocused(false);
+  };
+
+  const goToLogin = () => {
+    navigate("/login");
+  };
+
   useEffect(() => {
     if (nicknameError || !nickname) {
       return;
@@ -251,7 +276,9 @@ const RegisterPage = () => {
       }));
 
       try {
-        const data = await checkRegistrationAvailability({ nickname });
+        const { data } = await instance.get("/users/register/check", {
+          params: { nickname },
+        });
         if (cancelled) return;
         setAvailability((prev) => ({
           ...prev,
@@ -294,7 +321,9 @@ const RegisterPage = () => {
       }));
 
       try {
-        const data = await checkRegistrationAvailability({ email });
+        const { data } = await instance.get("/users/register/check", {
+          params: { email },
+        });
         if (cancelled) return;
         setAvailability((prev) => ({
           ...prev,
@@ -364,21 +393,17 @@ const RegisterPage = () => {
     };
 
     try {
-      await register(body);
-      toast.success("회원가입이 완료되었습니다. 이메일을 확인하여 계정을 인증해주세요.");
-      navigate("/login"); // User will need to verify email before logging in
+      await instance.post("/users/register", body);
+      toast.success("회원가입이 완료되었습니다.");
+      navigate("/login");
     } catch (error) {
       toast.error(
         error.response?.data?.message || "서버와 통신 중 오류가 발생했습니다.",
       );
     }
   };
-=======
-import { Link } from "react-router-dom";
-import { useRegisterForm } from "../../hooks/useRegisterForm";
 
-const RegisterPage = () => {
-  const {
+  return {
     availability,
     birthdayError,
     days,
@@ -406,254 +431,5 @@ const RegisterPage = () => {
     phoneError,
     selectArrowStyle,
     years,
-  } = useRegisterForm();
->>>>>>> Stashed changes
-
-  return (
-    <div className={styles.page}>
-      <form onSubmit={handleSubmit}>
-        <div className={styles.container}>
-          <label className={styles.label}>
-            닉네임
-            <input
-              className={styles.input}
-              type="text"
-              name="nickname"
-              value={form.nickname}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              maxLength={12}
-              placeholder="닉네임을 입력해주세요"
-            />
-            {nicknameError ? (
-              <span className={`${styles.fieldMessage} ${styles.fieldError}`}>
-                {nicknameError}
-              </span>
-            ) : nicknameAvailabilityMessage ? (
-              <span
-                className={`${styles.fieldMessage} ${
-                  availability.nickname.available
-                    ? styles.fieldValid
-                    : availability.nickname.checking
-                      ? styles.fieldMuted
-                      : styles.fieldError
-                }`}
-              >
-                {nicknameAvailabilityMessage}
-              </span>
-            ) : null}
-          </label>
-
-          <label className={styles.label}>
-            이메일 주소
-            <input
-              className={styles.input}
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="example@email.com"
-            />
-            {emailError ? (
-              <span className={`${styles.fieldMessage} ${styles.fieldError}`}>
-                {emailError}
-              </span>
-            ) : emailAvailabilityMessage ? (
-              <span
-                className={`${styles.fieldMessage} ${
-                  availability.email.available
-                    ? styles.fieldValid
-                    : availability.email.checking
-                      ? styles.fieldMuted
-                      : styles.fieldError
-                }`}
-              >
-                {emailAvailabilityMessage}
-              </span>
-            ) : null}
-          </label>
-
-          <label className={styles.label}>
-            비밀번호
-            <input
-              className={styles.input}
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              onFocus={handlePasswordFocus}
-              onBlur={handlePasswordBlur}
-              placeholder="비밀번호를 입력해주세요"
-            />
-            {passwordFocused && (
-              <div className={styles.passwordPopover}>
-                <strong>비밀번호 조건</strong>
-                {passwordCriteria.map((item) => (
-                  <span
-                    key={item.label}
-                    className={item.met ? styles.criteriaMet : styles.criteriaUnmet}
-                  >
-                    {item.met ? "✓" : "•"} {item.label}
-                  </span>
-                ))}
-              </div>
-            )}
-            {passwordError && (
-              <span className={`${styles.fieldMessage} ${styles.fieldError}`}>
-                {passwordError}
-              </span>
-            )}
-          </label>
-
-          <label className={styles.label}>
-            비밀번호 확인
-            <input
-              className={styles.input}
-              type="password"
-              name="pw_check"
-              value={form.pw_check}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="비밀번호를 다시 입력해주세요"
-            />
-            {passwordCheckError ? (
-              <span className={`${styles.fieldMessage} ${styles.fieldError}`}>
-                {passwordCheckError}
-              </span>
-            ) : form.pw_check ? (
-              <span className={`${styles.fieldMessage} ${styles.fieldValid}`}>
-                비밀번호가 일치합니다.
-              </span>
-            ) : null}
-          </label>
-
-          <label className={styles.label}>
-            휴대전화
-            <input
-              className={styles.input}
-              type="tel"
-              name="phone_number"
-              value={form.phone_number}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="'-' 없이 숫자만 입력해주세요"
-            />
-            {phoneError && (
-              <span className={`${styles.fieldMessage} ${styles.fieldError}`}>
-                {phoneError}
-              </span>
-            )}
-          </label>
-
-          <label className={styles.label}>
-            생년월일
-            <div className={styles.birthWrap}>
-              <select
-                className={styles.select}
-                name="year"
-                value={form.birthday.year}
-                onChange={handleBirthChange}
-                onBlur={handleBirthdayBlur}
-              >
-                <option value="">년</option>
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-              <select
-                className={styles.select}
-                name="month"
-                value={form.birthday.month}
-                onChange={handleBirthChange}
-                onBlur={handleBirthdayBlur}
-              >
-                <option value="">월</option>
-                {months.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-              <select
-                className={styles.select}
-                name="day"
-                value={form.birthday.day}
-                onChange={handleBirthChange}
-                onBlur={handleBirthdayBlur}
-              >
-                <option value="">일</option>
-                {days.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {birthdayError && (
-              <span className={`${styles.fieldMessage} ${styles.fieldError}`}>
-                {birthdayError}
-              </span>
-            )}
-          </label>
-
-          <fieldset className={styles.genderField}>
-            <legend className={styles.genderLabel}>성별</legend>
-            <div className={styles.genderWrap}>
-              {[
-                { label: "남성", value: "male" },
-                { label: "여성", value: "female" },
-              ].map((gender) => (
-                <label key={gender.value} className={styles.genderOption}>
-                  <input
-                    type="radio"
-                    name="gender"
-                    value={gender.value}
-                    checked={form.gender === gender.value}
-                    onChange={handleGenderChange}
-                  />
-                  {gender.label}
-                </label>
-              ))}
-            </div>
-            {genderError && (
-              <span className={`${styles.fieldMessage} ${styles.fieldError}`}>
-                {genderError}
-              </span>
-            )}
-          </fieldset>
-
-          <div className={styles.buttonWrap}>
-            <button
-              type="button"
-<<<<<<< Updated upstream
-              className={styles.btnCancel}
-              onClick={() => navigate("/login")}
-=======
-              className="h-[45px] flex-1 cursor-pointer rounded-[50px] border-0 bg-[#f0f0f0] text-[15px] font-semibold text-[#888] transition-[opacity,transform] duration-200 hover:opacity-85 active:scale-[0.98]"
-              onClick={goToLogin}
->>>>>>> Stashed changes
-            >
-              취소
-            </button>
-            <button
-              type="submit"
-              className={styles.btnSubmit}
-              disabled={!isFormValid}
-            >
-              회원가입
-            </button>
-          </div>
-
-          <Link to="/" className={styles.backLink}>
-            메인으로 돌아가기
-          </Link>
-        </div>
-      </form>
-    </div>
-  );
+  };
 };
-
-export default RegisterPage;
