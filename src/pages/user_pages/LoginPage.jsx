@@ -1,37 +1,8 @@
-<<<<<<< Updated upstream
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { login as loginAPI } from "../../api/users";
-import { useAuth } from "../../context/auth";
-
-const LoginPage = () => {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const [form, setForm] = useState({ email: "", password: "" });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const data = await loginAPI(form);
-      login(data);
-      navigate("/");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "로그인에 실패했습니다.");
-    }
-  };
-=======
 import { Link } from "react-router-dom";
 import { useLoginForm } from "../../hooks/useLoginForm";
 
 const LoginPage = () => {
   const { form, handleChange, handleSubmit } = useLoginForm();
->>>>>>> Stashed changes
 
   return (
     <div className="flex h-[calc(100vh-25px)] items-center justify-center">
@@ -73,7 +44,10 @@ const LoginPage = () => {
             to="/register"
             className="mt-1 pl-1 text-[12px] text-[#aaa] no-underline transition-colors duration-200 hover:text-[#888]"
           >
-            계정이 없으신가요? <span className="font-semibold text-[var(--color-active)]">회원가입 하러가기</span>
+            계정이 없으신가요?{" "}
+            <span className="font-semibold text-[var(--color-active)]">
+              회원가입 하러가기
+            </span>
           </Link>
         </div>
       </form>

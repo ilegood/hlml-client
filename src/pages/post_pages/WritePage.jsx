@@ -9,11 +9,10 @@ import {
 } from "../../api/homeConstants";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { createPost, getPost, updatePost } from "../../api/posts";
-import CategorySelector from "../../hooks/CategorySelector";
+import CategorySelector from "../../components/Post_Components/CategorySelector";
 import ImageDropZone from "../../components/post_components/ImageDropZone";
 import MapPreview from "../../components/post_components/MapPreview";
 import PlaceSearchModal from "../../components/modals/PlaceSearchModal";
-import styles from "./WritePage.module.css";
 
 const WRITE_CATEGORY_EXCLUDES = ["인원"];
 
@@ -88,19 +87,19 @@ function DatePickerModal({
     maxDate.slice(0, 8) + "01";
 
   return (
-    <div className={styles.pickerOverlay} onMouseDown={onClose}>
-      <div className={styles.pickerModal} onMouseDown={(e) => e.stopPropagation()}>
-        <div className={styles.pickerHeader}>
+    <div className="[position:fixed] [inset:0] [z-index:12000] [display:flex] [align-items:center] [justify-content:center] [padding:18px] [background:rgba(0,_0,_0,_0.62)] [backdrop-filter:blur(5px)]" onMouseDown={onClose}>
+      <div className="[width:min(520px,_100%)] [max-height:min(760px,_88vh)] [overflow-y:auto] [padding:22px] [border:1px_solid_var(--color-border)] [border-radius:24px] [background:radial-gradient(circle_at_top_left,_rgba(148,_163,_184,_0.12),_transparent_34%),_var(--color-sidebar)] [color:var(--color-text)] [box-shadow:0_24px_70px_rgba(0,_0,_0,_0.42)]" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="[display:flex] [justify-content:space-between] [gap:16px] [align-items:flex-start] [margin-bottom:18px] [&_span]:[color:var(--color-deactive)] [&_span]:[font-size:12px] [&_span]:[font-weight:900] [&_h3]:[margin-top:4px] [&_h3]:[color:var(--color-text)] [&_h3]:[font-size:21px] [&_h3]:[font-weight:900]">
           <div>
             <span>약속 날짜</span>
             <h3>{formatDateLabel(selectedDate)}</h3>
           </div>
-          <button type="button" className={styles.pickerCloseBtn} onClick={onClose}>
+          <button type="button" className="[width:34px] [height:34px] [border:1px_solid_var(--color-border)] [border-radius:999px] [background:var(--color-input-bg)] [color:var(--color-text)] [cursor:pointer] [font-size:22px] [line-height:1]" onClick={onClose}>
             &times;
           </button>
         </div>
 
-        <div className={styles.calendarHeader}>
+        <div className="[display:grid] [grid-template-columns:72px_1fr_72px] [gap:10px] [align-items:center] [margin-bottom:14px] [&_strong]:[text-align:center] [&_strong]:[font-size:16px] [&_strong]:[font-weight:900] [&_button]:[min-height:34px] [&_button]:[border:1px_solid_var(--color-border)] [&_button]:[border-radius:999px] [&_button]:[background:var(--color-input-bg)] [&_button]:[color:var(--color-text)] [&_button]:[cursor:pointer] [&_button]:[font-weight:800] [&_button:disabled]:[opacity:0.3] [&_button:disabled]:[cursor:not-allowed]">
           <button
             type="button"
             onClick={() => setCalendarMonth(new Date(viewYear, viewMonth - 1, 1))}
@@ -118,9 +117,9 @@ function DatePickerModal({
           </button>
         </div>
 
-        <div className={styles.calendarGrid}>
+        <div className="[display:grid] [grid-template-columns:repeat(7,_1fr)] [grid-template-rows:auto_repeat(6,_1fr)] [gap:8px] [min-height:356px]">
           {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
-            <div className={styles.calendarWeekday} key={day}>
+            <div className="[padding:6px_0] [color:var(--color-deactive)] [text-align:center] [font-size:12px] [font-weight:900]" key={day}>
               {day}
             </div>
           ))}
@@ -128,7 +127,7 @@ function DatePickerModal({
             if (!day) {
               return (
                 <div
-                  className={styles.calendarBlank}
+                  className="[aspect-ratio:1] [border:1px_solid_transparent] [border-radius:14px] [background:color-mix(in_srgb,_var(--color-input-bg)_42%,_transparent)] [opacity:0.35]"
                   key={`blank-${index}`}
                 />
               );
@@ -140,8 +139,10 @@ function DatePickerModal({
                 <button
                   type="button"
                   key={dateKey}
-                  className={`${styles.calendarDay} ${
-                    dateKey === selectedDate ? styles.calendarDayActive : ""
+                  className={`aspect-square rounded-[14px] border border-[var(--color-border)] bg-[var(--color-input-bg)] font-black text-[var(--color-text)] transition-[transform,border-color,background] duration-150 hover:-translate-y-px hover:border-[var(--color-deactive)] disabled:cursor-not-allowed disabled:opacity-25 ${
+                    dateKey === selectedDate
+                      ? "border-[var(--color-active)] bg-[var(--color-active)] text-white"
+                      : ""
                   }`}
                   disabled={disabled}
                   onClick={() => {
@@ -179,28 +180,30 @@ function TimePickerModal({
     isPastTimeSlot(`${selectedHour}:${minute}`);
 
   return (
-    <div className={styles.pickerOverlay} onMouseDown={onClose}>
-      <div className={styles.pickerModal} onMouseDown={(e) => e.stopPropagation()}>
-        <div className={styles.pickerHeader}>
+    <div className="[position:fixed] [inset:0] [z-index:12000] [display:flex] [align-items:center] [justify-content:center] [padding:18px] [background:rgba(0,_0,_0,_0.62)] [backdrop-filter:blur(5px)]" onMouseDown={onClose}>
+      <div className="[width:min(520px,_100%)] [max-height:min(760px,_88vh)] [overflow-y:auto] [padding:22px] [border:1px_solid_var(--color-border)] [border-radius:24px] [background:radial-gradient(circle_at_top_left,_rgba(148,_163,_184,_0.12),_transparent_34%),_var(--color-sidebar)] [color:var(--color-text)] [box-shadow:0_24px_70px_rgba(0,_0,_0,_0.42)]" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="[display:flex] [justify-content:space-between] [gap:16px] [align-items:flex-start] [margin-bottom:18px] [&_span]:[color:var(--color-deactive)] [&_span]:[font-size:12px] [&_span]:[font-weight:900] [&_h3]:[margin-top:4px] [&_h3]:[color:var(--color-text)] [&_h3]:[font-size:21px] [&_h3]:[font-weight:900]">
           <div>
             <span>약속 시간</span>
             <h3>{formatTimeLabel(nextTime)}</h3>
           </div>
-          <button type="button" className={styles.pickerCloseBtn} onClick={onClose}>
+          <button type="button" className="[width:34px] [height:34px] [border:1px_solid_var(--color-border)] [border-radius:999px] [background:var(--color-input-bg)] [color:var(--color-text)] [cursor:pointer] [font-size:22px] [line-height:1]" onClick={onClose}>
             &times;
           </button>
         </div>
 
-        <div className={styles.timeDial}>
-          <div className={styles.timeDialColumn}>
-            <span className={styles.timeDialLabel}>시</span>
-            <div className={styles.timeDialList}>
+        <div className="[display:grid] [grid-template-columns:minmax(0,_1fr)_auto_minmax(0,_1fr)] [gap:14px] [align-items:center]">
+          <div className="flex min-w-0 flex-col gap-2">
+            <span className="text-center text-[12px] font-bold text-[var(--color-deactive)]">시</span>
+            <div className="grid max-h-[260px] gap-2 overflow-y-auto pr-1">
               {HOURS.map((hour) => (
                 <button
                   type="button"
                   key={hour}
-                  className={`${styles.timeDialBtn} ${
-                    selectedHour === hour ? styles.timeDialBtnActive : ""
+                  className={`h-10 rounded-[12px] border border-[var(--color-border)] bg-[var(--color-input-bg)] font-bold text-[var(--color-text)] disabled:cursor-not-allowed disabled:opacity-30 ${
+                    selectedHour === hour
+                      ? "border-[var(--color-active)] bg-[var(--color-active)] text-white"
+                      : ""
                   }`}
                   disabled={isHourDisabled(hour)}
                   onClick={() => setSelectedHour(hour)}
@@ -210,16 +213,18 @@ function TimePickerModal({
               ))}
             </div>
           </div>
-          <div className={styles.timeDialDivider}>:</div>
-          <div className={styles.timeDialColumn}>
-            <span className={styles.timeDialLabel}>분</span>
-            <div className={styles.timeDialList}>
+          <div className="self-center text-[22px] font-black text-[var(--color-deactive)]">:</div>
+          <div className="flex min-w-0 flex-col gap-2">
+            <span className="text-center text-[12px] font-bold text-[var(--color-deactive)]">분</span>
+            <div className="grid max-h-[260px] gap-2 overflow-y-auto pr-1">
               {MINUTES.map((minute) => (
                 <button
                   type="button"
                   key={minute}
-                  className={`${styles.timeDialBtn} ${
-                    selectedMinute === minute ? styles.timeDialBtnActive : ""
+                  className={`h-10 rounded-[12px] border border-[var(--color-border)] bg-[var(--color-input-bg)] font-bold text-[var(--color-text)] disabled:cursor-not-allowed disabled:opacity-30 ${
+                    selectedMinute === minute
+                      ? "border-[var(--color-active)] bg-[var(--color-active)] text-white"
+                      : ""
                   }`}
                   disabled={isMinuteDisabled(minute)}
                   onClick={() => setSelectedMinute(minute)}
@@ -233,7 +238,7 @@ function TimePickerModal({
 
         <button
           type="button"
-          className={styles.timeConfirmBtn}
+          className="[width:100%] [min-height:42px] [margin-top:16px] [border:0] [border-radius:12px] [background:var(--color-active)] [color:white] [font-size:14px] [font-weight:900] [cursor:pointer] disabled:[opacity:0.35] disabled:[cursor:not-allowed]"
           disabled={confirmDisabled}
           onClick={() => {
             onSelect(nextTime);
@@ -397,54 +402,54 @@ export default function WritePage() {
 
   if (isLoading) {
     return (
-      <main className={styles.container}>
-        <h2 className={styles.pageTitle}>불러오는 중...</h2>
+      <main className="[max-width:900px] [margin:0_auto] [padding:16px] [padding-top:24px]">
+        <h2 className="[font-size:18px] [font-weight:800] [color:var(--color-text)]">불러오는 중...</h2>
       </main>
     );
   }
 
   return (
-    <main className={styles.container}>
-      <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>
+    <main className="[max-width:900px] [margin:0_auto] [padding:16px] [padding-top:24px]">
+      <div className="[display:flex] [align-items:center] [margin-bottom:20px]">
+        <button className="[background:none] [border:none] [width:36px] [height:36px] [border-radius:50%] [display:flex] [align-items:center] [justify-content:center] [cursor:pointer] [color:var(--color-text)] [margin-right:10px] [transition:background_0.15s] hover:[background:var(--color-border)]" onClick={() => navigate(-1)}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <h2 className={styles.pageTitle}>
+        <h2 className="[font-size:18px] [font-weight:800] [color:var(--color-text)]">
           {isEdit ? "게시글 수정" : "게시글 작성"}
         </h2>
       </div>
 
-      <div className={styles.writeForm}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>제목</label>
+      <div className="[display:flex] [flex-direction:column] [gap:20px] [background:var(--color-sidebar)] [padding:24px] [border-radius:18px] [border:1.5px_solid_var(--color-border)]">
+        <div className="[display:flex] [flex-direction:column] [gap:8px]">
+          <label className="[font-size:12px] [font-weight:700] [color:var(--color-text)] [opacity:0.8]">제목</label>
           <input
-            className={styles.formInput}
+            className="[width:100%] [padding:12px_16px] [border:1.5px_solid_var(--color-border)] [border-radius:12px] [font-size:14px] [font-family:inherit] [background:var(--color-input-bg)] [color:var(--color-text)] [outline:none] [transition:all_0.2s] [box-sizing:border-box] [border-color:var(--color-active)] [background:var(--color-input-focus-bg)] disabled:[opacity:0.5] disabled:[cursor:not-allowed] disabled:[background:var(--color-bg)]"
             placeholder="제목을 입력하세요"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>내용</label>
+        <div className="[display:flex] [flex-direction:column] [gap:8px]">
+          <label className="[font-size:12px] [font-weight:700] [color:var(--color-text)] [opacity:0.8]">내용</label>
           <textarea
-            className={styles.formTextarea}
+            className="[width:100%] [padding:14px_16px] [border:1.5px_solid_var(--color-border)] [border-radius:12px] [font-size:14px] [font-family:inherit] [background:var(--color-input-bg)] [color:var(--color-text)] [resize:none] [min-height:150px] [outline:none] [line-height:1.6] [box-sizing:border-box] focus:[border-color:var(--color-active)] focus:[background:var(--color-input-focus-bg)]"
             placeholder="어떤 활동을 함께 하고 싶나요?"
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
         </div>
 
-        <div className={styles.formRow2}>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>
+        <div className="[display:grid] [grid-template-columns:1fr_1fr] [gap:15px] [grid-template-columns:1fr]">
+          <div className="[display:flex] [flex-direction:column] [gap:8px]">
+            <label className="[font-size:12px] [font-weight:700] [color:var(--color-text)] [opacity:0.8]">
               약속 날짜 {isEdit && "(수정 불가)"}
             </label>
             <button
               type="button"
-              className={styles.selectionCard}
+              className="[width:100%] [display:flex] [flex-direction:column] [align-items:flex-start] [gap:6px] [min-height:72px] [padding:14px_16px] [border:1.5px_solid_var(--color-border)] [border-radius:18px] [background:linear-gradient(135deg,_rgba(148,_163,_184,_0.16),_rgba(7,_177,_188,_0.07)),_var(--color-input-bg)] [color:var(--color-text)] [cursor:pointer] [text-align:left] [transition:transform_0.16s_ease,_border-color_0.16s_ease,_background_0.16s_ease] [transform:translateY(-1px)] [border-color:var(--color-deactive)] [background:linear-gradient(135deg,_rgba(148,_163,_184,_0.22),_rgba(7,_177,_188,_0.1)),_var(--color-input-bg)] disabled:[opacity:0.45] disabled:[cursor:not-allowed] [&_span]:[color:var(--color-deactive)] [&_span]:[font-size:11px] [&_span]:[font-weight:900] [&_strong]:[color:var(--color-text)] [&_strong]:[font-size:17px] [&_strong]:[font-weight:900] [&_strong]:[letter-spacing:-0.02em]"
               onClick={() => !isEdit && setIsDatePickerOpen(true)}
               disabled={isEdit}
             >
@@ -452,13 +457,13 @@ export default function WritePage() {
               <strong>{formatDateLabel(date)}</strong>
             </button>
           </div>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>
+          <div className="[display:flex] [flex-direction:column] [gap:8px]">
+            <label className="[font-size:12px] [font-weight:700] [color:var(--color-text)] [opacity:0.8]">
               약속 시간 {isEdit && "(수정 불가)"}
             </label>
             <button
               type="button"
-              className={styles.selectionCard}
+              className="[width:100%] [display:flex] [flex-direction:column] [align-items:flex-start] [gap:6px] [min-height:72px] [padding:14px_16px] [border:1.5px_solid_var(--color-border)] [border-radius:18px] [background:linear-gradient(135deg,_rgba(148,_163,_184,_0.16),_rgba(7,_177,_188,_0.07)),_var(--color-input-bg)] [color:var(--color-text)] [cursor:pointer] [text-align:left] [transition:transform_0.16s_ease,_border-color_0.16s_ease,_background_0.16s_ease] [transform:translateY(-1px)] [border-color:var(--color-deactive)] [background:linear-gradient(135deg,_rgba(148,_163,_184,_0.22),_rgba(7,_177,_188,_0.1)),_var(--color-input-bg)] disabled:[opacity:0.45] disabled:[cursor:not-allowed] [&_span]:[color:var(--color-deactive)] [&_span]:[font-size:11px] [&_span]:[font-weight:900] [&_strong]:[color:var(--color-text)] [&_strong]:[font-size:17px] [&_strong]:[font-weight:900] [&_strong]:[letter-spacing:-0.02em]"
               onClick={() => !isEdit && setIsTimePickerOpen(true)}
               disabled={isEdit}
             >
@@ -468,45 +473,45 @@ export default function WritePage() {
           </div>
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>약속 장소</label>
-          <div className={styles.inputWithBtn}>
+        <div className="[display:flex] [flex-direction:column] [gap:8px]">
+          <label className="[font-size:12px] [font-weight:700] [color:var(--color-text)] [opacity:0.8]">약속 장소</label>
+          <div className="[display:flex] [gap:8px]">
             <input
-              className={styles.formInput}
+              className="[width:100%] [padding:12px_16px] [border:1.5px_solid_var(--color-border)] [border-radius:12px] [font-size:14px] [font-family:inherit] [background:var(--color-input-bg)] [color:var(--color-text)] [outline:none] [transition:all_0.2s] [box-sizing:border-box] [border-color:var(--color-active)] [background:var(--color-input-focus-bg)] disabled:[opacity:0.5] disabled:[cursor:not-allowed] disabled:[background:var(--color-bg)]"
               placeholder="장소 이름 또는 주소"
               value={place}
               readOnly
             />
-            <button className={styles.searchBtn} onClick={() => setIsSearchOpen(true)}>
+            <button className="[flex-shrink:0] [padding:0_16px] [background:var(--color-active)] [color:white] [border:none] [border-radius:12px] [font-size:13px] [font-weight:700] [cursor:pointer] [transition:opacity_0.2s] hover:[opacity:0.9]" onClick={() => setIsSearchOpen(true)}>
               지도에서 찾기
             </button>
           </div>
 
           {latitude && longitude && (
-            <div className={styles.mapPreviewSection}>
+            <div className="[text-align:center] [margin-top:10px]">
               <MapPreview latitude={latitude} longitude={longitude} />
-              <p className={styles.mapHint}>선택한 장소의 위치입니다.</p>
+              <p className="[font-size:12px] [color:#888] [margin-top:4px]">선택한 장소의 위치입니다.</p>
             </div>
           )}
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>
+        <div className="[display:flex] [flex-direction:column] [gap:8px]">
+          <label className="[font-size:12px] [font-weight:700] [color:var(--color-text)] [opacity:0.8]">
             모집 인원 (2~10명) {isEdit && "(수정 불가)"}
           </label>
-          <div className={styles.capacityRow}>
+          <div className="[display:flex] [align-items:center] [gap:14px]">
             <button
               type="button"
-              className={styles.capBtn}
+              className="[width:40px] [height:40px] [border-radius:8px] [border:1.5px_solid_var(--color-border)] [background:var(--color-input-bg)] [font-size:20px] [font-weight:500] [cursor:pointer] [display:flex] [align-items:center] [justify-content:center] [color:var(--color-text)] [transition:all_0.2s_ease] [border-color:var(--color-active)] [background:var(--color-input-focus-bg)] [color:var(--color-active)] disabled:[opacity:0.2] disabled:[cursor:not-allowed]"
               onClick={() => setCapacity((value) => Math.max(2, value - 1))}
               disabled={isEdit || capacity <= 2}
             >
               -
             </button>
-            <span className={styles.capDisplay}>{capacity}명</span>
+            <span className="[font-size:18px] [font-weight:800] [min-width:50px] [text-align:center] [color:var(--color-text)]">{capacity}명</span>
             <button
               type="button"
-              className={styles.capBtn}
+              className="[width:40px] [height:40px] [border-radius:8px] [border:1.5px_solid_var(--color-border)] [background:var(--color-input-bg)] [font-size:20px] [font-weight:500] [cursor:pointer] [display:flex] [align-items:center] [justify-content:center] [color:var(--color-text)] [transition:all_0.2s_ease] [border-color:var(--color-active)] [background:var(--color-input-focus-bg)] [color:var(--color-active)] disabled:[opacity:0.2] disabled:[cursor:not-allowed]"
               onClick={() => setCapacity((value) => Math.min(10, value + 1))}
               disabled={isEdit || capacity >= 10}
             >
@@ -515,8 +520,8 @@ export default function WritePage() {
           </div>
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>카테고리</label>
+        <div className="[display:flex] [flex-direction:column] [gap:8px]">
+          <label className="[font-size:12px] [font-weight:700] [color:var(--color-text)] [opacity:0.8]">카테고리</label>
           <CategorySelector
             selected={categories}
             onChange={setCategories}
@@ -524,8 +529,8 @@ export default function WritePage() {
           />
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>이미지 (선택)</label>
+        <div className="[display:flex] [flex-direction:column] [gap:8px]">
+          <label className="[font-size:12px] [font-weight:700] [color:var(--color-text)] [opacity:0.8]">이미지 (선택)</label>
           <ImageDropZone
             value={image}
             onChange={(val) => {
@@ -540,7 +545,7 @@ export default function WritePage() {
         </div>
 
         <button
-          className={`${styles.submitBtn} ${isSaving ? styles.savingBtn : ""}`}
+          className={`[width:100%] [padding:16px] [background:var(--color-active)] [color:white] [border:none] [border-radius:12px] [font-size:16px] [font-weight:800] [cursor:pointer] [transition:all_0.2s] [box-shadow:0_4px_12px_rgba(253,_147,_25,_0.2)] hover:[opacity:0.9] hover:[transform:translateY(-1px)] active:[transform:scale(0.98)] disabled:[opacity:0.75] disabled:[cursor:not-allowed] disabled:[transform:none] ${isSaving ? "[font-size:0] after:[content:attr(data-saving-label)] after:[font-size:16px]" : ""}`}
           onClick={handleSubmit}
           disabled={isSaving}
           data-saving-label={image?.file ? "이미지 업로드 중..." : "저장 중..."}

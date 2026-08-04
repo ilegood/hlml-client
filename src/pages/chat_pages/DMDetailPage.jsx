@@ -1,46 +1,73 @@
-﻿import { useEffect, useRef, useState, useContext, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { io } from "socket.io-client";
-import { AuthContext } from "../../context/auth";
-import instance, { BASE_URL, getImageUrl } from "../../api/instance";
-import { uploadChatFile } from "../../api/chat";
-import { toast } from "sonner";
-import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
+import DMChatOverlays from "../../components/chat_components/DMChatOverlays";
+import ChatInputArea from "../../components/chat_components/ChatInputArea";
 import ChatMessageList from "../../components/chat_components/ChatMessageList";
 import ChatScrollButton from "../../components/chat_components/ChatScrollButton";
 import DMHeader from "../../components/chat_components/DMHeader";
-import ChatInputArea from "../../components/chat_components/ChatInputArea";
 import useDMChat from "../../hooks/useDMChat";
-import UserProfileModal from "../../components/modals/UserProfileModal";
 import { formatChatPreview } from "../../utils/chatPreview";
-
-// ── Main Component ─────────────────────────────────────────────────────────────
 
 export default function DMDetailPage() {
   const {
-    roomId, name, userId, profileImg, messages, input, setInput,
-    targetUserId, targetNickname, targetProfileImg, targetOnline,
-    replyTo, editId, hoveredMsgId, setHoveredMsgId, showEmojiPicker, setShowEmojiPicker,
-    showMainEmojiPicker, setShowMainEmojiPicker, showScrollBtn,
-    showFileGallery, setShowFileGallery, notificationsMuted, sending,
-    selectedProfileId, setSelectedProfileId, typingNickname, socketRef,
-    bottomRef, messagesRef, inputRef, fileInputRef, typingEmitRef,
-    pendingFiles, showAttachMenu, setShowAttachMenu, fileAccept,
-    addPendingFiles, openFilePicker, removePendingFile, resizeInput,
-    handleEmojiSelect, handleScroll, scrollToBottom, toggleNotifications,
-    handleLeaveDM, handleSend, startEdit, startReply, handleDelete,
-    toggleReaction, scrollToMessage, cancelContext, handlePaste,
-    handleDrop, socketRoomId,
+    roomId,
+    userId,
+    messages,
+    input,
+    setInput,
+    targetUserId,
+    targetNickname,
+    targetProfileImg,
+    targetOnline,
+    replyTo,
+    editId,
+    hoveredMsgId,
+    setHoveredMsgId,
+    showEmojiPicker,
+    setShowEmojiPicker,
+    showMainEmojiPicker,
+    setShowMainEmojiPicker,
+    showScrollBtn,
+    showFileGallery,
+    setShowFileGallery,
+    notificationsMuted,
+    sending,
+    selectedProfileId,
+    setSelectedProfileId,
+    bottomRef,
+    messagesRef,
+    inputRef,
+    fileInputRef,
+    pendingFiles,
+    showAttachMenu,
+    setShowAttachMenu,
+    fileAccept,
+    addPendingFiles,
+    openFilePicker,
+    removePendingFile,
+    resizeInput,
+    handleEmojiSelect,
+    handleScroll,
+    scrollToBottom,
+    toggleNotifications,
+    handleLeaveDM,
+    handleSend,
+    startEdit,
+    startReply,
+    handleDelete,
+    toggleReaction,
+    scrollToMessage,
+    cancelContext,
+    handlePaste,
+    handleDrop,
+    handleDragOver,
+    handleInputChange,
   } = useDMChat();
-
 
   return (
     <div
       className="flex h-[calc(100vh-25px)] flex-col overflow-x-hidden bg-[var(--color-bg)] px-[200px] font-[inherit]"
       onDrop={handleDrop}
-      onDragOver={(e) => e.preventDefault()}
+      onDragOver={handleDragOver}
     >
-      {/* ── Header ── */}
       <DMHeader
         targetUserId={targetUserId}
         targetProfileImg={targetProfileImg}
@@ -71,13 +98,12 @@ export default function DMDetailPage() {
         setSelectedProfileId={setSelectedProfileId}
       />
 
-
       {showScrollBtn && (
         <ChatScrollButton
           onClick={scrollToBottom}
-          title="?? ??? ??"
-          ariaLabel="? ??? ????"
-          label="? ???"
+          title="맨 아래로"
+          ariaLabel="맨 아래로 이동"
+          label="아래"
         />
       )}
 
@@ -106,40 +132,19 @@ export default function DMDetailPage() {
         roomId={roomId}
         formatChatPreview={formatChatPreview}
         messages={messages}
-        onInputChange={(event) => {
-          const nextValue = event.target.value;
-          setInput(nextValue);
-          if (!nextValue.trim()) {
-            socketRef.current?.emit("stop_typing", { roomId: socketRoomId });
-          } else {
-            const now = Date.now();
-            if (now - typingEmitRef.current > 2000) {
-              typingEmitRef.current = now;
-              socketRef.current?.emit("typing", {
-                roomId: socketRoomId,
-                nickname: name,
-              });
-            }
-          }
-        }}
+        onInputChange={handleInputChange}
         onInput={resizeInput}
         onCompositionEnd={resizeInput}
       />
 
-      {selectedProfileId && (
-        <UserProfileModal
-          userId={selectedProfileId}
-          currentUserId={userId}
-          onClose={() => setSelectedProfileId(null)}
-        />
-      )}
-
-      {showFileGallery && (
-        <ChatFileGallery
-          messages={messages}
-          onClose={() => setShowFileGallery(false)}
-        />
-      )}
+      <DMChatOverlays
+        currentUserId={userId}
+        messages={messages}
+        selectedProfileId={selectedProfileId}
+        setSelectedProfileId={setSelectedProfileId}
+        setShowFileGallery={setShowFileGallery}
+        showFileGallery={showFileGallery}
+      />
     </div>
   );
 }

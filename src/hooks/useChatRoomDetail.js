@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { AuthContext } from "../context/auth";
+import { AuthContext } from "../context/AuthContext.jsx";
 import { useChatNotifications } from "../context/ChatNotificationContext";
 import { BASE_URL } from "../api/instance";
 import { getRoomBlockWarning, uploadChatFile } from "../api/chat";
@@ -735,6 +735,50 @@ export default function useChatRoomDetail() {
     addPendingFiles(e.dataTransfer?.files);
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  const handleInputChange = (event) => {
+    const nextValue = event.target.value;
+    setInput(nextValue);
+    if (!nextValue.trim()) {
+      socketRef.current?.emit("stop_typing", { roomId });
+      return;
+    }
+
+    const now = Date.now();
+    if (now - typingEmitRef.current > 2000) {
+      typingEmitRef.current = now;
+      socketRef.current?.emit("typing", { roomId, nickname: name });
+    }
+  };
+
+  const handleBlockWarningConfirm = () => {
+    if (blockWarning?.key) {
+      localStorage.setItem(blockWarning.key, "1");
+    }
+    setBlockWarning(null);
+  };
+
+  const handleKickMember = (target) => {
+    socketRef.current?.emit("kick_user", {
+      roomId,
+      targetUserId: target.user_id,
+      targetNickname: target.nickname,
+      myUserId: userId,
+    });
+    setRoomMembers((prev) =>
+      prev.filter(
+        (member) => Number(member.user_id) !== Number(target.user_id),
+      ),
+    );
+  };
+
   const toggleNotifications = () => {
     const next = !notificationsMuted;
     setNotificationsMuted(next);
@@ -777,6 +821,8 @@ export default function useChatRoomDetail() {
     scrollToBottom, handleSend, startEdit, startReply, handleDelete,
     toggleReaction, scrollToMessage, toggleMembers, cancelContext,
     handleLeave, handleJoinChat, handlePaste, handleDrop,
-    toggleNotifications, openRoomMap, isFull,
+    handleDragOver, handleBack, handleInputChange,
+    handleBlockWarningConfirm, handleKickMember, toggleNotifications,
+    openRoomMap, isFull,
   };
 }

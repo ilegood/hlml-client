@@ -1,5 +1,5 @@
-import AppointmentModal from "./AppointmentModal";
-import BlockedListModal from "./BlockedListModal";
+import AppointmentModal from "../sidebar_components/js/AppointmentModal";
+import BlockedListModal from "../sidebar_components/js/BlockedListModal";
 import ProfileEditModal from "./ProfileEditModal";
 import QAModal from "./QAModal";
 import ReportListModal from "./ReportListModal";

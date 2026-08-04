@@ -1,101 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import styled from "styled-components";
+import { useEffect, useRef, useState } from "react";
 import { CATEGORY_MAP } from "../../api/homeConstants";
-
-const CategoryRow = styled.div`
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-`;
-
-const CategoryWrapper = styled.div`
-  position: relative;
-`;
-
-const CategoryTitle = styled.div`
-  cursor: pointer;
-  padding: 6px 12px;
-  background: var(--color-sidebar);
-  border: 1.5px solid var(--color-border);
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition:
-    border-color 0.15s,
-    color 0.15s;
-  white-space: nowrap;
-  user-select: none;
-
-  &:hover {
-    border-color: var(--color-active);
-    color: var(--color-active);
-  }
-
-  &.has-selection {
-    border-color: var(--color-active);
-    background: var(--color-active);
-    color: white;
-  }
-`;
-
-const SelectedDot = styled.span`
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: white;
-  display: inline-block;
-`;
-
-const CategoryDropdown = styled.div`
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  background: var(--color-dropdown-bg);
-  color: var(--color-dropdown-text);
-  border: 1.5px solid var(--color-active);
-  border-radius: 12px;
-  padding: 6px;
-  box-shadow: 0 10px 28px var(--color-dropdown-shadow);
-  z-index: 100;
-  min-width: 110px;
-  animation: dropIn 0.12s ease;
-
-  @keyframes dropIn {
-    from {
-      opacity: 0;
-      transform: translateY(-6px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-const TagBtn = styled.div`
-  padding: 8px 12px;
-  cursor: pointer;
-  white-space: nowrap;
-  font-size: 13px;
-  border-radius: 8px;
-  transition: background 0.1s;
-  color: var(--color-dropdown-text);
-  font-weight: 700;
-
-  &:hover {
-    background: var(--color-dropdown-hover-bg);
-    color: var(--color-dropdown-hover-text);
-  }
-
-  &.active {
-    background: var(--color-active);
-    color: white;
-  }
-`;
 
 export default function CategorySelector({
   selected,
@@ -107,36 +11,40 @@ export default function CategorySelector({
   const ref = useRef();
   const excluded = new Set(exclude);
   const categories = order
-    .filter((cat) => CATEGORY_MAP[cat] && !excluded.has(cat))
-    .map((cat) => [cat, CATEGORY_MAP[cat]]);
+    .filter((category) => CATEGORY_MAP[category] && !excluded.has(category))
+    .map((category) => [category, CATEGORY_MAP[category]]);
 
   useEffect(() => {
-    const fn = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(null);
+    const closeDropdown = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) setOpen(null);
     };
-    document.addEventListener("click", fn);
-    return () => document.removeEventListener("click", fn);
+    document.addEventListener("click", closeDropdown);
+    return () => document.removeEventListener("click", closeDropdown);
   }, []);
 
   return (
-    <CategoryRow ref={ref}>
-      {categories.map(([cat, opts]) => (
-        <CategoryWrapper key={cat}>
-          <CategoryTitle
-            className={selected[cat] ? "has-selection" : ""}
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpen(open === cat ? null : cat);
+    <div ref={ref} className="flex flex-wrap gap-2">
+      {categories.map(([category, options]) => (
+        <div key={category} className="relative">
+          <div
+            className={`flex cursor-pointer select-none items-center gap-[5px] whitespace-nowrap rounded-[20px] border-[1.5px] border-[var(--color-border)] bg-[var(--color-sidebar)] px-3 py-1.5 text-[13px] font-medium text-[var(--color-text)] transition-[border-color,color] duration-150 hover:border-[var(--color-active)] hover:text-[var(--color-active)] ${
+              selected[category]
+                ? "border-[var(--color-active)] bg-[var(--color-active)] text-white"
+                : ""
+            }`}
+            onClick={(event) => {
+              event.stopPropagation();
+              setOpen(open === category ? null : category);
             }}
           >
-            {selected[cat] ? (
+            {selected[category] ? (
               <>
-                <SelectedDot />
-                {selected[cat]}
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-white" />
+                {selected[category]}
               </>
             ) : (
               <>
-                {cat}
+                {category}
                 <svg
                   width="10"
                   height="10"
@@ -149,29 +57,34 @@ export default function CategorySelector({
                 </svg>
               </>
             )}
-          </CategoryTitle>
-          {open === cat && (
-            <CategoryDropdown>
-              {opts.map((opt) => (
-                <TagBtn
-                  key={opt}
-                  className={selected[cat] === opt ? "active" : ""}
-                  onClick={(e) => {
-                    e.stopPropagation();
+          </div>
+          {open === category && (
+            <div className="absolute left-0 top-[calc(100%+6px)] z-[100] min-w-[110px] rounded-xl border-[1.5px] border-[var(--color-active)] bg-[var(--color-dropdown-bg)] p-1.5 text-[var(--color-dropdown-text)] shadow-[0_10px_28px_var(--color-dropdown-shadow)]">
+              {options.map((option) => (
+                <div
+                  key={option}
+                  className={`cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-bold text-[var(--color-dropdown-text)] transition-colors duration-100 hover:bg-[var(--color-dropdown-hover-bg)] hover:text-[var(--color-dropdown-hover-text)] ${
+                    selected[category] === option
+                      ? "bg-[var(--color-active)] text-white"
+                      : ""
+                  }`}
+                  onClick={(event) => {
+                    event.stopPropagation();
                     onChange({
                       ...selected,
-                      [cat]: selected[cat] === opt ? null : opt,
+                      [category]:
+                        selected[category] === option ? null : option,
                     });
                     setOpen(null);
                   }}
                 >
-                  {opt}
-                </TagBtn>
+                  {option}
+                </div>
               ))}
-            </CategoryDropdown>
+            </div>
           )}
-        </CategoryWrapper>
+        </div>
       ))}
-    </CategoryRow>
+    </div>
   );
 }

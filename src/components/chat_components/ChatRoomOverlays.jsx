@@ -21,7 +21,7 @@ const ChatRoomOverlays = ({
   roomMembers,
   roomAuthor,
   userId,
-  socketRef,
+  onKickMember,
   selectedProfileId,
   setSelectedProfileId,
 }) => (
@@ -64,19 +64,7 @@ const ChatRoomOverlays = ({
         members={roomMembers}
         authorNickname={roomAuthor}
         currentUserId={userId}
-        onKick={(target) => {
-          socketRef.current?.emit("kick_user", {
-            roomId,
-            targetUserId: target.user_id,
-            targetNickname: target.nickname,
-            myUserId: userId,
-          });
-          setRoomMembers((prev) =>
-            prev.filter(
-              (member) => Number(member.user_id) !== Number(target.user_id),
-            ),
-          );
-        }}
+        onKick={onKickMember}
       />
 
       {selectedProfileId && (
