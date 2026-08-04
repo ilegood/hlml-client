@@ -1,7 +1,7 @@
 import { Component, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "../../api/instance";
-import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
+import styles from "./chatStyles.js";
 
 const URL_PATTERN = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
 const TRAILING_PUNCTUATION = /[)\],.!?]+$/;

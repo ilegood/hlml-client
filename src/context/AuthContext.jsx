@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { AuthContext } from "./auth";
+import { createContext, useContext, useState } from "react";
+
+export const AuthContext = createContext(null);
+
+export const useAuth = () => useContext(AuthContext);
 
 const getUserIdFromToken = (token) => {
   if (!token) return null;

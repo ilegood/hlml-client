@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { STATUS_CLOSED, STATUS_OPEN } from "../api/homeConstants";
-import { getPost, updatePost } from "../api/posts";
-import CategorySelector from "./post_components/CategorySelector";
-import ImageDropZone from "./post_components/ImageDropZone";
-import MapPreview from "./post_components/MapPreview";
-import PlaceSearchModal from "./modals/PlaceSearchModal";
+import { STATUS_CLOSED, STATUS_OPEN } from "../../api/homeConstants";
+import { getPost, updatePost } from "../../api/posts";
+import CategorySelector from "../../hooks/CategorySelector";
+import ImageDropZone from "../post_components/ImageDropZone";
+import MapPreview from "../post_components/MapPreview";
+import PlaceSearchModal from "./PlaceSearchModal";
 import styles from "./RoomSettingsModal.module.css";
 
 const CATEGORY_EXCLUDES = ["인원"];
@@ -33,6 +33,12 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
     [currentParticipants],
   );
   const isAtCapacity = Number(capacity) <= Number(currentParticipants);
+
+  useEffect(() => {
+    if (isAtCapacity && status !== STATUS_CLOSED) {
+      setStatus(STATUS_CLOSED);
+    }
+  }, [isAtCapacity, status]);
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -232,7 +238,7 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
               <label className={styles.formLabel}>상태</label>
               <select
                 className={styles.formSelect}
-                value={isAtCapacity ? STATUS_CLOSED : status}
+                value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
                 <option value={STATUS_OPEN} disabled={isAtCapacity}>

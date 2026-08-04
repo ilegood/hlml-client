@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { getImageUrl } from "../../api/instance";
 import { MediaLightbox } from "./ChatAttachment";
-import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
+import styles from "./chatStyles.js";
 
 const countHangul = (value) =>
   (String(value).match(/[\uAC00-\uD7A3]/g) || []).length;
@@ -101,8 +101,8 @@ export default function ChatFileGallery({ messages, onClose }) {
               <h3>파일 모아보기</h3>
               <span>{attachments.length}개 공유됨</span>
             </div>
-            <button type="button" onClick={onClose} aria-label="닫기">
-              &times;
+            <button type="button" className="flex h-8 w-8 items-center justify-center rounded-md border-0 bg-[var(--color-input-bg)] text-[22px] leading-none text-[var(--color-text)] transition-colors hover:bg-[var(--color-input-focus-bg)]" onClick={onClose} aria-label="닫기" title="닫기">
+              ×
             </button>
           </div>
 

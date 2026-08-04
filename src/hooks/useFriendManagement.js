@@ -9,7 +9,7 @@ import {
   blockUser,
   updateFriendMemo,
 } from "../api/friends";
-import { createDmRoom } from "../api/chat";
+import instance from "../api/instance";
 import { toast } from "sonner";
 
 export const useFriendManagement = () => {
@@ -35,22 +35,25 @@ export const useFriendManagement = () => {
 
     try {
       const fData = await getFriends();
-      setFriends(fData);
+      const friendsArray = Array.isArray(fData) ? fData : [];
+      setFriends(friendsArray);
 
       const initialMemos = {};
-      fData.forEach((friend) => {
+      friendsArray.forEach((friend) => {
         if (friend.memo) initialMemos[friend.id] = friend.memo;
       });
       setMemos(initialMemos);
     } catch (err) {
       console.error("친구 목록 로드 실패", err);
+      setFriends([]);
     }
 
     try {
       const rData = await getFriendRequests();
-      setRequests(rData);
+      setRequests(Array.isArray(rData) ? rData : []);
     } catch (err) {
       console.error("친구 요청 로드 실패", err);
+      setRequests([]);
     }
   }, [token]);
 
@@ -122,7 +125,7 @@ export const useFriendManagement = () => {
     setActiveMenuId(null);
   };
 
-  const filteredFriends = friends.filter((friend) =>
+  const filteredFriends = (Array.isArray(friends) ? friends : []).filter((friend) =>
     (friend.name || "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
@@ -171,8 +174,10 @@ export const useFriendManagement = () => {
 
   const handleStartDM = async () => {
     try {
-      const data = await createDmRoom(selectedFriend.id);
-      navigate(`/dms/${data.roomId}`);
+      const res = await instance.post("/chat/dm", {
+        targetId: selectedFriend.id,
+      });
+      navigate(`/dms/${res.data.roomId}`);
       setIsOpen(false);
       setSelectedFriend(null);
     } catch (err) {

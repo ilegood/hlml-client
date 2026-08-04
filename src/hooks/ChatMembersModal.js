@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import styles from "./ChatMembersModal.module.css";
+import styles from "../pages/ChatMembersModal.module.css";
 import { getImageUrl } from "../api/instance";
 import { blockUser } from "../api/friends";
 import borderImg from "../assets/border.png";
-import UserProfileModal from "./modals/UserProfileModal";
+import UserProfileModal from "../components/modals/UserProfileModal";
+import ReportModal from "../components/modals/ReportModal";
 
 export default function ChatMembersModal({
   isOpen,

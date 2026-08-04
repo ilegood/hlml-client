@@ -168,11 +168,7 @@ export const ChatNotificationProvider = ({ children }) => {
   }, [showAppointmentReminder, token, userId]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      refresh({ quiet: false });
-    }, 0);
-
-    return () => window.clearTimeout(timer);
+    refresh({ quiet: false });
   }, [refresh]);
 
   useEffect(() => {

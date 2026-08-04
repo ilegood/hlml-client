@@ -1,12 +1,6 @@
 import axios from "axios";
 
-<<<<<<< Updated upstream
-export const BASE_URL = import.meta.env.VITE_API_URL;
-=======
-export const BASE_URL = (
-  import.meta.env.VITE_API_URL || "https://hlml-server-gleaming-mountain-8819.fly.dev"
-).replace(/\/$/, "");
->>>>>>> Stashed changes
+export const BASE_URL = "https://hlml-server-gleaming-mountain-8819.fly.dev";
 
 export const getImageUrl = (path) => {
   if (!path) return null;

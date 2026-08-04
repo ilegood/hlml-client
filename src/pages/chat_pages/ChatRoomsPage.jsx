@@ -3,9 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/auth";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
-import { deletePostBan, getKickedPosts, getMyChatRooms } from "../../api/posts";
+import { deletePostBan, getKickedPosts, getPosts } from "../../api/posts";
 import ChatRoomItem from "../../components/chat_components/ChatRoomItem";
-import styles from "./ChatRoomsPage.module.css";
 
 const sortByAppointment = (rooms) =>
   [...rooms].sort((a, b) => {
@@ -45,11 +44,18 @@ const ChatRoomsPage = () => {
     setLoading(true);
     try {
       const [allPosts, kickedPosts] = await Promise.all([
-        getMyChatRooms(),
+        getPosts(),
         getKickedPosts(),
       ]);
 
       const myJoinedRooms = allPosts
+        .filter((post) => {
+          const isAuthor = String(post.user_id) === String(userId);
+          const isParticipant = (post.joinedUserIds || [])
+            .map(Number)
+            .includes(Number(userId));
+          return isAuthor || isParticipant;
+        })
         .map((room) => ({ ...room, isKicked: false }));
 
       const combined = [...myJoinedRooms];
@@ -69,11 +75,7 @@ const ChatRoomsPage = () => {
   }, [userId]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      fetchChatRooms();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
+    fetchChatRooms();
   }, [fetchChatRooms]);
 
   useEffect(() => {
@@ -109,14 +111,14 @@ const ChatRoomsPage = () => {
 >>>>>>> Stashed changes
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h2>채팅방 목록</h2>
+    <div className="mx-auto flex min-h-[calc(100vh-25px)] max-w-[900px] flex-col bg-[var(--color-bg)] p-5">
+      <div className="mb-[25px] border-b border-[var(--color-border)] pb-[15px]">
+        <h2 className="m-0 text-[24px] font-extrabold text-[var(--color-active)]">채팅방 목록</h2>
       </div>
 
-      <div className={styles.chatRoomList}>
+      <div className="flex flex-1 flex-col gap-4 px-[5px] pb-[30px] pt-[5px]">
         {loading ? (
-          <div className={styles.empty}>채팅방을 불러오는 중...</div>
+          <div className="mt-20 text-center text-[16px] font-semibold text-[var(--color-deactive)] opacity-70">채팅방을 불러오는 중...</div>
         ) : chatRooms.length > 0 ? (
           chatRooms.map((room) => {
             const roomId = String(room.post_id || room.id);
@@ -134,7 +136,7 @@ const ChatRoomsPage = () => {
             );
           })
         ) : (
-          <div className={styles.empty}>
+          <div className="mt-20 text-center text-[16px] font-semibold text-[var(--color-deactive)] opacity-70">
             {userId
               ? "참여 중인 채팅방이 없습니다."
               : "로그인하면 채팅방 목록을 확인할 수 있습니다."}

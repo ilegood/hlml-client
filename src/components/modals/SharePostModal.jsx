@@ -2,15 +2,8 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import styled from "styled-components";
-<<<<<<< Updated upstream
-import { getImageUrl } from "../../api/instance";
-import { sharePostToChat } from "../../api/chat";
-import { getFriends } from "../../api/friends";
-import { AuthContext } from "../../context/auth";
-=======
 import instance, { getImageUrl } from "../../api/instance";
-import { AuthContext } from "../../context/AuthContext.jsx";
->>>>>>> Stashed changes
+import { AuthContext } from "../../context/auth";
 
 const Overlay = styled.div`
   position: fixed;
@@ -185,8 +178,9 @@ export default function SharePostModal({ postId, postTitle, postImage, onClose }
   const { name: currentUserName } = useContext(AuthContext);
 
   useEffect(() => {
-    getFriends()
-      .then(setFriends)
+    instance
+      .get("/friends")
+      .then((res) => setFriends(res.data))
       .catch(() => {});
   }, []);
 
@@ -198,7 +192,7 @@ export default function SharePostModal({ postId, postTitle, postImage, onClose }
     if (!selectedId) return;
     setLoading(true);
     try {
-      const data = await sharePostToChat({
+      const { data } = await instance.post("/chat/share", {
         targetId: selectedId,
         postId,
         postTitle,

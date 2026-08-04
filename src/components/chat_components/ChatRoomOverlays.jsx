@@ -21,7 +21,7 @@ const ChatRoomOverlays = ({
   roomMembers,
   roomAuthor,
   userId,
-  onKickMember,
+  socketRef,
   selectedProfileId,
   setSelectedProfileId,
 }) => (
@@ -45,7 +45,8 @@ const ChatRoomOverlays = ({
               });
               setRoomAppointment(normalizeRoomAppointment(updatedPost));
             }
-            // Room updates are broadcast by the server.
+            // 서버에서 emitPostRoomUpdate로 room_info를 이미 브로드캐스트하므로
+            // 별도 join_room 중복 emit 불필요
           }}
         />
       )}
@@ -63,7 +64,19 @@ const ChatRoomOverlays = ({
         members={roomMembers}
         authorNickname={roomAuthor}
         currentUserId={userId}
-        onKick={onKickMember}
+        onKick={(target) => {
+          socketRef.current?.emit("kick_user", {
+            roomId,
+            targetUserId: target.user_id,
+            targetNickname: target.nickname,
+            myUserId: userId,
+          });
+          setRoomMembers((prev) =>
+            prev.filter(
+              (member) => Number(member.user_id) !== Number(target.user_id),
+            ),
+          );
+        }}
       />
 
       {selectedProfileId && (

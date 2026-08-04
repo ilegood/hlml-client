@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { AuthContext } from "../context/auth";
 import instance, { BASE_URL } from "../api/instance";
 import { uploadChatFile } from "../api/chat";
 import { toast } from "sonner";
@@ -640,40 +640,19 @@ export default function useDMChat() {
     addPendingFiles(e.dataTransfer?.files);
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const handleInputChange = (event) => {
-    const nextValue = event.target.value;
-    setInput(nextValue);
-    if (!nextValue.trim()) {
-      socketRef.current?.emit("stop_typing", { roomId: socketRoomId });
-    } else {
-      const now = Date.now();
-      if (now - typingEmitRef.current > 2000) {
-        typingEmitRef.current = now;
-        socketRef.current?.emit("typing", {
-          roomId: socketRoomId,
-          nickname: name,
-        });
-      }
-    }
-  };
-
   return {
     roomId, name, userId, profileImg, messages, input, setInput,
     targetUserId, targetNickname, targetProfileImg, targetOnline,
     replyTo, editId, hoveredMsgId, showEmojiPicker, setShowEmojiPicker,
     showMainEmojiPicker, setShowMainEmojiPicker, showScrollBtn,
     showFileGallery, setShowFileGallery, notificationsMuted, sending,
-    selectedProfileId, setSelectedProfileId,
-    bottomRef, messagesRef, inputRef, fileInputRef,
+    selectedProfileId, setSelectedProfileId, typingNickname, socketRef,
+    bottomRef, messagesRef, inputRef, fileInputRef, typingEmitRef,
     pendingFiles, showAttachMenu, setShowAttachMenu, fileAccept,
     addPendingFiles, openFilePicker, removePendingFile, resizeInput,
     handleEmojiSelect, handleScroll, scrollToBottom, toggleNotifications,
     handleLeaveDM, handleSend, startEdit, startReply, handleDelete,
     toggleReaction, scrollToMessage, cancelContext, handlePaste,
-    handleDrop, handleDragOver, handleInputChange,
+    handleDrop, socketRoomId,
   };
 }
