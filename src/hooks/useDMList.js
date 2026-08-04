@@ -7,26 +7,26 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useChatNotifications } from "../context/ChatNotificationContext";
 
 export const mediaLabelByMime = (mimeType) => {
-  if (mimeType?.startsWith("image/")) return "?대?吏瑜?蹂대깉?듬땲??";
-  if (mimeType?.startsWith("video/")) return "?숈쁺?곸쓣 蹂대깉?듬땲??";
-  return "?뚯씪??蹂대깉?듬땲??";
+  if (mimeType?.startsWith("image/")) return "이미지를 보냈습니다.";
+  if (mimeType?.startsWith("video/")) return "동영상을 보냈습니다.";
+  return "파일을 보냈습니다.";
 };
 
 export const mediaLabelByAttachment = (attachment) => {
-  if (attachment?.resourceType === "image") return "?대?吏瑜?蹂대깉?듬땲??";
-  if (attachment?.resourceType === "video") return "?숈쁺?곸쓣 蹂대깉?듬땲??";
+  if (attachment?.resourceType === "image") return "이미지를 보냈습니다.";
+  if (attachment?.resourceType === "video") return "동영상을 보냈습니다.";
   return mediaLabelByMime(attachment?.mimeType);
 };
 
 export const formatLastMessage = (content) => {
-  if (!content) return "?꾩쭅 ????댁슜???놁뒿?덈떎.";
+  if (!content) return "아직 대화 내용이 없습니다.";
 
   try {
     const parsed = JSON.parse(content);
     if (parsed?.kind === "share_post") {
-      const sharer = parsed.sharerNickname || "?????놁쓬";
-      const title = parsed.postTitle || "寃뚯떆湲";
-      return `${sharer}?섏씠 "${title}" 寃뚯떆湲??怨듭쑀?덉뒿?덈떎.`;
+      const sharer = parsed.sharerNickname || "상대방";
+      const title = parsed.postTitle || "게시글";
+      return `${sharer}님이 "${title}" 게시글을 공유했습니다.`;
     }
 
     const attachments =
@@ -40,7 +40,7 @@ export const formatLastMessage = (content) => {
     if (attachments.length === 0) return text || content;
 
     const label = mediaLabelByAttachment(attachments[0]);
-    return text ? `${text} 쨌 ${label}` : label;
+    return text ? `${text} · ${label}` : label;
   } catch {
     return content;
   }
@@ -124,7 +124,7 @@ export const useDMList = () => {
         setDms(res.data);
         refresh?.();
       } catch (err) {
-        console.error("DM 紐⑸줉 議고쉶 ?ㅽ뙣", err);
+        console.error("DM 목록 조회 실패", err);
       } finally {
         setLoading(false);
       }

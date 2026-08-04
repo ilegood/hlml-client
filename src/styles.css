@@ -49,6 +49,16 @@ body {
   color: var(--color-text);
 }
 
+html:not([data-theme="dark"]) .write-light-surface,
+html:not([data-theme="dark"]) .write-light-control {
+  background: #fff;
+}
+
+html:not([data-theme="dark"]) .write-light-control:focus,
+html:not([data-theme="dark"]) .write-light-control:focus-visible {
+  background: #fff;
+}
+
 select {
   background-color: var(--color-dropdown-bg);
   color: var(--color-dropdown-text);

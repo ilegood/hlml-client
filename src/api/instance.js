@@ -1,6 +1,8 @@
 import axios from "axios";
 
-export const BASE_URL = "https://hlml-server-gleaming-mountain-8819.fly.dev";
+export const BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://hlml-server-gleaming-mountain-8819.fly.dev";
 
 export const getImageUrl = (path) => {
   if (!path) return null;

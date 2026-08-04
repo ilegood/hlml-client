@@ -64,7 +64,7 @@ export default function DMDetailPage() {
 
   return (
     <div
-      className="flex h-[calc(100vh-25px)] flex-col overflow-x-hidden bg-[var(--color-bg)] px-[200px] font-[inherit]"
+      className="mx-auto flex h-[calc(100vh-25px)] w-full max-w-[1040px] flex-col overflow-x-hidden bg-[var(--color-bg)] px-4 font-[inherit] md:px-6"
       onDrop={handleDrop}
       onDragOver={handleDragOver}
     >

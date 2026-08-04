@@ -19,7 +19,7 @@ const ChatRoomHeader = ({
   <div className={styles.header}>
     <div className={styles.headerThumb}>
       {roomImage ? (
-        <img src={getImageUrl(roomImage)} alt="room" />
+        <img src={getImageUrl(roomImage)} alt="채팅방" />
       ) : (
         <span className={styles.headerHashIcon} style={{ fontSize: 22 }}>
           #
@@ -34,6 +34,7 @@ const ChatRoomHeader = ({
     <div className={styles.headerActions}>
       {name === roomAuthor && (
         <button
+          type="button"
           className={styles.headerIconBtn}
           title="방 설정 변경"
           onClick={() => setShowSettings(true)}
@@ -42,37 +43,46 @@ const ChatRoomHeader = ({
         </button>
       )}
       <button
+        type="button"
         className={styles.headerIconBtn}
         title={notificationsMuted ? "채팅 알림 켜기" : "채팅 알림 끄기"}
         onClick={toggleNotifications}
       >
-        {notificationsMuted ? "끔" : "켬"}
+        {notificationsMuted ? "🔕" : "🔔"}
       </button>
       <button
+        type="button"
         className={styles.headerIconBtn}
         title="파일 모아보기"
         onClick={() => setShowFileGallery(true)}
       >
-        파일
+        📎
       </button>
       {roomLocation?.latitude && (
         <button
+          type="button"
           className={styles.headerIconBtn}
           title="지도 보기"
           onClick={openRoomMap}
         >
-          지도
+          🗺️
         </button>
       )}
       <button
+        type="button"
         className={styles.headerIconBtn}
         title="멤버 보기"
         onClick={toggleMembers}
       >
-        멤버
+        👥
       </button>
-      <button className={styles.headerIconBtn} title="나가기" onClick={handleLeave}>
-        나가기
+      <button
+        type="button"
+        className={styles.headerIconBtn}
+        title="나가기"
+        onClick={handleLeave}
+      >
+        🚪
       </button>
     </div>
   </div>

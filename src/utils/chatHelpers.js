@@ -59,6 +59,9 @@ export const createPendingFileId = (file) =>
   }`;
 
 export const formatAppointmentDateTime = (date, time) => {
+  if (date && typeof date === "object") {
+    return formatAppointmentDateTime(date.date, date.time);
+  }
   if (!date && !time) return "";
 
   const now = new Date();

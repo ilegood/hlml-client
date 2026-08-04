@@ -107,7 +107,7 @@ export default function ChatRoomDetailPage() {
 
   return (
     <div
-      className="flex h-[calc(100vh-25px)] flex-col overflow-x-hidden bg-[var(--color-bg)] px-[200px] font-[inherit]"
+      className="mx-auto flex h-[calc(100vh-25px)] w-full max-w-[1040px] flex-col overflow-x-hidden bg-[var(--color-bg)] px-4 font-[inherit] md:px-6"
       onDrop={handleDrop}
       onDragOver={handleDragOver}
     >
@@ -129,14 +129,18 @@ export default function ChatRoomDetailPage() {
       />
 
       {appointmentReminder && (
-        <div className="mx-4 mt-3 rounded-md border border-[rgba(255,193,7,0.35)] bg-[rgba(255,193,7,0.12)] px-3 py-2 text-[13px] text-[var(--color-text)]">
+        <div className="mx-4 mt-3 rounded-lg border border-[rgba(253,147,25,0.35)] bg-[rgba(253,147,25,0.08)] px-3 py-2 text-center text-[13px] font-bold text-[var(--color-text)]">
           약속 시간까지 {appointmentReminder.minutesLeft}분 남았습니다.
         </div>
       )}
 
       {roomAppointment && (roomAppointment.date || roomAppointment.time) && (
-        <div className="mx-4 mt-3 text-[13px] text-[var(--color-deactive)]">
-          {formatAppointmentDateTime(roomAppointment)}
+        <div className="mx-4 mt-3 flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-sidebar)] px-3 py-2 text-[13px] font-bold text-[var(--color-text)]">
+          약속{" "}
+          {formatAppointmentDateTime(
+            roomAppointment.date,
+            roomAppointment.time,
+          )}
         </div>
       )}
 

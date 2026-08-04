@@ -21,7 +21,7 @@ export const useLoginForm = () => {
       login(data);
       navigate("/");
     } catch (error) {
-      toast.error(error.response?.data?.message || "濡쒓렇?몄뿉 ?ㅽ뙣?덉뒿?덈떎.");
+      toast.error(error.response?.data?.message || "로그인에 실패했습니다.");
     }
   };
 

@@ -66,7 +66,7 @@ export const useChatRooms = () => {
       setChatRooms(sortByAppointment(combined));
     } catch (error) {
       console.error("Failed to fetch chat rooms:", error);
-      toast.error("梨꾪똿諛?紐⑸줉??遺덈윭?ㅼ? 紐삵뻽?듬땲??");
+      toast.error("채팅방 목록을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
@@ -84,15 +84,15 @@ export const useChatRooms = () => {
   }, [fetchChatRooms]);
 
   const handleDeleteKickedRoom = async (postId) => {
-    if (!window.confirm("??梨꾪똿諛⑹쓣 紐⑸줉?먯꽌 ??젣?섏떆寃좎뒿?덇퉴?")) return;
+    if (!window.confirm("이 채팅방을 목록에서 삭제하시겠습니까?")) return;
 
     try {
       await deletePostBan(postId);
-      toast.success("紐⑸줉?먯꽌 ??젣?덉뒿?덈떎.");
+      toast.success("목록에서 삭제되었습니다.");
       fetchChatRooms();
     } catch (err) {
       console.error("Failed to delete kicked room:", err);
-      toast.error("??젣???ㅽ뙣?덉뒿?덈떎.");
+      toast.error("삭제에 실패했습니다.");
     }
   };
 
