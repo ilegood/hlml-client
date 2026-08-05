@@ -41,7 +41,7 @@
 }
 
 .unblockButton {
-  @apply cursor-pointer rounded-lg border-[1.5px] border-[var(--color-border)] bg-white px-3 py-1.5 text-[12px] font-semibold hover:border-[#ff4757] hover:text-[#ff4757];
+  @apply cursor-pointer rounded-lg border-[1.5px] border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-1.5 text-[12px] font-semibold text-[var(--color-text)] transition-colors hover:border-[#ff4757] hover:bg-[#ff4757] hover:text-white;
 }
 
 .empty {

@@ -29,7 +29,7 @@ export default function CategorySelector({
           <div
             className={`flex cursor-pointer select-none items-center gap-[5px] whitespace-nowrap rounded-[20px] border-[1.5px] border-[var(--color-border)] bg-[var(--color-sidebar)] px-3 py-1.5 text-[13px] font-medium transition-[border-color,color] duration-150 hover:border-[var(--color-active)] hover:text-[var(--color-active)] ${
               selected[category]
-                ? "border-[var(--color-active)] bg-[var(--color-active)] !text-white"
+                ? "border-[var(--color-active)] bg-[var(--color-active)] !text-[var(--color-category-selected-text)]"
                 : "text-[var(--color-text)]"
             }`}
             onClick={(event) => {
@@ -39,7 +39,7 @@ export default function CategorySelector({
           >
             {selected[category] ? (
               <>
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-white" />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-category-selected-text)]" />
                 {selected[category]}
               </>
             ) : (
@@ -65,7 +65,7 @@ export default function CategorySelector({
                   key={option}
                     className={`cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-bold text-[var(--color-dropdown-text)] transition-colors duration-100 hover:bg-[var(--color-dropdown-hover-bg)] hover:text-[var(--color-dropdown-hover-text)] ${
                       selected[category] === option
-                        ? "bg-[var(--color-active)] !text-white"
+                        ? "bg-[var(--color-active)] !text-[var(--color-category-selected-text)]"
                       : ""
                   }`}
                   onClick={(event) => {
