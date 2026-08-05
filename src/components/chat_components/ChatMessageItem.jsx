@@ -25,7 +25,7 @@ function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
       {isHost && (
         <img
           src={borderImg}
-          className={"[position:absolute] [top:-25%] [left:-25%] [width:150%] [height:150%] [aspect-ratio:1/1] [object-fit:contain] [transform:scale(1.35)] [transform-origin:center] [z-index:5] [pointer-events:none]"}
+          className={"[position:absolute] [top:-25%] [width:150%] [height:150%] [aspect-ratio:1/1] [object-fit:contain] [transform:scale(1.35)] [transform-origin:center] [z-index:5] [pointer-events:none]"}
           alt="host-border"
           draggable="false"
         />
@@ -35,7 +35,12 @@ function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
         style={{ width: size, height: size, fontSize: size * 0.3 }}
       >
         {url ? (
-          <img src={url} alt={label} style={{ backgroundColor: "white" }} />
+          <img
+            src={url}
+            alt={label}
+            className={"[display:block] [width:100%] [height:100%] [object-fit:cover]"}
+            style={{ backgroundColor: "white" }}
+          />
         ) : (
           label.slice(0, 2)
         )}

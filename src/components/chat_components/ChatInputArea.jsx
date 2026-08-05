@@ -1,5 +1,6 @@
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+import { getEditableMessageText } from "../../utils/chatHelpers";
 
 export default function ChatInputArea({
   input,
@@ -32,9 +33,7 @@ export default function ChatInputArea({
 }) {
   const contextText = replyTo
     ? formatChatPreview(replyTo.content)
-    : formatChatPreview(
-        messages.find((message) => message.id === editId)?.content,
-      );
+    : getEditableMessageText(messages.find((message) => message.id === editId)?.content);
 
   return (
     <>
@@ -110,9 +109,10 @@ export default function ChatInputArea({
             accept={fileAccept}
             multiple
             className={"[display:none]"}
+            disabled={Boolean(editId)}
             onChange={(event) => addPendingFiles(event.target.files)}
           />
-          {showAttachMenu && (
+          {showAttachMenu && !editId && (
             <div className={"[position:absolute] [left:14px] [bottom:calc(100%_+_8px)] [z-index:1200] [min-width:160px] [padding:6px] [border:1px_solid_var(--color-active)] [border-radius:8px] [background:var(--color-dropdown-bg)] [box-shadow:0_10px_28px_var(--color-dropdown-shadow)]"}>
               <button
                 type="button"
@@ -129,7 +129,7 @@ export default function ChatInputArea({
             type="button"
             className={"[width:32px] [height:32px] [align-self:center] [border:none] [border-radius:4px] [background:transparent] [color:#888] [font-size:24px] [line-height:1] [cursor:pointer] [display:flex] [align-items:center] [justify-content:center] [flex-shrink:0] [transition:background_0.15s,_color_0.15s]"}
             title="파일 첨부"
-            disabled={sending}
+            disabled={sending || Boolean(editId)}
             onClick={() => setShowAttachMenu((prev) => !prev)}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">

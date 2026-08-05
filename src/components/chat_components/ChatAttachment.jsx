@@ -123,6 +123,12 @@ const extractUrls = (text) => {
   return urls;
 };
 
+const removeUrls = (value) =>
+  String(value || "")
+    .replace(URL_PATTERN, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+
 const getHostname = (url) => {
   try {
     return new URL(normalizeUrl(url)).hostname.toLowerCase();
@@ -152,10 +158,7 @@ const getYouTubeVideoId = (value) => {
   return "";
 };
 
-const getLinkPreview = (text) => {
-  const url = extractUrls(text)[0];
-  if (!url) return null;
-
+const createLinkPreview = (url) => {
   const hostname = getHostname(url);
   const videoId = getYouTubeVideoId(url);
   if (videoId) {
@@ -181,6 +184,11 @@ const getLinkPreview = (text) => {
     domain: hostname,
   };
 };
+
+const getLinkPreviews = (text) =>
+  extractUrls(text).map(createLinkPreview).filter(Boolean);
+
+const getLinkPreview = (text) => getLinkPreviews(text)[0] || null;
 
 const renderTextWithLinks = (value) => {
   const text = String(value || "");
@@ -258,19 +266,40 @@ function SharedPostCard({ payload }) {
 function LinkPreviewCard({ preview }) {
   return (
     <a
-      className={"[display:flex] [gap:12px] [max-width:min(500px,_100%)] [min-height:96px] [padding:10px] [border:1px_solid_var(--color-border)] [border-radius:12px] [background:var(--color-input-bg)] [color:var(--color-text)] [text-decoration:none] [transition:border-color_0.15s,_background_0.15s,_transform_0.15s]"}
+      className={"[display:flex] [flex-direction:column] [width:min(500px,_100%)] [margin:5px_0] [overflow:hidden] [border:1px_solid_var(--color-border)] [border-radius:12px] [background:var(--color-input-bg)] [color:#2563eb] [text-decoration:none] [transition:border-color_0.15s,_background_0.15s,_transform_0.15s]"}
       href={preview.url}
       target="_blank"
       rel="noreferrer noopener"
     >
-      <div className={"[width:128px] [min-width:128px] [aspect-ratio:16_/_9] [border-radius:12px] [display:flex] [align-items:center] [justify-content:center] [font-size:28px] [font-weight:900] [flex-shrink:0]"}>
-        <span aria-hidden="true">{preview.type === "map" ? "지도" : "링크"}</span>
-      </div>
-      <div className={"[min-width:0] [display:flex] [flex-direction:column] [gap:6px] [justify-content:center]"}>
-        <strong className={"[font-size:14px] [line-height:1.4] [font-weight:800] [color:var(--color-text)] [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical] [overflow:hidden]"}>{preview.title}</strong>
-        <span className={"[font-size:11px] [color:var(--color-deactive)] [opacity:0.85] [overflow:hidden] [text-overflow:ellipsis] [white-space:nowrap]"}>{preview.domain}</span>
+      <div className={"[display:flex] [flex-direction:column] [gap:4px] [padding:14px]"}>
+        <strong className={"[font-size:14px] [line-height:1.4] [font-weight:800] [color:#2563eb] [overflow:hidden] [text-overflow:ellipsis] [white-space:nowrap]"}>
+          {preview.url}
+        </strong>
+        <span className={"[font-size:11px] [color:#2563eb] [opacity:0.8] [overflow:hidden] [text-overflow:ellipsis] [white-space:nowrap]"}>
+          {preview.domain}
+        </span>
       </div>
     </a>
+  );
+}
+
+function LinkList({ previews }) {
+  return (
+    <div className={"[display:flex] [flex-direction:column] [gap:8px] [width:min(500px,_100%)]"}>
+      {previews.map((preview) => (
+        <a
+          key={preview.url}
+          className={"[display:flex] [min-width:0] [align-items:center] [gap:10px] [padding:10px_12px] [border:1px_solid_var(--color-border)] [border-radius:8px] [background:var(--color-input-bg)] [color:#2563eb] [text-decoration:none] [transition:background_0.15s,_border-color_0.15s]"}
+          href={preview.url}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          <span className={"[min-width:0] [overflow:hidden] [text-overflow:ellipsis] [white-space:nowrap] [font-size:13px] [font-weight:700] [color:#2563eb]"}>
+            {preview.url}
+          </span>
+        </a>
+      ))}
+    </div>
   );
 }
 
@@ -288,7 +317,7 @@ function YouTubePreview({ preview }) {
   }, [preview.url]);
 
   return (
-    <a className="[display:flex] [flex-direction:column] [width:min(500px,_100%)] [overflow:hidden] [border:1px_solid_var(--color-border)] [border-radius:12px] [background:var(--color-input-bg)] [color:var(--color-text)] [text-decoration:none]" href={preview.url} target="_blank" rel="noreferrer noopener">
+    <a className="[display:flex] [flex-direction:column] [width:min(500px,_100%)] [margin:5px_0] [overflow:hidden] [border:1px_solid_var(--color-border)] [border-radius:12px] [background:var(--color-input-bg)] [color:var(--color-text)] [text-decoration:none]" href={preview.url} target="_blank" rel="noreferrer noopener">
       <div className="[width:100%] [aspect-ratio:16/9] [overflow:hidden] [background:var(--color-border)]">
         <img src={thumbnailUrl} alt={title} className="[width:100%] [height:100%] [object-fit:cover] [display:block]" />
       </div>
@@ -507,7 +536,9 @@ function ChatMessageContentBody({ content }) {
   }
 
   const textContent = payload ? payload.text : content;
-  const linkPreview = getLinkPreview(textContent);
+  const linkPreviews = getLinkPreviews(textContent);
+  const linkPreview = linkPreviews.length === 1 ? linkPreviews[0] : null;
+  const visibleText = linkPreviews.length > 0 ? removeUrls(textContent) : textContent;
 
   if (!payload) {
     if (isSingleEmoji(content)) {
@@ -515,19 +546,20 @@ function ChatMessageContentBody({ content }) {
     }
 
     const text = String(content || "");
-    const shouldHideLinkText =
-      linkPreview && normalizeUrl(text.trim()) === linkPreview.url;
 
     return (
       <div className={"[display:flex] [flex-direction:column] [gap:8px]"}>
+        {linkPreviews.length > 1 && <LinkList previews={linkPreviews} />}
         {linkPreview?.type === "youtube" && (
           <YouTubePreview preview={linkPreview} />
         )}
         {linkPreview && linkPreview.type !== "youtube" && (
           <LinkPreviewCard preview={linkPreview} />
         )}
-        {!shouldHideLinkText && (
-          <div className={"[white-space:pre-wrap]"}>{renderTextWithLinks(content)}</div>
+        {visibleText && (
+          <div className={"[white-space:pre-wrap]"}>
+            {linkPreview ? visibleText : renderTextWithLinks(text)}
+          </div>
         )}
       </div>
     );
@@ -537,18 +569,17 @@ function ChatMessageContentBody({ content }) {
   const fileAttachments = payload.attachments.filter(
     (attachment) => !isMedia(attachment),
   );
-  const shouldHideLinkText =
-    linkPreview && normalizeUrl(payload.text.trim()) === linkPreview.url;
 
   return (
     <div className={"[display:flex] [flex-direction:column] [gap:8px]"}>
+      {linkPreviews.length > 1 && <LinkList previews={linkPreviews} />}
       {linkPreview?.type === "youtube" && (
         <YouTubePreview preview={linkPreview} />
       )}
       {linkPreview && linkPreview.type !== "youtube" && (
         <LinkPreviewCard preview={linkPreview} />
       )}
-      {payload.text && !shouldHideLinkText && (
+      {visibleText && (
         <div
           className={`${"[white-space:pre-wrap]"} ${
             isSingleEmoji(payload.text) &&
@@ -558,7 +589,7 @@ function ChatMessageContentBody({ content }) {
               : ""
           }`}
         >
-          {renderTextWithLinks(payload.text)}
+          {linkPreview ? visibleText : renderTextWithLinks(payload.text)}
         </div>
       )}
       {mediaAttachments.length > 0 && <MediaGrid attachments={mediaAttachments} />}

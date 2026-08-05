@@ -118,7 +118,7 @@ export default function ChatMembersModal({
                           />
                         ) : (
                           <span className={styles.defaultAvatar}>
-                            {nickname.slice(0, 1)}
+  {nickname.slice(0, 2)}
                           </span>
                         )}
                       </div>

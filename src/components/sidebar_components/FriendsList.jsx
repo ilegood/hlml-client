@@ -4,6 +4,7 @@ import { getImageUrl } from "../../api/instance";
 import AddFriendModal from "./js/AddFriendModal";
 import ReportModal from "../modals/ReportModal";
 import { useFriendManagement } from "../../hooks/useFriendManagement";
+import { displayName } from "../../utils/chatHelpers";
 
 const FriendsList = () => {
   const {
@@ -81,14 +82,13 @@ const FriendsList = () => {
               </h3>
               {requests.map((req) => (
                 <div key={req.id} className={styles.requestItem}>
-                  <div
-                    className={styles.avatar}
-                    style={{
-                      backgroundImage: req.profile_img
-                        ? `url(${getImageUrl(req.profile_img)})`
-                        : "none",
-                    }}
-                  />
+                  <div className={styles.avatar}>
+                    {req.profile_img ? (
+                      <img src={getImageUrl(req.profile_img)} alt={displayName(req.name)} />
+                    ) : (
+                      displayName(req.name).slice(0, 2)
+                    )}
+                  </div>
                   <span className={styles.requestName}>{req.name}</span>
                   <div className={styles.actionBtns}>
                     <button
@@ -122,14 +122,13 @@ const FriendsList = () => {
                     onClick={(e) => handleClick(e, friend)}
                   >
                     <td className={styles.avatarCell}>
-                      <div
-                        className={styles.avatar}
-                        style={{
-                          backgroundImage: friend.profile_img
-                            ? `url(${getImageUrl(friend.profile_img)})`
-                            : "none",
-                        }}
-                      />
+                      <div className={styles.avatar}>
+                        {friend.profile_img ? (
+                          <img src={getImageUrl(friend.profile_img)} alt={displayName(friend.name)} />
+                        ) : (
+                          displayName(friend.name).slice(0, 2)
+                        )}
+                      </div>
                     </td>
                     <td className={styles.nameCell}>{friend.name}</td>
                     <td
@@ -175,14 +174,16 @@ const FriendsList = () => {
           style={{ top: `${cardTop}px` }}
         >
           <div className={styles.detailHeader}>
-            <div
-              className={styles.detailAvatarLarge}
-              style={{
-                backgroundImage: selectedFriend?.profile_img
-                  ? `url(${getImageUrl(selectedFriend.profile_img)})`
-                  : "none",
-              }}
-            />
+            <div className={styles.detailAvatarLarge}>
+              {selectedFriend?.profile_img ? (
+                <img
+                  src={getImageUrl(selectedFriend.profile_img)}
+                  alt={displayName(selectedFriend.name)}
+                />
+              ) : (
+                displayName(selectedFriend?.name).slice(0, 2)
+              )}
+            </div>
           </div>
           <div className={styles.detailBody}>
             <h4>{selectedFriend?.name}</h4>

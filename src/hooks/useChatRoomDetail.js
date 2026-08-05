@@ -13,6 +13,8 @@ import {
   displayName,
   createClientMessageId,
   normalizeRoomAppointment,
+  getEditableMessageText,
+  buildEditedMessageContent,
 } from "../utils/chatHelpers";
 import { usePendingChatFiles } from "./usePendingChatFiles";
 
@@ -475,9 +477,10 @@ export default function useChatRoomDetail() {
 
       if (editId) {
         if (!input.trim()) return;
+        const originalMessage = messages.find((message) => message.id === editId);
         socketRef.current.emit("edit_message", {
           messageId: editId,
-          content: input,
+          content: buildEditedMessageContent(originalMessage?.content, input),
           roomId,
           userId,
         });
@@ -591,6 +594,7 @@ export default function useChatRoomDetail() {
     },
     [
       input,
+      messages,
       pendingFiles.length,
       editId,
       roomId,
@@ -609,7 +613,7 @@ export default function useChatRoomDetail() {
 
   const startEdit = (msg) => {
     setEditId(msg.id);
-    setInput(msg.content);
+    setInput(getEditableMessageText(msg.content));
     setReplyTo(null);
     setTimeout(() => inputRef.current?.focus(), 0);
   };

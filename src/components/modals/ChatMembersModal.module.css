@@ -43,19 +43,21 @@
 }
 
 .avatar {
-  @apply flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#555];
+  @apply flex h-full w-full shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[gray] text-[12px] font-bold text-white;
 }
 
 .avatarBorder {
-  @apply pointer-events-none absolute -top-1/4 -left-1/4 z-[5] aspect-square h-[150%] w-[150%] object-contain object-center;
+  @apply pointer-events-none absolute -top-1/4 z-[5] aspect-square h-[150%] w-[150%] object-contain;
+  transform: scale(1.35);
+  transform-origin: center;
 }
 
 .avatar img {
-  @apply aspect-square h-full w-full object-cover object-center;
+  @apply block h-full w-full object-cover;
 }
 
 .defaultAvatar {
-  @apply text-[1.2rem] font-bold text-white;
+  @apply text-[12px] font-bold text-white;
 }
 
 .info {
