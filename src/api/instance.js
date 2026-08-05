@@ -1,6 +1,13 @@
 import axios from "axios";
 
-export const BASE_URL = "https://hlml-server-gleaming-mountain-8819.fly.dev";
+const DEFAULT_API_URL = "https://hlml-server-gleaming-mountain-8819.fly.dev";
+
+// Use the local API during development and the deployed API when no build-time
+// override is provided. Keeping this in one place also keeps image URLs and
+// Axios requests pointed at the same server.
+export const BASE_URL = (
+  import.meta.env.VITE_API_URL || DEFAULT_API_URL
+).replace(/\/$/, "");
 
 export const getImageUrl = (path) => {
   if (!path) return null;

@@ -77,7 +77,7 @@ export default function DMDetailPage() {
           onClick={scrollToBottom}
           title="?? ??? ??"
           ariaLabel="? ??? ????"
-          label="? ???"
+          label="최근 채팅 확인하기"
         />
       )}
 

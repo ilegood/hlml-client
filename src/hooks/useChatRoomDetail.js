@@ -7,7 +7,6 @@ import { BASE_URL } from "../api/instance";
 import { getRoomBlockWarning, uploadChatFile } from "../api/chat";
 import { leavePost, getPost, togglePostJoin } from "../api/posts";
 import { toast } from "sonner";
-import styles from "../components/chat_components/chatStyles.js";
 import { formatChatPreview } from "../utils/chatPreview";
 import {
   formatAppointmentDateTime,
@@ -643,8 +642,8 @@ export default function useChatRoomDetail() {
     const el = document.getElementById(`msg-${msgId}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add(styles.highlight);
-      setTimeout(() => el.classList.remove(styles.highlight), 2000);
+      el.classList.add("[animation:highlightMessage_2s_ease-out]");
+      setTimeout(() => el.classList.remove("[animation:highlightMessage_2s_ease-out]"), 2000);
     } else {
       toast.error("원본 메시지를 찾을 수 없습니다.");
     }

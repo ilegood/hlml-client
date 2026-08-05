@@ -5,7 +5,6 @@ import { AuthContext } from "../context/auth";
 import instance, { BASE_URL } from "../api/instance";
 import { uploadChatFile } from "../api/chat";
 import { toast } from "sonner";
-import styles from "../components/chat_components/chatStyles.js";
 import { createClientMessageId } from "../utils/chatHelpers";
 import { usePendingChatFiles } from "./usePendingChatFiles";
 
@@ -609,8 +608,8 @@ export default function useDMChat() {
     const el = document.getElementById(`msg-${msgId}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add(styles.highlight);
-      setTimeout(() => el.classList.remove(styles.highlight), 2000);
+      el.classList.add("[animation:highlightMessage_2s_ease-out]");
+      setTimeout(() => el.classList.remove("[animation:highlightMessage_2s_ease-out]"), 2000);
     } else {
       toast.error("원본 메시지를 찾을 수 없습니다.");
     }

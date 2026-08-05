@@ -1,7 +1,6 @@
 import { Component, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "../../api/instance";
-import styles from "./chatStyles.js";
 
 const URL_PATTERN = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
 const TRAILING_PUNCTUATION = /[)\],.!?]+$/;
@@ -208,7 +207,7 @@ const renderTextWithLinks = (value) => {
     nodes.push(
       <a
         key={`${start}-${href}`}
-        className={styles.messageLink}
+        className={"[color:var(--color-active)] [text-decoration:underline] [text-underline-offset:2px] [word-break:break-all]"}
         href={href}
         target="_blank"
         rel="noreferrer noopener"
@@ -230,25 +229,25 @@ function SharedPostCard({ payload }) {
   return (
     <button
       type="button"
-      className={styles.sharedPostCard}
+      className={"[flex-direction:column] [width:min(500px,_100%)] [min-height:auto] [overflow:hidden] [padding:0] [cursor:pointer] [text-align:left] [gap:0]"}
       onClick={() => navigate(`/detail/${payload.postId}`)}
       disabled={!payload.postId}
     >
       {payload.postImage && (
-        <div className={styles.sharedPostImageContainer}>
+        <div className={"[width:100%] [aspect-ratio:16_/_9] [overflow:hidden] [background-color:var(--color-border)] [display:flex] [justify-content:center] [align-items:center]"}>
           <img
             src={getImageUrl(payload.postImage)}
             alt=""
-            className={styles.sharedPostImage}
+            className={"[width:100%] [height:100%] [display:block] [object-fit:cover]"}
           />
         </div>
       )}
-      <div className={styles.sharedPostContent}>
-        <span className={styles.sharedPostEyebrow}>공유된 게시글</span>
-        <strong className={styles.sharedPostTitle}>
+      <div className={"[flex:1] [min-width:0] [display:flex] [flex-direction:column] [gap:4px] [padding:12px_14px_13px]"}>
+        <span className={"[display:none]"}>공유된 게시글</span>
+        <strong className={"[font-size:16px] [line-height:1.35] [color:var(--color-text)] [overflow:hidden] [text-overflow:ellipsis] [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical] [white-space:normal]"}>
           {payload.postTitle || "게시글"}
         </strong>
-        <span className={styles.sharedPostMeta}>
+        <span className={"[font-size:12px] [line-height:1.35] [color:var(--color-deactive)] [overflow:hidden] [text-overflow:ellipsis] [white-space:normal]"}>
           {payload.sharerNickname || "알 수 없음"}님이 공유했습니다.
         </span>
       </div>
@@ -259,62 +258,43 @@ function SharedPostCard({ payload }) {
 function LinkPreviewCard({ preview }) {
   return (
     <a
-      className={styles.linkPreview}
+      className={"[display:flex] [gap:12px] [max-width:min(500px,_100%)] [min-height:96px] [padding:10px] [border:1px_solid_var(--color-border)] [border-radius:12px] [background:var(--color-input-bg)] [color:var(--color-text)] [text-decoration:none] [transition:border-color_0.15s,_background_0.15s,_transform_0.15s]"}
       href={preview.url}
       target="_blank"
       rel="noreferrer noopener"
     >
-      <div className={styles.linkPreviewIcon}>
+      <div className={"[width:128px] [min-width:128px] [aspect-ratio:16_/_9] [border-radius:12px] [display:flex] [align-items:center] [justify-content:center] [font-size:28px] [font-weight:900] [flex-shrink:0]"}>
         <span aria-hidden="true">{preview.type === "map" ? "지도" : "링크"}</span>
       </div>
-      <div className={styles.linkPreviewMeta}>
-        <strong className={styles.linkPreviewTitle}>{preview.title}</strong>
-        <span className={styles.linkPreviewUrl}>{preview.domain}</span>
+      <div className={"[min-width:0] [display:flex] [flex-direction:column] [gap:6px] [justify-content:center]"}>
+        <strong className={"[font-size:14px] [line-height:1.4] [font-weight:800] [color:var(--color-text)] [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical] [overflow:hidden]"}>{preview.title}</strong>
+        <span className={"[font-size:11px] [color:var(--color-deactive)] [opacity:0.85] [overflow:hidden] [text-overflow:ellipsis] [white-space:nowrap]"}>{preview.domain}</span>
       </div>
     </a>
   );
 }
 
 function YouTubePreview({ preview }) {
-  const [title, setTitle] = useState("YouTube 동영상");
+  const [title, setTitle] = useState("YouTube video");
   const thumbnailUrl = `https://i.ytimg.com/vi/${preview.videoId}/hqdefault.jpg`;
 
   useEffect(() => {
     let cancelled = false;
-
-    const loadPreview = async () => {
-      try {
-        const response = await fetch(
-          `https://www.youtube.com/oembed?url=${encodeURIComponent(preview.url)}&format=json`,
-        );
-        if (!response.ok) return;
-        const data = await response.json();
-        if (!cancelled) setTitle(data.title || "YouTube 동영상");
-      } catch {
-        // 기본 제목을 유지합니다.
-      }
-    };
-
-    loadPreview();
-    return () => {
-      cancelled = true;
-    };
+    fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(preview.url)}&format=json`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => { if (!cancelled && data?.title) setTitle(data.title); })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, [preview.url]);
 
   return (
-    <a
-      className={styles.youtubePreview}
-      href={preview.url}
-      target="_blank"
-      rel="noreferrer noopener"
-    >
-      <div className={styles.youtubeThumb}>
-        <img src={thumbnailUrl} alt={title} />
-        <span className={styles.youtubePlayBadge}>재생</span>
+    <a className="[display:flex] [flex-direction:column] [width:min(500px,_100%)] [overflow:hidden] [border:1px_solid_var(--color-border)] [border-radius:12px] [background:var(--color-input-bg)] [color:var(--color-text)] [text-decoration:none]" href={preview.url} target="_blank" rel="noreferrer noopener">
+      <div className="[width:100%] [aspect-ratio:16/9] [overflow:hidden] [background:var(--color-border)]">
+        <img src={thumbnailUrl} alt={title} className="[width:100%] [height:100%] [object-fit:cover] [display:block]" />
       </div>
-      <div className={styles.youtubeMeta}>
-        <span className={styles.youtubeDomain}>youtube.com</span>
-        <strong className={styles.youtubeTitle}>{title}</strong>
+      <div className="[display:flex] [flex-direction:column] [gap:4px] [padding:12px_14px_14px]">
+        <strong className="[font-size:15px] [line-height:1.4] [font-weight:800] [color:var(--color-text)] [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical] [overflow:hidden]">{title}</strong>
+        <span className="[font-size:11px] [color:var(--color-deactive)] [overflow:hidden] [text-overflow:ellipsis] [white-space:nowrap]">{preview.url}</span>
       </div>
     </a>
   );
@@ -325,9 +305,9 @@ export default function ChatAttachment({ attachment }) {
   const downloadUrl = getDownloadUrl(attachment);
 
   return (
-    <div className={styles.attachmentWrap}>
+    <div className={"[display:inline-flex] [flex-direction:column] [gap:6px] [max-width:min(420px,_100%)]"}>
       <a
-        className={styles.attachmentFileCard}
+        className={"[display:flex] [align-items:center] [justify-content:space-between] [gap:16px] [width:min(360px,_100%)] [min-height:46px] [padding:10px_12px_10px_14px] [border:1px_solid_var(--color-border)] [border-radius:8px] [background:var(--color-input-bg)] [color:var(--color-text)] [font-size:13px] [font-weight:700] [text-decoration:none] [box-sizing:border-box] [transition:border-color_0.15s,_background_0.15s,_color_0.15s]"}
         href={downloadUrl || "#"}
         download={filename}
         title={filename}
@@ -335,9 +315,13 @@ export default function ChatAttachment({ attachment }) {
           if (!downloadUrl) event.preventDefault();
         }}
       >
-        <span className={styles.attachmentFileName}>{filename}</span>
-        <span className={styles.attachmentDownloadIcon} aria-hidden="true">
-          내려받기
+        <span className={"[min-width:0] [overflow:hidden] [text-overflow:ellipsis] [white-space:nowrap]"}>{filename}</span>
+        <span className={"[display:inline-flex] [align-items:center] [justify-content:center] [flex:0_0_auto] [width:30px] [height:30px] [border-radius:6px] [background:var(--color-sidebar)] [color:currentColor]"} aria-hidden="true">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 3v12" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 21h14" />
+          </svg>
         </span>
       </a>
     </div>
@@ -369,66 +353,53 @@ export function MediaLightbox({ attachments, index, onClose, onMove }) {
   if (!attachment) return null;
 
   return (
-    <div className={styles.mediaLightbox} onMouseDown={onClose}>
-      <button
-        type="button"
-        className={styles.lightboxClose}
-        onMouseDown={(event) => event.stopPropagation()}
-        onClick={onClose}
-        title="닫기"
-      >
-        X
-      </button>
-
-      <div
-        className={styles.lightboxDownloadActions}
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <button type="button" onClick={() => downloadAttachment(attachment)}>
-          현재 파일 다운로드
-        </button>
-        {attachments.length > 1 && (
-          <button type="button" onClick={downloadAll}>
-            모두 다운로드
-          </button>
-        )}
+    <div className={"[position:fixed] [inset:0] [z-index:6000] [display:flex] [align-items:center] [justify-content:center] [background:rgba(0,_0,_0,_0.86)] [padding:56px] [box-sizing:border-box]"} onMouseDown={onClose}>
+      <div className="[position:fixed] [top:18px] [right:72px] [display:flex] [gap:8px] [z-index:1]" onMouseDown={(event) => event.stopPropagation()}>
+        <button type="button" className="[height:40px] [padding:0_14px] [border:none] [border-radius:8px] [background:rgba(255,_255,_255,_0.12)] [color:#fff] [font:inherit] [font-size:13px] [font-weight:800] [cursor:pointer] hover:[background:rgba(255,_255,_255,_0.22)]" onClick={() => downloadAttachment(attachment)}>{"\uC774\uBBF8\uC9C0 \uB2E4\uC6B4\uB85C\uB4DC"}</button>
+        {attachments.length > 1 && <button type="button" className="[height:40px] [padding:0_14px] [border:none] [border-radius:8px] [background:rgba(255,_255,_255,_0.12)] [color:#fff] [font:inherit] [font-size:13px] [font-weight:800] [cursor:pointer] hover:[background:rgba(255,_255,_255,_0.22)]" onClick={downloadAll}>{"\uBAA8\uB450 \uB2E4\uC6B4\uB85C\uB4DC"}</button>}
       </div>
 
       {attachments.length > 1 && (
         <>
           <button
             type="button"
-            className={`${styles.lightboxNav} ${styles.lightboxPrev}`}
+            className={`${"[position:fixed] [z-index:2] [top:50%] [width:44px] [height:64px] [border:none] [border-radius:8px] [background:rgba(255,_255,_255,_0.12)] [color:#fff] [display:flex] [align-items:center] [justify-content:center] [cursor:pointer] [font-size:48px] [transform:translateY(-50%)]"} ${"[left:20px]"} hover:[background:rgba(255,_255,_255,_0.22)]`}
+            style={{ top: "50%", transform: "translateY(-50%)" }}
             onMouseDown={(event) => event.stopPropagation()}
             onClick={() => onMove(-1)}
             title="이전"
             aria-label="이전 이미지"
           >
-            ‹
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m15 18-6-6 6-6" />
+            </svg>
           </button>
           <button
             type="button"
-            className={`${styles.lightboxNav} ${styles.lightboxNext}`}
+            className={`${"[position:fixed] [z-index:2] [top:50%] [width:44px] [height:64px] [border:none] [border-radius:8px] [background:rgba(255,_255,_255,_0.12)] [color:#fff] [display:flex] [align-items:center] [justify-content:center] [cursor:pointer] [font-size:48px] [transform:translateY(-50%)]"} ${"[right:20px]"} hover:[background:rgba(255,_255,_255,_0.22)]`}
+            style={{ top: "50%", transform: "translateY(-50%)" }}
             onMouseDown={(event) => event.stopPropagation()}
             onClick={() => onMove(1)}
             title="다음"
             aria-label="다음 이미지"
           >
-            ›
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
           </button>
         </>
       )}
 
       <div
-        className={styles.lightboxBody}
+        className={"[max-width:min(1100px,_100%)] [max-height:100%] [display:flex] [flex-direction:column] [gap:10px] [align-items:center]"}
         onMouseDown={(event) => event.stopPropagation()}
       >
         {isVideo(attachment) ? (
           <video src={src} controls autoPlay />
         ) : (
-          <img src={src} alt={filename} />
+          <img src={src} alt={filename} className="[max-width:100%] [max-height:calc(100vh_-_140px)] [width:auto] [height:auto] [object-fit:contain] [display:block]" />
         )}
-        <div className={styles.lightboxMeta}>
+        <div className={"[width:100%] [display:flex] [justify-content:space-between] [gap:16px] [color:#fff] [font-size:13px] [font-weight:700]"}>
           <span>{filename}</span>
           <span>
             {index + 1} / {attachments.length}
@@ -456,11 +427,16 @@ function MediaGrid({ attachments }) {
   return (
     <>
       <div
-        className={`${styles.mediaGrid} ${
-          attachments.length === 1 ? styles.mediaGridSingle : ""
-        } ${attachments.length === 2 ? styles.mediaGridTwo : ""} ${
-          attachments.length === 3 ? styles.mediaGridThree : ""
+        className={`${"[display:grid] [grid-template-columns:repeat(2,_minmax(0,_180px))] [grid-auto-rows:132px] [gap:4px] [width:min(364px,_100%)] [overflow:hidden] [border-radius:8px]"} ${
+          attachments.length === 1 ? "[display:block] [width:min(420px,_100%)]" : ""
+        } ${attachments.length === 2 ? "[grid-template-columns:repeat(2,_minmax(0,_180px))] [grid-auto-rows:180px]" : ""} ${
+          attachments.length === 3 ? "" : ""
         }`}
+        style={
+          attachments.length === 1
+            ? { display: "block", width: "min(420px, 100%)", overflow: "visible" }
+            : undefined
+        }
       >
         {visible.map((attachment, index) => {
           const src = getImageUrl(attachment.url);
@@ -471,20 +447,40 @@ function MediaGrid({ attachments }) {
             <button
               key={`${attachment.url || attachment.name || "media"}-${index}`}
               type="button"
-              className={styles.mediaGridItem}
+              className={"[position:relative] [display:block] [min-width:0] [min-height:0] [overflow:hidden] [color:#fff] [background:transparent] [border:none] [padding:0] [cursor:pointer] [background:none]"}
+              style={
+                attachments.length === 1
+                  ? { width: "min(420px, 100%)", height: "auto" }
+                  : attachments.length === 3 && index === 0
+                    ? { gridRow: "span 2" }
+                    : undefined
+              }
               onClick={() => setLightboxIndex(index)}
               title={filename}
             >
               {isVideo(attachment) ? (
-                <video src={src} muted />
+                <video src={src} muted className="[width:100%] [height:100%] [object-fit:cover] [display:block]" />
               ) : (
-                <img src={src} alt={filename} />
+                <img
+                  src={src}
+                  alt={filename}
+                  style={
+                    attachments.length === 1
+                      ? { width: "100%", height: "auto", objectFit: "contain", display: "block" }
+                      : undefined
+                  }
+                  className={
+                    attachments.length === 1
+                      ? "[width:100%] [height:auto] [object-fit:contain] [display:block]"
+                      : "[width:100%] [height:100%] [object-fit:cover] [display:block]"
+                  }
+                />
               )}
               {isVideo(attachment) && (
-                <span className={styles.videoBadge}>동영상</span>
+                <span className={"[position:absolute] [left:8px] [bottom:8px] [padding:3px_7px] [border-radius:4px] [background:rgba(0,_0,_0,_0.68)] [color:#fff] [font-size:11px] [font-weight:700]"}>동영상</span>
               )}
               {showOverlay && (
-                <span className={styles.mediaOverflow}>+{overflow}</span>
+                <span className={"[position:absolute] [inset:0] [display:flex] [align-items:center] [justify-content:center] [background:rgba(0,_0,_0,_0.55)] [font-size:26px] [font-weight:800]"}>+{overflow}</span>
               )}
             </button>
           );
@@ -515,7 +511,7 @@ function ChatMessageContentBody({ content }) {
 
   if (!payload) {
     if (isSingleEmoji(content)) {
-      return <span className={styles.emojiOnly}>{String(content || "").trim()}</span>;
+      return <span className={"[display:inline-block] [font-size:42px] [line-height:1.15] [white-space:normal]"}>{String(content || "").trim()}</span>;
     }
 
     const text = String(content || "");
@@ -523,7 +519,7 @@ function ChatMessageContentBody({ content }) {
       linkPreview && normalizeUrl(text.trim()) === linkPreview.url;
 
     return (
-      <div className={styles.messagePayload}>
+      <div className={"[display:flex] [flex-direction:column] [gap:8px]"}>
         {linkPreview?.type === "youtube" && (
           <YouTubePreview preview={linkPreview} />
         )}
@@ -531,7 +527,7 @@ function ChatMessageContentBody({ content }) {
           <LinkPreviewCard preview={linkPreview} />
         )}
         {!shouldHideLinkText && (
-          <div className={styles.payloadText}>{renderTextWithLinks(content)}</div>
+          <div className={"[white-space:pre-wrap]"}>{renderTextWithLinks(content)}</div>
         )}
       </div>
     );
@@ -545,7 +541,7 @@ function ChatMessageContentBody({ content }) {
     linkPreview && normalizeUrl(payload.text.trim()) === linkPreview.url;
 
   return (
-    <div className={styles.messagePayload}>
+    <div className={"[display:flex] [flex-direction:column] [gap:8px]"}>
       {linkPreview?.type === "youtube" && (
         <YouTubePreview preview={linkPreview} />
       )}
@@ -554,11 +550,11 @@ function ChatMessageContentBody({ content }) {
       )}
       {payload.text && !shouldHideLinkText && (
         <div
-          className={`${styles.payloadText} ${
+          className={`${"[white-space:pre-wrap]"} ${
             isSingleEmoji(payload.text) &&
             mediaAttachments.length === 0 &&
             fileAttachments.length === 0
-              ? styles.emojiOnly
+              ? "[display:inline-block] [font-size:42px] [line-height:1.15] [white-space:normal]"
               : ""
           }`}
         >
@@ -567,7 +563,7 @@ function ChatMessageContentBody({ content }) {
       )}
       {mediaAttachments.length > 0 && <MediaGrid attachments={mediaAttachments} />}
       {fileAttachments.length > 0 && (
-        <div className={styles.payloadAttachments}>
+        <div className={"[display:flex] [flex-direction:column] [gap:10px]"}>
           {fileAttachments.map((attachment, index) => (
             <ChatAttachment
               key={`${attachment.url || attachment.name || "file"}-${index}`}
@@ -597,7 +593,7 @@ class ChatMessageContentErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className={styles.payloadText}>
+        <div className={"[white-space:pre-wrap]"}>
           {String(this.props.fallbackText || "")}
         </div>
       );
@@ -624,7 +620,7 @@ export class MessageRowErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className={styles.msgBubble}>
+        <div className={"[font-size:15px] [line-height:1.5] [word-break:break-word] [color:var(--color-text)] [white-space:pre-wrap]"}>
           {String(this.props.fallbackText || "메시지를 표시할 수 없습니다.")}
         </div>
       );

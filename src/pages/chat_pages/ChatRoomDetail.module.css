@@ -205,7 +205,8 @@
   gap: 12px;
   margin: 12px 0 0;
   padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--color-active) 45%, var(--color-border));
+  border: 1px solid
+    color-mix(in srgb, var(--color-active) 45%, var(--color-border));
   border-radius: 8px;
   background: color-mix(in srgb, var(--color-active) 12%, var(--color-bg));
   color: var(--color-text);
@@ -374,10 +375,10 @@
 
 .avatarBorderSmall {
   position: absolute;
-  top: -25%;
-  left: -25%;
-  width: 150%;
-  height: 150%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  transform: scale(1.5);
+  transform-origin: center;
   z-index: 5;
   pointer-events: none;
 }
@@ -511,9 +512,15 @@
 }
 
 @keyframes pulse {
-  0% { opacity: 0.5; }
-  50% { opacity: 1; }
-  100% { opacity: 0.5; }
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
 }
 
 .failedMessage {
@@ -1749,6 +1756,7 @@
 .attachBtn {
   width: 32px;
   height: 32px;
+  align-self: center;
   border: none;
   border-radius: 4px;
   background: transparent;
@@ -1868,8 +1876,10 @@
 /* ?? Scroll to bottom button ?? */
 .scrollToBottom {
   position: absolute;
-  bottom: 80px;
-  right: 16px;
+  bottom: 88px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   color: var(--color-text);

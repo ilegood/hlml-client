@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { getImageUrl } from "../../api/instance";
 import { MediaLightbox } from "./ChatAttachment";
-import styles from "./chatStyles.js";
 
 const countHangul = (value) =>
   (String(value).match(/[\uAC00-\uD7A3]/g) || []).length;
@@ -91,12 +90,12 @@ export default function ChatFileGallery({ messages, onClose }) {
 
   return (
     <>
-      <div className={styles.fileGalleryOverlay} onMouseDown={onClose}>
+      <div className={"[position:fixed] [inset:0] [z-index:5200] [display:flex] [align-items:center] [justify-content:center] [padding:32px] [background:rgba(0,_0,_0,_0.45)]"} onMouseDown={onClose}>
         <section
-          className={styles.fileGalleryPanel}
+          className={"[width:min(760px,_100%)] [max-height:min(720px,_calc(100vh_-_64px))] [display:flex] [flex-direction:column] [border:1px_solid_var(--color-border)] [border-radius:8px] [background:var(--color-sidebar)] [color:var(--color-text)] [box-shadow:0_20px_60px_rgba(0,_0,_0,_0.28)] [overflow:hidden]"}
           onMouseDown={(event) => event.stopPropagation()}
         >
-          <div className={styles.fileGalleryHeader}>
+          <div className={"[display:flex] [align-items:center] [justify-content:space-between] [gap:16px] [padding:18px_20px] [border-bottom:1px_solid_var(--color-border)]"}>
             <div>
               <h3>파일 모아보기</h3>
               <span>{attachments.length}개 공유됨</span>
@@ -107,15 +106,15 @@ export default function ChatFileGallery({ messages, onClose }) {
           </div>
 
           {attachments.length === 0 ? (
-            <div className={styles.fileGalleryEmpty}>
+            <div className={"[padding:54px_20px] [color:var(--color-deactive)] [text-align:center] [font-size:14px]"}>
               아직 공유된 파일이 없습니다.
             </div>
           ) : (
-            <div className={styles.fileGalleryBody}>
+            <div className={"[padding:18px_20px_22px] [overflow-y:auto]"}>
               {media.length > 0 && (
-                <div className={styles.fileGallerySection}>
-                  <div className={styles.fileGallerySectionTitle}>이미지/동영상</div>
-                  <div className={styles.fileGalleryMediaGrid}>
+                <div className={""}>
+                  <div className={"[margin-bottom:10px] [font-size:13px] [font-weight:900] [color:var(--color-text)]"}>이미지/동영상</div>
+                  <div className={"[display:grid] [grid-template-columns:repeat(auto-fill,_minmax(132px,_1fr))] [gap:10px]"}>
                     {media.map((attachment, index) => {
                       const src = getImageUrl(attachment.url);
                       const filename = repairFilename(attachment.name) || "미디어";
@@ -127,7 +126,7 @@ export default function ChatFileGallery({ messages, onClose }) {
                         <button
                           key={attachment.id}
                           type="button"
-                          className={styles.fileGalleryMediaItem}
+                          className={"[min-width:0] [border:1px_solid_var(--color-border)] [border-radius:8px] [background:var(--color-input-bg)] [color:var(--color-text)] [text-decoration:none] [overflow:hidden] [padding:0] [cursor:pointer] [text-align:left]"}
                           title={filename}
                           onClick={() => setLightboxIndex(index)}
                         >
@@ -145,21 +144,21 @@ export default function ChatFileGallery({ messages, onClose }) {
               )}
 
               {files.length > 0 && (
-                <div className={styles.fileGallerySection}>
-                  <div className={styles.fileGallerySectionTitle}>파일</div>
-                  <div className={styles.fileGalleryFileList}>
+                <div className={""}>
+                  <div className={"[margin-bottom:10px] [font-size:13px] [font-weight:900] [color:var(--color-text)]"}>파일</div>
+                  <div className={"[display:flex] [flex-direction:column] [gap:8px]"}>
                     {files.map((attachment) => {
                       const filename = repairFilename(attachment.name) || "파일";
                       return (
                         <a
                           key={attachment.id}
-                          className={styles.fileGalleryFileItem}
+                          className={"[display:flex] [align-items:center] [gap:12px] [min-width:0] [padding:11px_12px] [border:1px_solid_var(--color-border)] [border-radius:8px] [background:var(--color-input-bg)] [color:var(--color-text)] [text-decoration:none]"}
                           href={getDownloadUrl(attachment) || "#"}
                           download={filename}
                           title={filename}
                         >
-                          <span className={styles.fileGalleryFileIcon}>FILE</span>
-                          <span className={styles.fileGalleryFileInfo}>
+                          <span className={"[width:42px] [height:42px] [border-radius:8px] [background:var(--color-active)] [color:white] [display:flex] [align-items:center] [justify-content:center] [font-size:10px] [font-weight:900] [flex-shrink:0]"}>FILE</span>
+                          <span className={"[min-width:0] [display:flex] [flex-direction:column] [gap:4px]"}>
                             <strong>{filename}</strong>
                             <small>
                               {[formatFileSize(attachment.size), formatSentAt(attachment.sentAt)]

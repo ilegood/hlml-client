@@ -5,7 +5,7 @@
 }
 
 .modalContent {
-  @apply relative flex h-[min(760px,90vh)] w-[480px] flex-col overflow-hidden rounded-[24px] bg-[var(--color-sidebar)] p-[30px] text-[var(--color-text)] shadow-[0_20px_40px_rgba(0,0,0,0.3)];
+  @apply relative flex h-[min(760px,90vh)] w-[480px] flex-col overflow-hidden rounded-2xl bg-[var(--color-sidebar)] p-[30px] text-[var(--color-text)] shadow-[0_4px_24px_rgba(0,0,0,0.1)];
 }
 
 .header {
@@ -13,23 +13,23 @@
 }
 
 .header h2 {
-  @apply text-[20px] font-extrabold text-[var(--color-active)];
+  @apply text-[20px] font-bold text-[var(--color-active)];
 }
 
 .closeBtn {
-  @apply cursor-pointer border-0 bg-transparent text-[var(--color-deactive)] hover:text-[var(--color-active)];
+  @apply cursor-pointer border-0 bg-transparent text-[var(--color-deactive)] transition-colors duration-200 hover:text-[var(--color-active)];
 }
 
 .calendarContainer {
-  @apply mb-5 flex-none rounded-[16px] border border-[var(--color-border)] bg-[var(--color-input-bg)] p-5;
+  @apply mb-5 flex-none rounded-xl border-[1.5px] border-solid border-[var(--color-border)] bg-[var(--color-input-bg)] p-5;
 }
 
 .calHeader {
-  @apply mb-[15px] flex items-center justify-between font-bold;
+  @apply mb-[15px] flex items-center justify-between font-semibold text-[var(--color-text)];
 }
 
 .navBtn {
-  @apply flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent p-0 text-[var(--color-text)] transition-[background,color,opacity] duration-150 hover:not-disabled:bg-[var(--color-input-focus-bg)] hover:not-disabled:text-[var(--color-active)] disabled:cursor-not-allowed disabled:opacity-20;
+  @apply flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent p-0 text-[var(--color-text)] transition-[background-color,color,opacity] duration-200 hover:not-disabled:bg-[var(--color-input-focus-bg)] hover:not-disabled:text-[var(--color-active)] disabled:cursor-not-allowed disabled:opacity-20;
 }
 
 .daysGrid {
@@ -37,7 +37,7 @@
 }
 
 .dayLabel {
-  @apply flex h-5 items-center justify-center font-bold opacity-50;
+  @apply flex h-5 items-center justify-center font-semibold text-[var(--color-text)] opacity-50;
 }
 
 .dayCell {
@@ -45,7 +45,7 @@
 }
 
 .today {
-  @apply border-[1.5px] border-[var(--color-active)];
+  @apply border-[1.5px] border-solid border-[var(--color-active)];
 }
 
 .selected {
@@ -65,15 +65,15 @@
 }
 
 .apptList h3 {
-  @apply mb-[5px] flex-none text-[14px];
+  @apply mb-[5px] flex-none text-[14px] font-semibold text-[var(--color-text)];
 }
 
 .apptItem {
-  @apply flex cursor-pointer items-center gap-[15px] rounded-xl border border-[var(--color-border)] bg-[var(--color-input-bg)] p-[15px] transition-transform duration-100 active:scale-[0.98];
+  @apply flex cursor-pointer items-center gap-[15px] rounded-xl border-[1.5px] border-solid border-[var(--color-border)] bg-[var(--color-input-bg)] p-[15px] transition-[transform,border-color] duration-200 hover:border-[var(--color-active)] active:scale-[0.97];
 }
 
 .timeTag {
-  @apply whitespace-nowrap rounded-md bg-[var(--color-active)] px-2 py-1 text-[11px] font-bold text-white;
+  @apply whitespace-nowrap rounded-md bg-[var(--color-active)] px-2 py-1 text-[11px] font-semibold text-white;
 }
 
 .info {
@@ -81,29 +81,29 @@
 }
 
 .infoTitle {
-  @apply mb-0.5 text-[14px] font-bold;
+  @apply mb-0.5 text-[14px] font-bold text-[var(--color-text)];
 }
 
 .infoPlace {
-  @apply text-[12px] opacity-60;
+  @apply text-[12px] text-[var(--color-text)] opacity-60;
 }
 
 .emptyMsg {
-  @apply flex min-h-[112px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-[30px] text-center text-[14px] text-[var(--color-deactive)];
+  @apply flex min-h-[112px] items-center justify-center rounded-xl border-[1.5px] border-dashed border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-[30px] text-center text-[14px] text-[var(--color-deactive)];
 }
 
 .dotPopup {
-  @apply absolute top-full left-1/2 z-[100] min-w-[160px] -translate-x-1/2 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-sidebar)] px-1 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.25)];
+  @apply absolute top-full left-1/2 z-[100] min-w-[160px] -translate-x-1/2 rounded-[10px] border-[1.5px] border-solid border-[var(--color-border)] bg-[var(--color-sidebar)] px-1 py-2 shadow-[0_4px_24px_rgba(0,0,0,0.1)];
 }
 
 .dotPopupItem {
-  @apply flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] transition-colors duration-150 hover:bg-[var(--color-border)];
+  @apply flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] transition-colors duration-200 hover:bg-[var(--color-border)];
 }
 
 .dotPopupTime {
-  @apply whitespace-nowrap font-bold text-[var(--color-active)];
+  @apply whitespace-nowrap font-semibold text-[var(--color-active)];
 }
 
 .dotPopupTitle {
-  @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  @apply overflow-hidden text-ellipsis whitespace-nowrap text-[var(--color-text)];
 }
