@@ -1,7 +1,7 @@
 ﻿import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { AuthContext } from "../../context/auth";
+import { AuthContext } from "../../context/AuthContext.jsx";
 import instance, { BASE_URL, getImageUrl } from "../../api/instance";
 import { uploadChatFile } from "../../api/chat";
 import { toast } from "sonner";

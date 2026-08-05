@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { AuthContext } from "../../context/auth";
+import { AuthContext } from "../../context/AuthContext.jsx";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
 import { getRoomBlockWarning, uploadChatFile } from "../../api/chat";
@@ -16,7 +16,7 @@ import {
 } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/modals/RoomSettingsModal";
-import ChatMembersModal from "../../hooks/ChatMembersModal";
+import ChatMembersModal from "../../components/modals/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import ChatInputArea from "../../components/chat_components/ChatInputArea";
 import MapPreview from "../../components/post_components/MapPreview";

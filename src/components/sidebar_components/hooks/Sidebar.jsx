@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { useAuth } from "../../../context/auth";
+import { useAuth } from "../../../context/AuthContext.jsx";
 import { useChatNotifications } from "../../../context/ChatNotificationContext";
 import styles from "./Sidebar.module.css";
 
