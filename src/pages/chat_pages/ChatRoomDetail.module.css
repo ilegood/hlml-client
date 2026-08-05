@@ -64,6 +64,12 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--color-text);
+  min-width: 0;
+  max-width: min(35vw, 280px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
 }
 
 .headerDivider {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "../../context/AuthContext";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { deletePostBan, getKickedPosts, getPosts } from "../../api/posts";
 import ChatRoomItem from "../../components/chat_components/ChatRoomItem";

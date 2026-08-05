@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { toast } from "sonner";
 import instance, { getImageUrl } from "../../api/instance";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "../../context/AuthContext";
 
 const ModalWrapper = styled.div`
   position: fixed;

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "../../context/AuthContext";
 import { togglePostLike } from "../../api/posts";
 import CategorySelector from "../../hooks/CategorySelector";
 import SortDropdown from "../../components/post_components/SortDropdown";

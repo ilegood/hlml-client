@@ -30,7 +30,7 @@ const DMHeader = ({
           )}
         </button>
         <span
-          className={"[font-size:15px] [font-weight:700] [color:var(--color-text)]"}
+          className={"[font-size:15px] [font-weight:700] [color:var(--color-text)] [min-width:0] [max-width:min(35vw,_280px)] [overflow:hidden] [white-space:nowrap] [text-overflow:ellipsis] [flex-shrink:1]"}
           style={{ display: "flex", alignItems: "center", gap: 6 }}
         >
           {targetNickname || "사용자"}

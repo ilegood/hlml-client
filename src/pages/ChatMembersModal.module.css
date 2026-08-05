@@ -47,7 +47,12 @@
 }
 
 .avatarBorder {
-  @apply pointer-events-none absolute -top-1/4 -left-1/4 z-[5] h-[150%] w-[150%];
+  @apply pointer-events-none absolute z-[5] h-[150%] w-[150%] object-contain;
+  top: 50%;
+  left: 50%;
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%) scale(1.35);
+  transform-origin: center;
 }
 
 .avatar img {
@@ -64,10 +69,6 @@
 
 .nickname {
   @apply text-[0.95rem] text-[var(--color-text,#fff)];
-}
-
-.hostBadge {
-  @apply ml-2 inline-flex items-center rounded-[10px] bg-[var(--color-active,#f39c12)] px-1.5 py-0.5 text-[0.7rem] font-bold text-white;
 }
 
 .kickBtn,

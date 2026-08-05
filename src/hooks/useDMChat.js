@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { AuthContext } from "../context/auth";
+import { AuthContext } from "../context/AuthContext";
 import instance, { BASE_URL } from "../api/instance";
 import { uploadChatFile } from "../api/chat";
 import { toast } from "sonner";
@@ -32,14 +32,12 @@ export default function useDMChat() {
   );
   const [sending, setSending] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
-  const [typingNickname, setTypingNickname] = useState("");
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
-  const typingTimerRef = useRef(null);
   const typingEmitRef = useRef(0);
   const {
     pendingFiles,
@@ -276,19 +274,6 @@ export default function useDMChat() {
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, readCount } : m)),
       );
-    });
-
-    socket.on("typing", ({ nickname }) => {
-      if (nickname !== name && nickname) {
-        setTypingNickname(nickname);
-        clearTimeout(typingTimerRef.current);
-        typingTimerRef.current = setTimeout(() => setTypingNickname(""), 2500);
-      }
-    });
-
-    socket.on("stop_typing", () => {
-      setTypingNickname("");
-      clearTimeout(typingTimerRef.current);
     });
 
     socket.on("friend_online_status", ({ userId: friendId, online }) => {
@@ -640,12 +625,12 @@ export default function useDMChat() {
   };
 
   return {
-    roomId, name, userId, profileImg, messages, input, setInput,
+    roomId, name, userId, messages, input, setInput,
     targetUserId, targetNickname, targetProfileImg, targetOnline,
-    replyTo, editId, hoveredMsgId, showEmojiPicker, setShowEmojiPicker,
+    replyTo, editId, hoveredMsgId, setHoveredMsgId, showEmojiPicker, setShowEmojiPicker,
     showMainEmojiPicker, setShowMainEmojiPicker, showScrollBtn,
     showFileGallery, setShowFileGallery, notificationsMuted, sending,
-    selectedProfileId, setSelectedProfileId, typingNickname, socketRef,
+    selectedProfileId, setSelectedProfileId, socketRef,
     bottomRef, messagesRef, inputRef, fileInputRef, typingEmitRef,
     pendingFiles, showAttachMenu, setShowAttachMenu, fileAccept,
     addPendingFiles, openFilePicker, removePendingFile, resizeInput,

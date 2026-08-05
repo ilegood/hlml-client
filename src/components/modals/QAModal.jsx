@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "../../context/AuthContext";
 import { deleteUser } from "../../api/users";
 import styles from "./QAModal.module.css";
 

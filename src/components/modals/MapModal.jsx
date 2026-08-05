@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getPosts } from "../../api/posts";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "../../context/AuthContext";
 import styles from "./MapModal.module.css";
 
 const MapModal = ({ onClose }) => {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "../../context/AuthContext";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
 import instance from "../../api/instance";

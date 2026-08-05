@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import styled from "styled-components";
 import instance, { getImageUrl } from "../../api/instance";
-import { AuthContext } from "../../context/auth";
+import { AuthContext } from "../../context/AuthContext";
 
 const Overlay = styled.div`
   position: fixed;

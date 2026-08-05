@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/auth";
+import { useAuth } from "../context/AuthContext";
 import {
   getFriends,
   getFriendRequests,

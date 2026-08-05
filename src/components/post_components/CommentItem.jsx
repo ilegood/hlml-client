@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { getTimeAgo } from "../../api/homeConstants";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "../../context/AuthContext";
 import styles from "./CommentItem.module.css";
 
 const ArrowIcon = () => (

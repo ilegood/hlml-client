@@ -83,7 +83,6 @@ export default function ChatMembersModal({
                     </div>
                     <span className={styles.nickname}>
                       {nickname}
-                      {isHost && <span className={styles.hostBadge}>방장</span>}
                     </span>
                   </div>
 
