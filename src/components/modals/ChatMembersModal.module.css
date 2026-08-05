@@ -47,11 +47,11 @@
 }
 
 .avatarBorder {
-  @apply pointer-events-none absolute -top-1/4 -left-1/4 z-[5] h-[150%] w-[150%];
+  @apply pointer-events-none absolute -top-1/4 -left-1/4 z-[5] aspect-square h-[150%] w-[150%] object-contain object-center;
 }
 
 .avatar img {
-  @apply h-full w-full object-cover;
+  @apply aspect-square h-full w-full object-cover object-center;
 }
 
 .defaultAvatar {

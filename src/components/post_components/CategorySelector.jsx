@@ -27,10 +27,10 @@ export default function CategorySelector({
       {categories.map(([category, options]) => (
         <div key={category} className="relative">
           <div
-            className={`flex cursor-pointer select-none items-center gap-[5px] whitespace-nowrap rounded-[20px] border-[1.5px] border-[var(--color-border)] bg-[var(--color-sidebar)] px-3 py-1.5 text-[13px] font-medium text-[var(--color-text)] transition-[border-color,color] duration-150 hover:border-[var(--color-active)] hover:text-[var(--color-active)] ${
+            className={`flex cursor-pointer select-none items-center gap-[5px] whitespace-nowrap rounded-[20px] border-[1.5px] border-[var(--color-border)] bg-[var(--color-sidebar)] px-3 py-1.5 text-[13px] font-medium transition-[border-color,color] duration-150 hover:border-[var(--color-active)] hover:text-[var(--color-active)] ${
               selected[category]
-                ? "border-[var(--color-active)] bg-[var(--color-active)] text-white"
-                : ""
+                ? "border-[var(--color-active)] bg-[var(--color-active)] !text-white"
+                : "text-[var(--color-text)]"
             }`}
             onClick={(event) => {
               event.stopPropagation();
@@ -63,9 +63,9 @@ export default function CategorySelector({
               {options.map((option) => (
                 <div
                   key={option}
-                  className={`cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-bold text-[var(--color-dropdown-text)] transition-colors duration-100 hover:bg-[var(--color-dropdown-hover-bg)] hover:text-[var(--color-dropdown-hover-text)] ${
-                    selected[category] === option
-                      ? "bg-[var(--color-active)] text-white"
+                    className={`cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-bold text-[var(--color-dropdown-text)] transition-colors duration-100 hover:bg-[var(--color-dropdown-hover-bg)] hover:text-[var(--color-dropdown-hover-text)] ${
+                      selected[category] === option
+                        ? "bg-[var(--color-active)] !text-white"
                       : ""
                   }`}
                   onClick={(event) => {

@@ -19,7 +19,11 @@ const ChatRoomHeader = ({
   <div className={styles.header}>
     <div className={styles.headerThumb}>
       {roomImage ? (
-        <img src={getImageUrl(roomImage)} alt="채팅방" />
+        <img
+          src={getImageUrl(roomImage)}
+          alt="채팅방"
+          className={styles.headerThumbImage}
+        />
       ) : (
         <span className={styles.headerHashIcon} style={{ fontSize: 22 }}>
           #
@@ -39,7 +43,7 @@ const ChatRoomHeader = ({
           title="방 설정 변경"
           onClick={() => setShowSettings(true)}
         >
-          설정
+          ⚙
         </button>
       )}
       <button

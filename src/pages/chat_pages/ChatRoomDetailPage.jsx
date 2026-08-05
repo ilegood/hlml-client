@@ -4,7 +4,6 @@ import ChatRoomAccessState from "../../components/chat_components/ChatRoomAccess
 import ChatRoomHeader from "../../components/chat_components/ChatRoomHeader";
 import ChatRoomMessageList from "../../components/chat_components/ChatRoomMessageList";
 import ChatRoomOverlays from "../../components/chat_components/ChatRoomOverlays";
-import ChatScrollButton from "../../components/chat_components/ChatScrollButton";
 import useChatRoomDetail from "../../hooks/useChatRoomDetail";
 import { formatChatPreview } from "../../utils/chatPreview";
 import { formatAppointmentDateTime } from "../../utils/chatHelpers";
@@ -170,15 +169,6 @@ export default function ChatRoomDetailPage() {
         </div>
       )}
 
-      {showScrollBtn && (
-        <ChatScrollButton
-          onClick={scrollToBottom}
-          title="맨 아래로"
-          ariaLabel="맨 아래로 이동"
-          label="아래"
-        />
-      )}
-
       <ChatInputArea
         input={input}
         setInput={setInput}
@@ -207,6 +197,8 @@ export default function ChatRoomDetailPage() {
         onInputChange={handleInputChange}
         onInput={resizeInput}
         onCompositionEnd={resizeInput}
+        showScrollBtn={showScrollBtn}
+        scrollToBottom={scrollToBottom}
       />
 
       <ChatRoomOverlays

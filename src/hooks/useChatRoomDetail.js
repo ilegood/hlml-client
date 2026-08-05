@@ -142,7 +142,16 @@ export default function useChatRoomDetail() {
     socket.on("receive_message", (msg) => {
       setMessages((prev) => {
         if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
-        if (msg.isSystem && prev.some((m) => m.isSystem && String(m.userId) === String(msg.userId) && m.content === msg.content)) return prev;
+        if (
+          msg.isSystem &&
+          prev.some(
+            (m) =>
+              m.isSystem &&
+              String(m.userId) === String(msg.userId) &&
+              m.content === msg.content,
+          )
+        )
+          return prev;
         if (msg.clientTempId) {
           const pendingIndex = prev.findIndex(
             (m) => m.clientTempId === msg.clientTempId,
@@ -748,20 +757,18 @@ export default function useChatRoomDetail() {
     setInput(nextValue);
     if (!nextValue.trim()) {
       socketRef.current?.emit("stop_typing", { roomId });
-      return;
-    }
-
-    const now = Date.now();
-    if (now - typingEmitRef.current > 2000) {
-      typingEmitRef.current = now;
-      socketRef.current?.emit("typing", { roomId, nickname: name });
+    } else {
+      const now = Date.now();
+      if (now - typingEmitRef.current > 2000) {
+        typingEmitRef.current = now;
+        socketRef.current?.emit("typing", { roomId, nickname: name });
+      }
     }
   };
 
   const handleBlockWarningConfirm = () => {
-    if (blockWarning?.key) {
-      localStorage.setItem(blockWarning.key, "1");
-    }
+    if (!blockWarning) return;
+    localStorage.setItem(blockWarning.key, "1");
     setBlockWarning(null);
   };
 
@@ -803,26 +810,85 @@ export default function useChatRoomDetail() {
   const isFull =
     postData && (postData.participants || 1) >= (postData.capacity || 999);
 
-
   return {
-    roomId, name, userId, profileImg, navigate, messages, input, setInput,
-    roomTitle, setRoomTitle, roomImage, setRoomImage, roomAuthor,
-    roomLocation, setRoomLocation, roomAppointment, setRoomAppointment,
-    showSettings, setShowSettings, showMembers, setShowMembers, roomMembers,
-    setRoomMembers, replyTo, editId, hoveredMsgId, setHoveredMsgId, showEmojiPicker,
-    setShowEmojiPicker, showMainEmojiPicker, setShowMainEmojiPicker,
-    showScrollBtn, showFileGallery, setShowFileGallery, notificationsMuted,
-    sending, blockWarning, setBlockWarning, selectedProfileId,
-    setSelectedProfileId, postData, isParticipant, joining, loadingPost,
-    typingNickname, socketRef, bottomRef, messagesRef, inputRef, fileInputRef,
-    typingEmitRef, pendingFiles, showAttachMenu, setShowAttachMenu,
-    fileAccept, addPendingFiles, openFilePicker, removePendingFile,
-    resizeInput, appointmentReminder, handleEmojiSelect, handleScroll,
-    scrollToBottom, handleSend, startEdit, startReply, handleDelete,
-    toggleReaction, scrollToMessage, toggleMembers, cancelContext,
-    handleLeave, handleJoinChat, handlePaste, handleDrop,
-    handleDragOver, handleBack, handleInputChange,
-    handleBlockWarningConfirm, handleKickMember, toggleNotifications,
-    openRoomMap, isFull,
+    roomId,
+    name,
+    userId,
+    profileImg,
+    navigate,
+    messages,
+    input,
+    setInput,
+    roomTitle,
+    setRoomTitle,
+    roomImage,
+    setRoomImage,
+    roomAuthor,
+    roomLocation,
+    setRoomLocation,
+    roomAppointment,
+    setRoomAppointment,
+    showSettings,
+    setShowSettings,
+    showMembers,
+    setShowMembers,
+    roomMembers,
+    replyTo,
+    editId,
+    hoveredMsgId,
+    setHoveredMsgId,
+    showEmojiPicker,
+    setShowEmojiPicker,
+    showMainEmojiPicker,
+    setShowMainEmojiPicker,
+    showScrollBtn,
+    showFileGallery,
+    setShowFileGallery,
+    notificationsMuted,
+    sending,
+    blockWarning,
+    selectedProfileId,
+    setSelectedProfileId,
+    postData,
+    isParticipant,
+    joining,
+    loadingPost,
+    typingNickname,
+    bottomRef,
+    messagesRef,
+    inputRef,
+    fileInputRef,
+    pendingFiles,
+    showAttachMenu,
+    setShowAttachMenu,
+    fileAccept,
+    addPendingFiles,
+    openFilePicker,
+    removePendingFile,
+    resizeInput,
+    appointmentReminder,
+    handleEmojiSelect,
+    handleScroll,
+    scrollToBottom,
+    handleSend,
+    startEdit,
+    startReply,
+    handleDelete,
+    toggleReaction,
+    scrollToMessage,
+    toggleMembers,
+    cancelContext,
+    handleLeave,
+    handleJoinChat,
+    handlePaste,
+    handleDrop,
+    handleDragOver,
+    handleBack,
+    handleInputChange,
+    handleBlockWarningConfirm,
+    handleKickMember,
+    toggleNotifications,
+    openRoomMap,
+    isFull,
   };
 }

@@ -1,6 +1,7 @@
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import styles from "./chatStyles.js";
+import ChatScrollButton from "./ChatScrollButton";
 
 export default function ChatInputArea({
   input,
@@ -30,6 +31,8 @@ export default function ChatInputArea({
   onInputChange,
   onInput,
   onCompositionEnd,
+  showScrollBtn,
+  scrollToBottom,
 }) {
   const contextText = replyTo
     ? formatChatPreview(replyTo.content)
@@ -62,6 +65,14 @@ export default function ChatInputArea({
       )}
 
       <div className={styles.inputArea}>
+        {showScrollBtn && (
+          <ChatScrollButton
+            onClick={scrollToBottom}
+            title="최근 채팅 확인하기"
+            ariaLabel="최근 채팅 확인하기"
+            label="최근 채팅 확인하기"
+          />
+        )}
         {pendingFiles.length > 0 && (
           <div className={styles.pendingAttachments}>
             {pendingFiles.map((item) => (

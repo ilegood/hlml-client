@@ -1,7 +1,6 @@
 import DMChatOverlays from "../../components/chat_components/DMChatOverlays";
 import ChatInputArea from "../../components/chat_components/ChatInputArea";
 import ChatMessageList from "../../components/chat_components/ChatMessageList";
-import ChatScrollButton from "../../components/chat_components/ChatScrollButton";
 import DMHeader from "../../components/chat_components/DMHeader";
 import useDMChat from "../../hooks/useDMChat";
 import { formatChatPreview } from "../../utils/chatPreview";
@@ -98,15 +97,6 @@ export default function DMDetailPage() {
         setSelectedProfileId={setSelectedProfileId}
       />
 
-      {showScrollBtn && (
-        <ChatScrollButton
-          onClick={scrollToBottom}
-          title="맨 아래로"
-          ariaLabel="맨 아래로 이동"
-          label="아래"
-        />
-      )}
-
       <ChatInputArea
         input={input}
         setInput={setInput}
@@ -135,6 +125,8 @@ export default function DMDetailPage() {
         onInputChange={handleInputChange}
         onInput={resizeInput}
         onCompositionEnd={resizeInput}
+        showScrollBtn={showScrollBtn}
+        scrollToBottom={scrollToBottom}
       />
 
       <DMChatOverlays

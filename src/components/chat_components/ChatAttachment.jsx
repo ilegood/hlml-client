@@ -309,12 +309,15 @@ function YouTubePreview({ preview }) {
       rel="noreferrer noopener"
     >
       <div className={styles.youtubeThumb}>
-        <img src={thumbnailUrl} alt={title} />
-        <span className={styles.youtubePlayBadge}>재생</span>
+        <img
+          src={thumbnailUrl}
+          alt={title}
+          className={styles.youtubeThumbImage}
+        />
       </div>
       <div className={styles.youtubeMeta}>
-        <span className={styles.youtubeDomain}>youtube.com</span>
         <strong className={styles.youtubeTitle}>{title}</strong>
+        <span className={styles.youtubeDomain}>{preview.url}</span>
       </div>
     </a>
   );
@@ -370,25 +373,23 @@ export function MediaLightbox({ attachments, index, onClose, onMove }) {
 
   return (
     <div className={styles.mediaLightbox} onMouseDown={onClose}>
-      <button
-        type="button"
-        className={styles.lightboxClose}
-        onMouseDown={(event) => event.stopPropagation()}
-        onClick={onClose}
-        title="닫기"
-      >
-        X
-      </button>
-
       <div
         className={styles.lightboxDownloadActions}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <button type="button" onClick={() => downloadAttachment(attachment)}>
-          현재 파일 다운로드
+        <button
+          type="button"
+          className={styles.lightboxDownloadButton}
+          onClick={() => downloadAttachment(attachment)}
+        >
+          이 이미지 다운로드
         </button>
         {attachments.length > 1 && (
-          <button type="button" onClick={downloadAll}>
+          <button
+            type="button"
+            className={styles.lightboxDownloadAllButton}
+            onClick={downloadAll}
+          >
             모두 다운로드
           </button>
         )}
@@ -404,7 +405,7 @@ export function MediaLightbox({ attachments, index, onClose, onMove }) {
             title="이전"
             aria-label="이전 이미지"
           >
-            ‹
+            ←
           </button>
           <button
             type="button"
@@ -414,7 +415,7 @@ export function MediaLightbox({ attachments, index, onClose, onMove }) {
             title="다음"
             aria-label="다음 이미지"
           >
-            ›
+            →
           </button>
         </>
       )}
@@ -424,9 +425,9 @@ export function MediaLightbox({ attachments, index, onClose, onMove }) {
         onMouseDown={(event) => event.stopPropagation()}
       >
         {isVideo(attachment) ? (
-          <video src={src} controls autoPlay />
+          <video className={styles.lightboxMedia} src={src} controls autoPlay />
         ) : (
-          <img src={src} alt={filename} />
+          <img className={styles.lightboxMedia} src={src} alt={filename} />
         )}
         <div className={styles.lightboxMeta}>
           <span>{filename}</span>
@@ -471,20 +472,30 @@ function MediaGrid({ attachments }) {
             <button
               key={`${attachment.url || attachment.name || "media"}-${index}`}
               type="button"
-              className={styles.mediaGridItem}
+              className={`${styles.mediaGridItem} ${
+                attachments.length === 1 ? styles.mediaGridSingleItem : ""
+              } ${
+                attachments.length === 3 && index === 0
+                  ? styles.mediaGridThreeFirst
+                  : ""
+              }`}
               onClick={() => setLightboxIndex(index)}
               title={filename}
             >
               {isVideo(attachment) ? (
-                <video src={src} muted />
+                <video className={styles.mediaGridMedia} src={src} muted />
               ) : (
-                <img src={src} alt={filename} />
+                <img
+                  className={styles.mediaGridMedia}
+                  src={src}
+                  alt={filename}
+                />
               )}
               {isVideo(attachment) && (
                 <span className={styles.videoBadge}>동영상</span>
               )}
               {showOverlay && (
-                <span className={styles.mediaOverflow}>+{overflow}</span>
+                <span className={styles.mediaOverflow}>+{overflow}장</span>
               )}
             </button>
           );

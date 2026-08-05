@@ -28,6 +28,7 @@ function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
           src={borderImg}
           className={styles.avatarBorderSmall}
           alt="host-border"
+          draggable="false"
         />
       )}
       <div

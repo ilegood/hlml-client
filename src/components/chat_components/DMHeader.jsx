@@ -24,6 +24,7 @@ const DMHeader = ({
         <img
           src={getImageUrl(targetProfileImg)}
           alt="상대 프로필"
+          className={styles.headerThumbImage}
           style={{ backgroundColor: "white" }}
         />
       ) : (
