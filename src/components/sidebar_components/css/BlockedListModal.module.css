@@ -10,10 +10,10 @@
 
 .header {
   @apply mb-5 flex items-center justify-between;
-}
 
-.header h2 {
-  @apply text-[20px] font-extrabold text-[#ff4757];
+  & h2 {
+    @apply text-[20px] font-extrabold text-[#ff4757];
+  }
 }
 
 .closeButton {

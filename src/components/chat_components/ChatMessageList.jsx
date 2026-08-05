@@ -1,4 +1,3 @@
-import styles from "./chatStyles.js";
 import ChatMessageItem from "./ChatMessageItem";
 
 const ChatMessageList = ({
@@ -10,7 +9,7 @@ const ChatMessageList = ({
   reactions = ["👍", "❤️", "😂"],
   ...messageActions
 }) => (
-  <div className={styles.messages} ref={messagesRef} onScroll={onScroll}>
+  <div className={"[flex:1] [overflow-y:auto] [overflow-x:hidden] [padding:16px_0_8px] [display:flex] [flex-direction:column] [background:var(--color-bg)]"} ref={messagesRef} onScroll={onScroll}>
     {messages.map((msg, idx) => (
       <ChatMessageItem
         key={msg.id || idx}

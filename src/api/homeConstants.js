@@ -35,7 +35,7 @@ export function getTimeAgo(ts) {
   if (min < 60) return `${min}분 전`;
   if (hr < 24) return `${hr}시간 전`;
   if (day < 7) return `${day}일 전`;
-
+ 
   const options = {
     month: "long",
     day: "numeric",
