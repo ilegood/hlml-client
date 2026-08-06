@@ -22,12 +22,13 @@ import { CommentItem } from "../../components/post_components/CommentItem";
 import MapPreview from "../../components/post_components/MapPreview";
 import ReportModal from "../../components/modals/ReportModal";
 import SharePostModal from "../../components/modals/SharePostModal";
+import usePostDetailData from "../../hooks/usePostDetailData";
 
 export default function DetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { userId, token } = useAuth();
-  const [post, setPost] = useState(null);
+  const { post, setPost, refreshPost } = usePostDetailData(id);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentImage, setCommentImage] = useState(null);
@@ -42,17 +43,6 @@ export default function DetailPage() {
   const fileInputRef = useRef(null);
 
   const [isDragging, setIsDragging] = useState(false);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setPost(await getPost(id));
-      } catch (err) {
-        console.error("Failed to fetch post:", err);
-      }
-    };
-    load();
-  }, [id]);
 
   useEffect(() => {
     if (contentRef.current) {
@@ -90,10 +80,6 @@ export default function DetailPage() {
     STATUS_CLASS[status] === "status-full"
       ? "[background:#fff0f1] [color:#c0392b]"
       : "[background:#e8fdf0] [color:#1a8a44]";
-
-  const refreshPost = async () => {
-    setPost(await getPost(id));
-  };
 
   const runPostAction = async (action, errorMessage = "처리에 실패했습니다.") => {
     try {

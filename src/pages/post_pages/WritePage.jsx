@@ -13,6 +13,9 @@ import CategorySelector from "../../components/Post_Components/CategorySelector"
 import ImageDropZone from "../../components/post_components/ImageDropZone";
 import MapPreview from "../../components/post_components/MapPreview";
 import PlaceSearchModal from "../../components/modals/PlaceSearchModal";
+import DatePickerModalComponent from "../../components/post_pages/DatePickerModal";
+import TimePickerModalComponent from "../../components/post_pages/TimePickerModal";
+import useWriteModals from "../../hooks/useWriteModals";
 
 const WRITE_CATEGORY_EXCLUDES = ["인원"];
 const HOURS = Array.from({ length: 24 }, (_, index) =>
@@ -63,7 +66,7 @@ const createDateFromKey = (value) => {
 
 const getDefaultTime = () => currentTimeString();
 
-function DatePickerModal({
+function LegacyDatePickerModal({
   calendarMonth,
   maxDate,
   minDate,
@@ -185,7 +188,7 @@ function DatePickerModal({
   );
 }
 
-function TimePickerModal({ isPastTimeSlot, onClose, onSelect, selectedTime }) {
+function LegacyTimePickerModal({ isPastTimeSlot, onClose, onSelect, selectedTime }) {
   const [selectedHour, setSelectedHour] = useState(
     String(selectedTime || getDefaultTime()).slice(0, 2),
   );
@@ -305,7 +308,14 @@ export default function WritePage() {
   const [place, setPlace] = useState("");
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const {
+    isSearchOpen,
+    setIsSearchOpen,
+    isDatePickerOpen,
+    setIsDatePickerOpen,
+    isTimePickerOpen,
+    setIsTimePickerOpen,
+  } = useWriteModals();
   const [capacity, setCapacity] = useState(2);
   const [status, setStatus] = useState(STATUS_OPEN);
   const [categories, setCategories] = useState({});
@@ -313,8 +323,6 @@ export default function WritePage() {
   const [existingImage, setExistingImage] = useState("");
   const [isLoading, setIsLoading] = useState(isEdit);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() =>
     createDateFromKey(todayString()),
   );
@@ -631,7 +639,7 @@ export default function WritePage() {
       )}
 
       {isDatePickerOpen && (
-        <DatePickerModal
+        <DatePickerModalComponent
           calendarMonth={calendarMonth}
           minDate={today}
           maxDate={maxDate}
@@ -643,7 +651,7 @@ export default function WritePage() {
       )}
 
       {isTimePickerOpen && (
-        <TimePickerModal
+        <TimePickerModalComponent
           isPastTimeSlot={isPastTimeSlot}
           selectedTime={time}
           onSelect={setTime}
