@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../context/auth";
-import { getPosts } from "../../api/posts";
-import styles from "./AppointmentModal.module.css";
+import { useAuth } from "../../../context/AuthContext.jsx";
+import { getPosts } from "../../../api/posts";
+import styles from "../css/AppointmentModal.module.css";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 const CALENDAR_CELL_COUNT = 42;
@@ -68,40 +68,45 @@ export default function AppointmentModal({ onClose }) {
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const prevMonthLastDay = new Date(viewYear, viewMonth, 0).getDate();
 
-  const calendarDays = Array.from({ length: CALENDAR_CELL_COUNT }, (_, index) => {
-    const dayNumber = index - firstDayOfMonth + 1;
+  const calendarDays = Array.from(
+    { length: CALENDAR_CELL_COUNT },
+    (_, index) => {
+      const dayNumber = index - firstDayOfMonth + 1;
 
-    if (dayNumber < 1) {
-      const day = prevMonthLastDay + dayNumber;
+      if (dayNumber < 1) {
+        const day = prevMonthLastDay + dayNumber;
+        return {
+          key: `prev-${index}`,
+          day,
+          date: new Date(viewYear, viewMonth - 1, day),
+          isCurrentMonth: false,
+        };
+      }
+
+      if (dayNumber > daysInMonth) {
+        const day = dayNumber - daysInMonth;
+        return {
+          key: `next-${index}`,
+          day,
+          date: new Date(viewYear, viewMonth + 1, day),
+          isCurrentMonth: false,
+        };
+      }
+
       return {
-        key: `prev-${index}`,
-        day,
-        date: new Date(viewYear, viewMonth - 1, day),
-        isCurrentMonth: false,
+        key: `current-${dayNumber}`,
+        day: dayNumber,
+        date: new Date(viewYear, viewMonth, dayNumber),
+        isCurrentMonth: true,
       };
-    }
-
-    if (dayNumber > daysInMonth) {
-      const day = dayNumber - daysInMonth;
-      return {
-        key: `next-${index}`,
-        day,
-        date: new Date(viewYear, viewMonth + 1, day),
-        isCurrentMonth: false,
-      };
-    }
-
-    return {
-      key: `current-${dayNumber}`,
-      day: dayNumber,
-      date: new Date(viewYear, viewMonth, dayNumber),
-      isCurrentMonth: true,
-    };
-  });
+    },
+  );
 
   const getDayAppts = (date) => {
     const dateStr = toLocalDateKey(date);
-    return appointments.filter((appointment) => toDateKey(appointment.date) === dateStr);
+    return appointments.filter(
+      (appointment) => toDateKey(appointment.date) === dateStr,
+    );
   };
 
   const isToday = (date) => toLocalDateKey(date) === toLocalDateKey(today);
@@ -130,7 +135,10 @@ export default function AppointmentModal({ onClose }) {
 
   return (
     <div className={styles.overlay} onMouseDown={onClose}>
-      <div className={styles.modalContent} onMouseDown={(e) => e.stopPropagation()}>
+      <div
+        className={styles.modalContent}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <div className={styles.header}>
           <h2>내 약속 관리</h2>
           <button className={styles.closeBtn} onClick={onClose}>
@@ -223,7 +231,9 @@ export default function AppointmentModal({ onClose }) {
                   onClick={() => {
                     if (isCurrentMonth) setSelectedDay(date);
                   }}
-                  onMouseEnter={() => setHoveredDay(isCurrentMonth ? key : null)}
+                  onMouseEnter={() =>
+                    setHoveredDay(isCurrentMonth ? key : null)
+                  }
                   onMouseLeave={() => setHoveredDay(null)}
                 >
                   {day}

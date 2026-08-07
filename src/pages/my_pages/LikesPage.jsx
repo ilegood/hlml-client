@@ -1,57 +1,17 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/auth";
-import { getPosts, togglePostLike } from "../../api/posts";
 import PostCard from "../../components/post_components/PostCard";
-import styles from "./LikesPage.module.css";
+import { useLikedPosts } from "../../hooks/useLikedPosts";
 
 export default function LikesPage() {
-  const navigate = useNavigate();
-  const { userId } = useAuth();
-  const [likedPosts, setLikedPosts] = useState([]);
-
-  useEffect(() => {
-    const fetchLikedPosts = async () => {
-      try {
-        const allPosts = await getPosts();
-        const currentUserId = userId || "me";
-        const filtered = allPosts.filter(
-          (p) =>
-            Array.isArray(p.likedBy) &&
-            p.likedBy.includes(String(currentUserId)),
-        );
-        setLikedPosts(filtered);
-      } catch (err) {
-        console.error("Failed to fetch liked posts:", err);
-      }
-    };
-    fetchLikedPosts();
-  }, [userId]);
-
-  const handleLike = async (post) => {
-    const currentUserId = userId || "me";
-    const previous = likedPosts;
-
-    setLikedPosts((prev) => prev.filter((p) => p.id !== post.id));
-
-    try {
-      const updated = await togglePostLike(post.id);
-      setLikedPosts((prev) =>
-        prev.filter(
-          (p) =>
-            p.id !== post.id || updated.likedBy.includes(String(currentUserId)),
-        ),
-      );
-    } catch (err) {
-      console.error("Failed to update like:", err);
-      setLikedPosts(previous);
-    }
-  };
+  const { currentUserId, goBack, handleLike, likedPosts, openPost } =
+    useLikedPosts();
 
   return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>
+    <div className="mx-auto max-w-[900px] px-5 py-10">
+      <div className="mb-[30px] flex items-center gap-[15px] [&_h2]:text-[24px] [&_h2]:font-extrabold">
+        <button
+          className="cursor-pointer border-0 bg-transparent text-[var(--color-text)]"
+          onClick={goBack}
+        >
           <svg
             width="24"
             height="24"
@@ -67,21 +27,21 @@ export default function LikesPage() {
       </div>
 
       {likedPosts.length > 0 ? (
-        <div className={styles.grid}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
           {likedPosts.map((post) => (
             <PostCard
               key={post.id}
               post={post}
               variant="likes"
               onLike={handleLike}
-              onOpen={(id) => navigate(`/detail/${id}`)}
-              currentUserId={userId || "me"}
+              onOpen={openPost}
+              currentUserId={currentUserId}
             />
           ))}
         </div>
       ) : (
-        <div className={styles.empty}>
-          <div className={styles.emptyIcon}>⭐</div>
+        <div className="py-[100px] text-center text-[var(--color-deactive)]">
+          <div className="mb-2.5 text-[48px]">♡</div>
           <p>찜한 게시글이 없습니다.</p>
         </div>
       )}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { AuthContext } from "../../context/auth";
+import { AuthContext } from "../../context/AuthContext.jsx";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
 import { BASE_URL, getImageUrl } from "../../api/instance";
 import { getRoomBlockWarning, uploadChatFile } from "../../api/chat";
@@ -15,8 +15,8 @@ import {
   MessageRowErrorBoundary,
 } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
-import RoomSettingsModal from "../../components/RoomSettingsModal";
-import ChatMembersModal from "../../components/ChatMembersModal";
+import RoomSettingsModal from "../../components/modals/RoomSettingsModal";
+import ChatMembersModal from "../../components/modals/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
 import ChatInputArea from "../../components/chat_components/ChatInputArea";
 import MapPreview from "../../components/post_components/MapPreview";
@@ -33,6 +33,8 @@ import {
   createClientMessageId,
   normalizeRoomAppointment,
   parseSystemMessagePayload,
+  getEditableMessageText,
+  buildEditedMessageContent,
 } from "../../utils/chatHelpers";
 import borderImg from "../../assets/border.png";
 
@@ -520,9 +522,10 @@ export default function ChatRoomDetailPage() {
 
       if (editId) {
         if (!input.trim()) return;
+        const originalMessage = messages.find((message) => message.id === editId);
         socketRef.current.emit("edit_message", {
           messageId: editId,
-          content: input,
+          content: buildEditedMessageContent(originalMessage?.content, input),
           roomId,
           userId,
         });
@@ -636,6 +639,7 @@ export default function ChatRoomDetailPage() {
     },
     [
       input,
+      messages,
       pendingFiles.length,
       editId,
       roomId,
@@ -654,7 +658,7 @@ export default function ChatRoomDetailPage() {
 
   const startEdit = (msg) => {
     setEditId(msg.id);
-    setInput(msg.content);
+    setInput(getEditableMessageText(msg.content));
     setReplyTo(null);
     setTimeout(() => inputRef.current?.focus(), 0);
   };
@@ -1512,7 +1516,7 @@ export default function ChatRoomDetailPage() {
           >
             <polyline points="6 9 12 15 18 9" />
           </svg>
-          <span>맨 밑으로</span>
+          <span>최근 채팅 확인하기</span>
         </button>
       )}
 
@@ -1683,7 +1687,10 @@ export default function ChatRoomDetailPage() {
             disabled={sending}
             onClick={() => setShowAttachMenu((prev) => !prev)}
           >
-            +
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg>
           </button>
           <textarea
             ref={inputRef}

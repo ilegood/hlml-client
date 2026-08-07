@@ -50,6 +50,43 @@ export const isCompact = (prev, curr) => {
 
 export const displayName = (nickname) => nickname || "이름 없음";
 
+const getChatPayload = (content) => {
+  if (!content || typeof content !== "string") return null;
+
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed?.kind === "chat_payload") {
+      return {
+        text: parsed.text || "",
+        attachments: Array.isArray(parsed.attachments)
+          ? parsed.attachments.filter(Boolean)
+          : [],
+      };
+    }
+    if (parsed?.kind === "chat_attachment") {
+      return { text: "", attachments: [parsed] };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
+export const getEditableMessageText = (content) =>
+  getChatPayload(content)?.text ?? String(content || "");
+
+export const buildEditedMessageContent = (originalContent, text) => {
+  const payload = getChatPayload(originalContent);
+  if (!payload) return text;
+
+  return JSON.stringify({
+    kind: "chat_payload",
+    text,
+    attachments: payload.attachments,
+  });
+};
+
 export const createClientMessageId = () =>
   `client-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
 
@@ -59,6 +96,9 @@ export const createPendingFileId = (file) =>
   }`;
 
 export const formatAppointmentDateTime = (date, time) => {
+  if (date && typeof date === "object") {
+    return formatAppointmentDateTime(date.date, date.time);
+  }
   if (!date && !time) return "";
 
   const now = new Date();

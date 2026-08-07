@@ -1,0 +1,97 @@
+@reference "tailwindcss";
+
+.overlay {
+  @apply fixed inset-0 z-[3000] flex justify-end bg-black/50;
+}
+
+.drawer {
+  @apply flex h-full w-[300px] flex-col bg-[var(--color-sidebar,#2c2c2c)] shadow-[-2px_0_10px_rgba(0,0,0,0.3)] animate-[slideIn_0.3s_ease-out];
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+.header {
+  @apply flex items-center justify-between border-b border-[var(--color-border,#444)] p-5;
+}
+
+.header h3 {
+  @apply m-0 text-[1.1rem] text-[var(--color-text,#fff)];
+}
+
+.closeBtn {
+  @apply cursor-pointer border-0 bg-transparent p-0 text-[1.5rem] leading-none text-[var(--color-text,#fff)];
+}
+
+.memberList {
+  @apply flex-1 overflow-y-auto py-2.5;
+}
+
+.memberItem {
+  @apply flex items-center px-5 py-3 transition-colors duration-200 hover:bg-[var(--color-item-hover,rgba(255,255,255,0.05))];
+}
+
+.avatarWrap {
+  @apply relative mr-[15px] h-10 w-10 shrink-0;
+}
+
+.avatar {
+  @apply flex h-full w-full shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[gray] text-[12px] font-bold text-white;
+}
+
+.avatarBorder {
+  @apply pointer-events-none absolute -top-1/4 z-[5] aspect-square h-[150%] w-[150%] object-contain;
+  transform: scale(1.35);
+  transform-origin: center;
+}
+
+.avatar img {
+  @apply block h-full w-full object-cover;
+}
+
+.defaultAvatar {
+  @apply text-[12px] font-bold text-white;
+}
+
+.info {
+  @apply flex flex-1 cursor-pointer items-center gap-2;
+}
+
+.nickname {
+  @apply text-[0.95rem] text-[var(--color-text,#fff)];
+}
+
+.hostBadge {
+  @apply ml-2 inline-flex items-center rounded-[10px] bg-[var(--color-active,#f39c12)] px-1.5 py-0.5 text-[0.7rem] font-bold text-white;
+}
+
+.kickBtn,
+.reportBtn,
+.blockBtn {
+  @apply invisible cursor-pointer opacity-0 transition-all duration-200 ease-in-out;
+}
+
+.memberItem:hover .kickBtn,
+.memberItem:hover .reportBtn,
+.memberItem:hover .blockBtn {
+  @apply visible opacity-100;
+}
+
+.kickBtn {
+  @apply ml-auto rounded-md border-0 bg-[#ff4757] px-2.5 py-1 text-[12px] font-semibold text-white;
+}
+
+.reportBtn {
+  @apply ml-1.5 rounded-md border border-[var(--color-deactive,#07b1bc)] bg-transparent px-2.5 py-1 text-[12px] font-semibold text-[var(--color-deactive,#07b1bc)] hover:bg-[var(--color-deactive,#07b1bc)] hover:text-white;
+}
+
+.blockBtn {
+  @apply ml-1.5 rounded-md border border-[#ff6b6b] bg-transparent px-2.5 py-1 text-[12px] font-semibold text-[#ff6b6b] hover:not-disabled:bg-[#ff6b6b] hover:not-disabled:text-white disabled:cursor-default disabled:opacity-50;
+}

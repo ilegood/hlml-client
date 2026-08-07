@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 import { toast } from "sonner";
 import { getChatNotifications, getUnreadSummary } from "../api/chat";
 import { BASE_URL } from "../api/instance";
-import { useAuth } from "./auth";
+import { useAuth } from "./AuthContext.jsx";
 
 const ChatNotificationContext = createContext(null);
 

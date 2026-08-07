@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/auth";
+import { useAuth } from "../context/AuthContext.jsx";
 import {
   getFriends,
   getFriendRequests,
@@ -35,22 +35,25 @@ export const useFriendManagement = () => {
 
     try {
       const fData = await getFriends();
-      setFriends(fData);
+      const friendsArray = Array.isArray(fData) ? fData : [];
+      setFriends(friendsArray);
 
       const initialMemos = {};
-      fData.forEach((friend) => {
+      friendsArray.forEach((friend) => {
         if (friend.memo) initialMemos[friend.id] = friend.memo;
       });
       setMemos(initialMemos);
     } catch (err) {
       console.error("친구 목록 로드 실패", err);
+      setFriends([]);
     }
 
     try {
       const rData = await getFriendRequests();
-      setRequests(rData);
+      setRequests(Array.isArray(rData) ? rData : []);
     } catch (err) {
       console.error("친구 요청 로드 실패", err);
+      setRequests([]);
     }
   }, [token]);
 
@@ -122,7 +125,7 @@ export const useFriendManagement = () => {
     setActiveMenuId(null);
   };
 
-  const filteredFriends = friends.filter((friend) =>
+  const filteredFriends = (Array.isArray(friends) ? friends : []).filter((friend) =>
     (friend.name || "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
 

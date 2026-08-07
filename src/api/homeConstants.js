@@ -2,7 +2,7 @@ export const STATUS_OPEN = "모집중";
 export const STATUS_CLOSED = "모집완료";
 
 export const CATEGORY_MAP = {
-  성별: ["여성", "남성", "무관"],
+  성별: ["남성", "여성", "무관"],
   나이: ["10대", "20대", "30대", "40대", "50대 이상"],
   흡연: ["흡연자", "비흡연자"],
   음주: ["음주", "금주"],
@@ -10,7 +10,7 @@ export const CATEGORY_MAP = {
   활동: ["식사", "운동", "수다", "게임", "공부", "창작", "휴식", "기타"],
 };
 
-export const STATUS_EMOJI = { [STATUS_OPEN]: "🟢", [STATUS_CLOSED]: "🔴" };
+export const STATUS_EMOJI = { [STATUS_OPEN]: "모집", [STATUS_CLOSED]: "완료" };
 export const STATUS_CLASS = {
   [STATUS_OPEN]: "status-open",
   [STATUS_CLOSED]: "status-full",
@@ -35,7 +35,7 @@ export function getTimeAgo(ts) {
   if (min < 60) return `${min}분 전`;
   if (hr < 24) return `${hr}시간 전`;
   if (day < 7) return `${day}일 전`;
-
+ 
   const options = {
     month: "long",
     day: "numeric",

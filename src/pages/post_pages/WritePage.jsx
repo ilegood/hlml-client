@@ -7,27 +7,34 @@ import {
   nextYearTodayString,
   todayString,
 } from "../../api/homeConstants";
-import { useAuth } from "../../context/auth";
 import { createPost, getPost, updatePost } from "../../api/posts";
-import CategorySelector from "../../components/post_components/CategorySelector";
+import { useAuth } from "../../context/AuthContext.jsx";
+import CategorySelector from "../../components/Post_Components/CategorySelector";
 import ImageDropZone from "../../components/post_components/ImageDropZone";
 import MapPreview from "../../components/post_components/MapPreview";
 import PlaceSearchModal from "../../components/modals/PlaceSearchModal";
-import styles from "./WritePage.module.css";
+import DatePickerModalComponent from "../../components/post_pages/DatePickerModal";
+import TimePickerModalComponent from "../../components/post_pages/TimePickerModal";
+import useWriteModals from "../../hooks/useWriteModals";
 
 const WRITE_CATEGORY_EXCLUDES = ["인원"];
-
 const HOURS = Array.from({ length: 24 }, (_, index) =>
   String(index).padStart(2, "0"),
 );
-
 const MINUTES = Array.from({ length: 60 }, (_, index) =>
   String(index).padStart(2, "0"),
 );
 
+const fieldClass =
+  "write-light-control w-full rounded-xl border-[1.5px] border-[var(--color-border)] bg-[var(--color-input-bg)] px-4 py-3 text-sm text-[var(--color-text)] outline-none transition-[border-color,background-color] focus:border-[var(--color-active)] focus:bg-[var(--color-input-focus-bg)] disabled:cursor-not-allowed disabled:opacity-50";
+const labelClass = "text-xs font-bold text-[var(--color-text)] opacity-80";
+const pickerButtonClass =
+  "write-light-control flex min-h-[72px] w-full flex-col items-start gap-1.5 rounded-[18px] border-[1.5px] border-[var(--color-border)] bg-[var(--color-input-bg)] px-4 py-3.5 text-left text-[var(--color-text)] transition-[border-color,transform,background-color] hover:-translate-y-px hover:border-[var(--color-deactive)] disabled:cursor-not-allowed disabled:opacity-45";
+
 const formatTimeLabel = (value) => {
-  const [hourText, minute] = String(value).split(":");
+  const [hourText, minute = "00"] = String(value || "").split(":");
   const hour = Number(hourText);
+  if (Number.isNaN(hour)) return "시간 선택";
   const period = hour < 12 ? "오전" : "오후";
   const displayHour = hour % 12 || 12;
   return `${period} ${displayHour}:${minute}`;
@@ -59,7 +66,7 @@ const createDateFromKey = (value) => {
 
 const getDefaultTime = () => currentTimeString();
 
-function DatePickerModal({
+function LegacyDatePickerModal({
   calendarMonth,
   maxDate,
   minDate,
@@ -88,29 +95,45 @@ function DatePickerModal({
     maxDate.slice(0, 8) + "01";
 
   return (
-    <div className={styles.pickerOverlay} onMouseDown={onClose}>
-      <div className={styles.pickerModal} onMouseDown={(e) => e.stopPropagation()}>
-        <div className={styles.pickerHeader}>
+    <div
+      className="fixed inset-0 z-[12000] flex items-center justify-center bg-[rgba(0,0,0,0.62)] p-[18px] backdrop-blur-[5px]"
+      onMouseDown={onClose}
+    >
+      <div
+        className="write-light-surface max-h-[min(760px,88vh)] w-[min(520px,100%)] overflow-y-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-sidebar)] p-[22px] text-[var(--color-text)] shadow-[0_24px_70px_rgba(0,0,0,0.42)]"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div className="mb-[18px] flex items-start justify-between gap-4">
           <div>
-            <span>약속 날짜</span>
-            <h3>{formatDateLabel(selectedDate)}</h3>
+            <span className="text-xs font-black text-[var(--color-deactive)]">
+              약속 날짜
+            </span>
+            <h3 className="mt-1 text-[21px] font-black">
+              {formatDateLabel(selectedDate)}
+            </h3>
           </div>
-          <button type="button" className={styles.pickerCloseBtn} onClick={onClose}>
+          <button
+            type="button"
+            className="write-light-control h-[34px] w-[34px] rounded-full border border-[var(--color-border)] bg-[var(--color-input-bg)] text-[22px] leading-none text-[var(--color-text)]"
+            onClick={onClose}
+          >
             &times;
           </button>
         </div>
 
-        <div className={styles.calendarHeader}>
+        <div className="mb-3.5 grid grid-cols-[72px_1fr_72px] items-center gap-2.5">
           <button
             type="button"
+            className="write-light-control min-h-[34px] rounded-full border border-[var(--color-border)] bg-[var(--color-input-bg)] font-extrabold disabled:cursor-not-allowed disabled:opacity-30"
             onClick={() => setCalendarMonth(new Date(viewYear, viewMonth - 1, 1))}
             disabled={!canMovePrev}
           >
             이전
           </button>
-          <strong>{monthLabel}</strong>
+          <strong className="text-center text-base font-black">{monthLabel}</strong>
           <button
             type="button"
+            className="write-light-control min-h-[34px] rounded-full border border-[var(--color-border)] bg-[var(--color-input-bg)] font-extrabold disabled:cursor-not-allowed disabled:opacity-30"
             onClick={() => setCalendarMonth(new Date(viewYear, viewMonth + 1, 1))}
             disabled={!canMoveNext}
           >
@@ -118,9 +141,12 @@ function DatePickerModal({
           </button>
         </div>
 
-        <div className={styles.calendarGrid}>
+        <div className="grid min-h-[356px] grid-cols-7 grid-rows-[auto_repeat(6,1fr)] gap-2">
           {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
-            <div className={styles.calendarWeekday} key={day}>
+            <div
+              className="py-1.5 text-center text-xs font-black text-[var(--color-deactive)]"
+              key={day}
+            >
               {day}
             </div>
           ))}
@@ -128,43 +154,41 @@ function DatePickerModal({
             if (!day) {
               return (
                 <div
-                  className={styles.calendarBlank}
+                  className="aspect-square rounded-[14px] border border-transparent bg-[color-mix(in_srgb,var(--color-input-bg)_42%,transparent)] opacity-35"
                   key={`blank-${index}`}
                 />
               );
             }
 
-              const dateKey = toDateKey(new Date(viewYear, viewMonth, day));
-              const disabled = dateKey < minDate || dateKey > maxDate;
-              return (
-                <button
-                  type="button"
-                  key={dateKey}
-                  className={`${styles.calendarDay} ${
-                    dateKey === selectedDate ? styles.calendarDayActive : ""
-                  }`}
-                  disabled={disabled}
-                  onClick={() => {
-                    onSelect(dateKey);
-                    onClose();
-                  }}
-                >
-                  {day}
-                </button>
-              );
-            })}
+            const dateKey = toDateKey(new Date(viewYear, viewMonth, day));
+            const disabled = dateKey < minDate || dateKey > maxDate;
+            const selected = dateKey === selectedDate;
+            return (
+              <button
+                type="button"
+                key={dateKey}
+                className={`write-light-control aspect-square rounded-[14px] border font-black transition-[transform,border-color,background-color] disabled:cursor-not-allowed disabled:opacity-25 ${
+                  selected
+                    ? "border-[var(--color-active)] bg-[var(--color-active)] text-white"
+                    : "border-[var(--color-border)] bg-[var(--color-input-bg)] text-[var(--color-text)] hover:-translate-y-px hover:border-[var(--color-deactive)]"
+                }`}
+                disabled={disabled}
+                onClick={() => {
+                  onSelect(dateKey);
+                  onClose();
+                }}
+              >
+                {day}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 }
 
-function TimePickerModal({
-  isPastTimeSlot,
-  onClose,
-  onSelect,
-  selectedTime,
-}) {
+function LegacyTimePickerModal({ isPastTimeSlot, onClose, onSelect, selectedTime }) {
   const [selectedHour, setSelectedHour] = useState(
     String(selectedTime || getDefaultTime()).slice(0, 2),
   );
@@ -179,28 +203,46 @@ function TimePickerModal({
     isPastTimeSlot(`${selectedHour}:${minute}`);
 
   return (
-    <div className={styles.pickerOverlay} onMouseDown={onClose}>
-      <div className={styles.pickerModal} onMouseDown={(e) => e.stopPropagation()}>
-        <div className={styles.pickerHeader}>
+    <div
+      className="fixed inset-0 z-[12000] flex items-center justify-center bg-[rgba(0,0,0,0.62)] p-[18px] backdrop-blur-[5px]"
+      onMouseDown={onClose}
+    >
+      <div
+        className="write-light-surface max-h-[min(760px,88vh)] w-[min(520px,100%)] overflow-y-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-sidebar)] p-[22px] text-[var(--color-text)] shadow-[0_24px_70px_rgba(0,0,0,0.42)]"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div className="mb-[18px] flex items-start justify-between gap-4">
           <div>
-            <span>약속 시간</span>
-            <h3>{formatTimeLabel(nextTime)}</h3>
+            <span className="text-xs font-black text-[var(--color-deactive)]">
+              약속 시간
+            </span>
+            <h3 className="mt-1 text-[21px] font-black">
+              {formatTimeLabel(nextTime)}
+            </h3>
           </div>
-          <button type="button" className={styles.pickerCloseBtn} onClick={onClose}>
+          <button
+            type="button"
+            className="write-light-control h-[34px] w-[34px] rounded-full border border-[var(--color-border)] bg-[var(--color-input-bg)] text-[22px] leading-none text-[var(--color-text)]"
+            onClick={onClose}
+          >
             &times;
           </button>
         </div>
 
-        <div className={styles.timeDial}>
-          <div className={styles.timeDialColumn}>
-            <span className={styles.timeDialLabel}>시</span>
-            <div className={styles.timeDialList}>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3.5">
+          <div className="flex min-w-0 flex-col gap-2">
+            <span className="text-center text-xs font-bold text-[var(--color-deactive)]">
+              시
+            </span>
+            <div className="grid max-h-[260px] gap-2 overflow-y-auto pr-1">
               {HOURS.map((hour) => (
                 <button
                   type="button"
                   key={hour}
-                  className={`${styles.timeDialBtn} ${
-                    selectedHour === hour ? styles.timeDialBtnActive : ""
+                  className={`write-light-control h-10 rounded-xl border font-bold disabled:cursor-not-allowed disabled:opacity-30 ${
+                    selectedHour === hour
+                      ? "border-[var(--color-active)] bg-[var(--color-active)] text-white"
+                      : "border-[var(--color-border)] bg-[var(--color-input-bg)] text-[var(--color-text)]"
                   }`}
                   disabled={isHourDisabled(hour)}
                   onClick={() => setSelectedHour(hour)}
@@ -210,16 +252,22 @@ function TimePickerModal({
               ))}
             </div>
           </div>
-          <div className={styles.timeDialDivider}>:</div>
-          <div className={styles.timeDialColumn}>
-            <span className={styles.timeDialLabel}>분</span>
-            <div className={styles.timeDialList}>
+          <div className="self-center text-[22px] font-black text-[var(--color-deactive)]">
+            :
+          </div>
+          <div className="flex min-w-0 flex-col gap-2">
+            <span className="text-center text-xs font-bold text-[var(--color-deactive)]">
+              분
+            </span>
+            <div className="grid max-h-[260px] gap-2 overflow-y-auto pr-1">
               {MINUTES.map((minute) => (
                 <button
                   type="button"
                   key={minute}
-                  className={`${styles.timeDialBtn} ${
-                    selectedMinute === minute ? styles.timeDialBtnActive : ""
+                  className={`write-light-control h-10 rounded-xl border font-bold disabled:cursor-not-allowed disabled:opacity-30 ${
+                    selectedMinute === minute
+                      ? "border-[var(--color-active)] bg-[var(--color-active)] text-white"
+                      : "border-[var(--color-border)] bg-[var(--color-input-bg)] text-[var(--color-text)]"
                   }`}
                   disabled={isMinuteDisabled(minute)}
                   onClick={() => setSelectedMinute(minute)}
@@ -233,7 +281,7 @@ function TimePickerModal({
 
         <button
           type="button"
-          className={styles.timeConfirmBtn}
+          className="mt-4 min-h-[42px] w-full rounded-xl border-0 bg-[var(--color-active)] text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-35"
           disabled={confirmDisabled}
           onClick={() => {
             onSelect(nextTime);
@@ -260,7 +308,14 @@ export default function WritePage() {
   const [place, setPlace] = useState("");
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const {
+    isSearchOpen,
+    setIsSearchOpen,
+    isDatePickerOpen,
+    setIsDatePickerOpen,
+    isTimePickerOpen,
+    setIsTimePickerOpen,
+  } = useWriteModals();
   const [capacity, setCapacity] = useState(2);
   const [status, setStatus] = useState(STATUS_OPEN);
   const [categories, setCategories] = useState({});
@@ -268,15 +323,14 @@ export default function WritePage() {
   const [existingImage, setExistingImage] = useState("");
   const [isLoading, setIsLoading] = useState(isEdit);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() =>
     createDateFromKey(todayString()),
   );
   const today = todayString();
   const maxDate = nextYearTodayString();
   const currentTime = currentTimeString();
-  const isPastTimeSlot = (slot) => !isEdit && date === today && slot < currentTime;
+  const isPastTimeSlot = (slot) =>
+    !isEdit && date === today && slot < currentTime;
 
   const handleDateChange = (nextDate) => {
     setDate(nextDate);
@@ -380,11 +434,11 @@ export default function WritePage() {
       setIsSaving(true);
       if (isEdit) {
         await updatePost(id, formData);
-        toast.success("게시글을 수정했습니다.");
+        toast.success("게시글이 수정되었습니다.");
         navigate(`/detail/${id}`);
       } else {
         const result = await createPost(formData);
-        toast.success("게시글을 등록했습니다.");
+        toast.success("게시글이 등록되었습니다.");
         navigate(result?.id ? `/chat-rooms/${result.id}` : "/");
       }
     } catch (err) {
@@ -397,116 +451,139 @@ export default function WritePage() {
 
   if (isLoading) {
     return (
-      <main className={styles.container}>
-        <h2 className={styles.pageTitle}>불러오는 중...</h2>
+      <main className="mx-auto max-w-[900px] px-4 pt-6">
+        <h2 className="text-lg font-extrabold text-[var(--color-text)]">
+          불러오는 중...
+        </h2>
       </main>
     );
   }
 
   return (
-    <main className={styles.container}>
-      <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>
+    <main className="mx-auto max-w-[900px] px-4 pt-6">
+      <div className="mb-5 flex items-center">
+        <button
+          type="button"
+          className="mr-2.5 flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent text-[var(--color-text)] transition-colors hover:bg-[var(--color-border)]"
+          onClick={() => navigate(-1)}
+          aria-label="뒤로 가기"
+        >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <h2 className={styles.pageTitle}>
+        <h2 className="text-lg font-extrabold text-[var(--color-text)]">
           {isEdit ? "게시글 수정" : "게시글 작성"}
         </h2>
       </div>
 
-      <div className={styles.writeForm}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>제목</label>
+      <div className="write-light-surface flex flex-col gap-5 rounded-[18px] border-[1.5px] border-[var(--color-border)] bg-[var(--color-sidebar)] p-6">
+        <div className="flex flex-col gap-2">
+          <label className={labelClass}>제목</label>
           <input
-            className={styles.formInput}
+            className={fieldClass}
             placeholder="제목을 입력하세요"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>내용</label>
+        <div className="flex flex-col gap-2">
+          <label className={labelClass}>내용</label>
           <textarea
-            className={styles.formTextarea}
+            className={`${fieldClass} min-h-[150px] resize-none leading-relaxed`}
             placeholder="어떤 활동을 함께 하고 싶나요?"
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
         </div>
 
-        <div className={styles.formRow2}>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>
+        <div className="grid grid-cols-1 gap-[15px] md:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <label className={labelClass}>
               약속 날짜 {isEdit && "(수정 불가)"}
             </label>
             <button
               type="button"
-              className={styles.selectionCard}
+              className={pickerButtonClass}
               onClick={() => !isEdit && setIsDatePickerOpen(true)}
               disabled={isEdit}
             >
-              <span>선택한 날짜</span>
-              <strong>{formatDateLabel(date)}</strong>
+              <span className="text-[11px] font-black text-[var(--color-deactive)]">
+                선택한 날짜
+              </span>
+              <strong className="text-[17px] font-black">
+                {formatDateLabel(date)}
+              </strong>
             </button>
           </div>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>
+          <div className="flex flex-col gap-2">
+            <label className={labelClass}>
               약속 시간 {isEdit && "(수정 불가)"}
             </label>
             <button
               type="button"
-              className={styles.selectionCard}
+              className={pickerButtonClass}
               onClick={() => !isEdit && setIsTimePickerOpen(true)}
               disabled={isEdit}
             >
-              <span>선택한 시간</span>
-              <strong>{time ? formatTimeLabel(time) : "시간 선택"}</strong>
+              <span className="text-[11px] font-black text-[var(--color-deactive)]">
+                선택한 시간
+              </span>
+              <strong className="text-[17px] font-black">
+                {time ? formatTimeLabel(time) : "시간 선택"}
+              </strong>
             </button>
           </div>
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>약속 장소</label>
-          <div className={styles.inputWithBtn}>
+        <div className="flex flex-col gap-2">
+          <label className={labelClass}>약속 장소</label>
+          <div className="flex gap-2">
             <input
-              className={styles.formInput}
+              className={fieldClass}
               placeholder="장소 이름 또는 주소"
               value={place}
               readOnly
             />
-            <button className={styles.searchBtn} onClick={() => setIsSearchOpen(true)}>
+            <button
+              type="button"
+              className="shrink-0 rounded-xl border-0 bg-[var(--color-active)] px-4 text-[13px] font-bold text-white transition-opacity hover:opacity-90"
+              onClick={() => setIsSearchOpen(true)}
+            >
               지도에서 찾기
             </button>
           </div>
 
           {latitude && longitude && (
-            <div className={styles.mapPreviewSection}>
+            <div className="mt-2.5 text-center">
               <MapPreview latitude={latitude} longitude={longitude} />
-              <p className={styles.mapHint}>선택한 장소의 위치입니다.</p>
+              <p className="mt-1 text-xs text-[#888]">
+                선택한 장소의 위치입니다.
+              </p>
             </div>
           )}
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>
+        <div className="flex flex-col gap-2">
+          <label className={labelClass}>
             모집 인원 (2~10명) {isEdit && "(수정 불가)"}
           </label>
-          <div className={styles.capacityRow}>
+          <div className="flex items-center gap-3.5">
             <button
               type="button"
-              className={styles.capBtn}
+              className="write-light-control flex h-10 w-10 items-center justify-center rounded-lg border-[1.5px] border-[var(--color-border)] bg-[var(--color-input-bg)] text-xl font-medium text-[var(--color-text)] disabled:cursor-not-allowed disabled:opacity-20"
               onClick={() => setCapacity((value) => Math.max(2, value - 1))}
               disabled={isEdit || capacity <= 2}
             >
               -
             </button>
-            <span className={styles.capDisplay}>{capacity}명</span>
+            <span className="min-w-[50px] text-center text-lg font-extrabold text-[var(--color-text)]">
+              {capacity}명
+            </span>
             <button
               type="button"
-              className={styles.capBtn}
+              className="write-light-control flex h-10 w-10 items-center justify-center rounded-lg border-[1.5px] border-[var(--color-border)] bg-[var(--color-input-bg)] text-xl font-medium text-[var(--color-text)] disabled:cursor-not-allowed disabled:opacity-20"
               onClick={() => setCapacity((value) => Math.min(10, value + 1))}
               disabled={isEdit || capacity >= 10}
             >
@@ -515,8 +592,8 @@ export default function WritePage() {
           </div>
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>카테고리</label>
+        <div className="flex flex-col gap-2">
+          <label className={labelClass}>카테고리</label>
           <CategorySelector
             selected={categories}
             onChange={setCategories}
@@ -524,8 +601,8 @@ export default function WritePage() {
           />
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>이미지 (선택)</label>
+        <div className="flex flex-col gap-2">
+          <label className={labelClass}>이미지 (선택)</label>
           <ImageDropZone
             value={image}
             onChange={(val) => {
@@ -540,7 +617,12 @@ export default function WritePage() {
         </div>
 
         <button
-          className={`${styles.submitBtn} ${isSaving ? styles.savingBtn : ""}`}
+          type="button"
+          className={`w-full rounded-xl border-0 bg-[var(--color-active)] p-4 text-base font-extrabold text-white shadow-[0_4px_12px_rgba(253,147,25,0.2)] transition-all hover:-translate-y-px hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-75 disabled:transform-none ${
+            isSaving
+              ? "text-[0px] after:text-base after:content-[attr(data-saving-label)]"
+              : ""
+          }`}
           onClick={handleSubmit}
           disabled={isSaving}
           data-saving-label={image?.file ? "이미지 업로드 중..." : "저장 중..."}
@@ -557,7 +639,7 @@ export default function WritePage() {
       )}
 
       {isDatePickerOpen && (
-        <DatePickerModal
+        <DatePickerModalComponent
           calendarMonth={calendarMonth}
           minDate={today}
           maxDate={maxDate}
@@ -569,7 +651,7 @@ export default function WritePage() {
       )}
 
       {isTimePickerOpen && (
-        <TimePickerModal
+        <TimePickerModalComponent
           isPastTimeSlot={isPastTimeSlot}
           selectedTime={time}
           onSelect={setTime}

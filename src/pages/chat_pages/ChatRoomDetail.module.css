@@ -205,7 +205,8 @@
   gap: 12px;
   margin: 12px 0 0;
   padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--color-active) 45%, var(--color-border));
+  border: 1px solid
+    color-mix(in srgb, var(--color-active) 45%, var(--color-border));
   border-radius: 8px;
   background: color-mix(in srgb, var(--color-active) 12%, var(--color-bg));
   color: var(--color-text);
@@ -373,11 +374,14 @@
 }
 
 .avatarBorderSmall {
-  position: absolute;
   top: -25%;
-  left: -25%;
   width: 150%;
   height: 150%;
+  position: absolute;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  transform: scale(1.35);
+  transform-origin: center;
   z-index: 5;
   pointer-events: none;
 }
@@ -492,12 +496,34 @@
 }
 
 .pendingMessage::after {
-  content: " 전송 중";
+  content: " 전송 중...";
   display: inline-block;
   margin-left: 8px;
   color: var(--color-deactive);
   font-size: 11px;
   font-weight: 800;
+}
+
+.uploadingMessage::after {
+  content: " 업로드 중...";
+  display: inline-block;
+  margin-left: 8px;
+  color: var(--color-active);
+  font-size: 11px;
+  font-weight: 800;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
 }
 
 .failedMessage {
@@ -1733,6 +1759,7 @@
 .attachBtn {
   width: 32px;
   height: 32px;
+  align-self: center;
   border: none;
   border-radius: 4px;
   background: transparent;
@@ -1852,8 +1879,10 @@
 /* ?? Scroll to bottom button ?? */
 .scrollToBottom {
   position: absolute;
-  bottom: 80px;
-  right: 16px;
+  bottom: 88px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   color: var(--color-text);
@@ -1868,7 +1897,7 @@
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 100;
-  animation: fadeIn 0.15s ease-out;
+  animation: scrollButtonIn 0.15s ease-out;
   transition: background 0.15s;
 }
 
@@ -1890,6 +1919,17 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes scrollButtonIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }
 

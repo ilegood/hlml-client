@@ -32,9 +32,7 @@
   border: none;
   background: none;
   padding-left: 23px;
-  transition:
-    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    background-color 0.2s ease;
+  transition: background-color 0.2s ease;
   gap: 20px;
   color: var(--color-deactive);
   font: inherit;
@@ -47,11 +45,16 @@
 
 /* ── Logo ── */
 .logo {
-  padding-left: 15px;
+  position: relative;
+  justify-content: flex-start;
+  padding-left: 0;
   margin-bottom: 25px;
 }
 
 .logo img {
+  position: absolute;
+  top: 7px;
+  left: 15px;
   width: 40px;
   height: 40px;
 }
@@ -62,7 +65,7 @@
   height: 24px;
   flex-shrink: 0;
   object-fit: contain;
-  transition: transform 0.3s ease;
+  transition: none;
 }
 
 /* ── Label ── */
@@ -163,6 +166,9 @@
 }
 
 .logo .label {
+  position: absolute;
+  top: 17px;
+  left: 75px;
   color: var(--color-active);
   font-size: 20px;
   font-weight: 800;
@@ -227,6 +233,7 @@
 
 /* ── Logout / Login button ── */
 .logoutBtn {
+  position: relative;
   background-color: var(--color-active);
   margin: 10px 10px;
   width: calc(100% - 20px);
@@ -239,11 +246,20 @@
 }
 
 .logoutBtn .label {
+  position: absolute;
+  top: 50%;
+  left: 57px;
+  transform: translateY(-50%);
   color: white;
   margin-left: 0;
-  width: 0;
-  overflow: hidden;
   opacity: 0;
+}
+
+.logoutBtn img {
+  position: absolute;
+  top: 12px;
+  left: 13px;
+  transition: none;
 }
 
 .logoutBtn:hover {
@@ -253,13 +269,6 @@
 
 .sidebar.open .logoutBtn {
   justify-content: flex-start;
-  padding-left: 15px;
-  gap: 20px;
-}
-
-.sidebar.open .logoutBtn .label {
-  width: auto;
-  opacity: 1;
 }
 
 /* ── Mobile ── */
