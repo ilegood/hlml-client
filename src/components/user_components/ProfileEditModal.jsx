@@ -179,7 +179,9 @@ const ProfileEditModal = ({ onClose, onSave }) => {
             className={`${styles.save} ${isSaving ? styles.savingBtn : ""}`}
             onClick={handleSave}
             disabled={isSaving}
-            data-saving-label={profileImg ? "이미지 업로드 중..." : "저장 중..."}
+            data-saving-label={
+              profileImg ? "이미지 업로드 중..." : "저장 중..."
+            }
           >
             저장하기
           </button>

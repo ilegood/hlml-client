@@ -169,7 +169,12 @@ const SharedByText = styled.span`
   color: var(--color-deactive);
 `;
 
-export default function SharePostModal({ postId, postTitle, postImage, onClose }) {
+export default function SharePostModal({
+  postId,
+  postTitle,
+  postImage,
+  onClose,
+}) {
   const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
   const [search, setSearch] = useState("");

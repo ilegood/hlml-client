@@ -588,13 +588,15 @@ export default function useDMChat() {
     setShowEmojiPicker(null);
   };
 
-
   const scrollToMessage = (msgId) => {
     const el = document.getElementById(`msg-${msgId}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
       el.classList.add("[animation:highlightMessage_2s_ease-out]");
-      setTimeout(() => el.classList.remove("[animation:highlightMessage_2s_ease-out]"), 2000);
+      setTimeout(
+        () => el.classList.remove("[animation:highlightMessage_2s_ease-out]"),
+        2000,
+      );
     } else {
       toast.error("원본 메시지를 찾을 수 없습니다.");
     }
@@ -625,18 +627,59 @@ export default function useDMChat() {
   };
 
   return {
-    roomId, name, userId, messages, input, setInput,
-    targetUserId, targetNickname, targetProfileImg, targetOnline,
-    replyTo, editId, hoveredMsgId, setHoveredMsgId, showEmojiPicker, setShowEmojiPicker,
-    showMainEmojiPicker, setShowMainEmojiPicker, showScrollBtn,
-    showFileGallery, setShowFileGallery, notificationsMuted, sending,
-    selectedProfileId, setSelectedProfileId, socketRef,
-    bottomRef, messagesRef, inputRef, fileInputRef, typingEmitRef,
-    pendingFiles, showAttachMenu, setShowAttachMenu, fileAccept,
-    addPendingFiles, openFilePicker, removePendingFile, resizeInput,
-    handleEmojiSelect, handleScroll, scrollToBottom, toggleNotifications,
-    handleLeaveDM, handleSend, startEdit, startReply, handleDelete,
-    toggleReaction, scrollToMessage, cancelContext, handlePaste,
-    handleDrop, socketRoomId,
+    roomId,
+    name,
+    userId,
+    messages,
+    input,
+    setInput,
+    targetUserId,
+    targetNickname,
+    targetProfileImg,
+    targetOnline,
+    replyTo,
+    editId,
+    hoveredMsgId,
+    setHoveredMsgId,
+    showEmojiPicker,
+    setShowEmojiPicker,
+    showMainEmojiPicker,
+    setShowMainEmojiPicker,
+    showScrollBtn,
+    showFileGallery,
+    setShowFileGallery,
+    notificationsMuted,
+    sending,
+    selectedProfileId,
+    setSelectedProfileId,
+    socketRef,
+    bottomRef,
+    messagesRef,
+    inputRef,
+    fileInputRef,
+    typingEmitRef,
+    pendingFiles,
+    showAttachMenu,
+    setShowAttachMenu,
+    fileAccept,
+    addPendingFiles,
+    openFilePicker,
+    removePendingFile,
+    resizeInput,
+    handleEmojiSelect,
+    handleScroll,
+    scrollToBottom,
+    toggleNotifications,
+    handleLeaveDM,
+    handleSend,
+    startEdit,
+    startReply,
+    handleDelete,
+    toggleReaction,
+    scrollToMessage,
+    cancelContext,
+    handlePaste,
+    handleDrop,
+    socketRoomId,
   };
 }

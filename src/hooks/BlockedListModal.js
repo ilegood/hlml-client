@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { getBlockedUsers, unblockUser } from "../../../api/friends";
-import { getImageUrl } from "../../../api/instance";
-import styles from "../css/BlockedListModal.module.css";
+import { getBlockedUsers, unblockUser } from "../api/friends";
+import { getImageUrl } from "../api/instance";
+import styles from "../components/sidebar_components/BlockedListModal.module.css";
 
 export default function BlockedListModal({ onClose }) {
   const [blockedUsers, setBlockedUsers] = useState([]);

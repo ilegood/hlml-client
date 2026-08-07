@@ -5,7 +5,7 @@ import { getPost, updatePost } from "../../api/posts";
 import CategorySelector from "../../hooks/CategorySelector";
 import ImageDropZone from "../post_components/ImageDropZone";
 import MapPreview from "../post_components/MapPreview";
-import PlaceSearchModal from "./PlaceSearchModal";
+import PlaceSearchModal from "../map_components/PlaceSearchModal";
 import styles from "./RoomSettingsModal.module.css";
 
 const CATEGORY_EXCLUDES = ["인원"];
@@ -88,7 +88,9 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
     }
 
     if (capacity < minCapacity) {
-      toast.error(`현재 참여 인원(${currentParticipants}명)보다 적게 설정할 수 없습니다.`);
+      toast.error(
+        `현재 참여 인원(${currentParticipants}명)보다 적게 설정할 수 없습니다.`,
+      );
       setCapacity(minCapacity);
       return;
     }
@@ -122,7 +124,9 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
       onClose();
     } catch (err) {
       console.error("Failed to update room:", err);
-      toast.error(err.response?.data?.message || "방 설정 저장에 실패했습니다.");
+      toast.error(
+        err.response?.data?.message || "방 설정 저장에 실패했습니다.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -132,7 +136,10 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
 
   return (
     <div className={styles.modalOverlay} onMouseDown={onClose}>
-      <div className={styles.modalContent} onMouseDown={(e) => e.stopPropagation()}>
+      <div
+        className={styles.modalContent}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <div className={styles.header}>
           <h2>방 설정 변경</h2>
           <button className={styles.closeBtn} onClick={onClose}>
@@ -218,7 +225,9 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
                 <button
                   type="button"
                   className={styles.capBtn}
-                  onClick={() => setCapacity((value) => Math.max(minCapacity, value - 1))}
+                  onClick={() =>
+                    setCapacity((value) => Math.max(minCapacity, value - 1))
+                  }
                   disabled={capacity <= minCapacity}
                 >
                   -
@@ -227,7 +236,9 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
                 <button
                   type="button"
                   className={styles.capBtn}
-                  onClick={() => setCapacity((value) => Math.min(10, value + 1))}
+                  onClick={() =>
+                    setCapacity((value) => Math.min(10, value + 1))
+                  }
                   disabled={capacity >= 10}
                 >
                   +
@@ -258,7 +269,9 @@ export default function RoomSettingsModal({ roomId, onClose, onUpdate }) {
             className={`${styles.submitBtn} ${isSaving ? styles.savingBtn : ""}`}
             onClick={handleSubmit}
             disabled={isSaving}
-            data-saving-label={image?.file ? "이미지 업로드 중..." : "저장 중..."}
+            data-saving-label={
+              image?.file ? "이미지 업로드 중..." : "저장 중..."
+            }
           >
             저장하기
           </button>

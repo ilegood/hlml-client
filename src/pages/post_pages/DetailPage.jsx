@@ -20,8 +20,8 @@ import {
 } from "../../api/posts";
 import { CommentItem } from "../../components/post_components/CommentItem";
 import MapPreview from "../../components/post_components/MapPreview";
-import ReportModal from "../../components/modals/ReportModal";
-import SharePostModal from "../../components/modals/SharePostModal";
+import ReportModal from "../../components/user_components/ReportModal";
+import SharePostModal from "../../components/user_components/SharePostModal";
 import styles from "./DetailPage.module.css";
 
 export default function DetailPage() {

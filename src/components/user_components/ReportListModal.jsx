@@ -495,7 +495,14 @@ export default function ReportListModal({ onClose, onChanged }) {
           <div className="title-row">
             {view === "form" && (
               <button className="back-btn" onClick={() => setView("list")}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
@@ -503,7 +510,14 @@ export default function ReportListModal({ onClose, onChanged }) {
             <h2>{view === "list" ? "신고 내역" : "새 신고하기"}</h2>
           </div>
           <button className="close-btn" onClick={onClose}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -515,12 +529,18 @@ export default function ReportListModal({ onClose, onChanged }) {
             <div className="report-list">
               {reports.length > 0 ? (
                 reports.map((report, index) => (
-                  <div key={report.id || `${report.targetUserId}-${index}`} className="report-item">
+                  <div
+                    key={report.id || `${report.targetUserId}-${index}`}
+                    className="report-item"
+                  >
                     <div className="item-top">
                       <div className="reported-user">
                         <div className="avatar">
                           {report.targetProfileImg && (
-                            <img src={getImageUrl(report.targetProfileImg)} alt="" />
+                            <img
+                              src={getImageUrl(report.targetProfileImg)}
+                              alt=""
+                            />
                           )}
                         </div>
                         <span className="name">{report.targetName}</span>
@@ -541,7 +561,9 @@ export default function ReportListModal({ onClose, onChanged }) {
                     )}
                     <div className="reason">{report.reason}</div>
                     <div className="content">{report.content}</div>
-                    <div className="date">{formatReportDate(report.createdAt)}</div>
+                    <div className="date">
+                      {formatReportDate(report.createdAt)}
+                    </div>
                   </div>
                 ))
               ) : (
@@ -553,7 +575,14 @@ export default function ReportListModal({ onClose, onChanged }) {
             </div>
             <div className="list-footer">
               <button className="go-report-btn" onClick={() => setView("form")}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                >
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
@@ -586,7 +615,9 @@ export default function ReportListModal({ onClose, onChanged }) {
                   <div className="selected-user-meta">
                     <strong>{selectedUser.nickname}</strong>
                     <span>신고 대상 선택됨</span>
-                    <span>현재 신고 횟수 {selectedUser.report_count || 0}회</span>
+                    <span>
+                      현재 신고 횟수 {selectedUser.report_count || 0}회
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -629,7 +660,10 @@ export default function ReportListModal({ onClose, onChanged }) {
 
             <div className="form-group">
               <label>신고 사유</label>
-              <select value={reason} onChange={(e) => setReason(e.target.value)}>
+              <select
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              >
                 <option>{REASON_PLACEHOLDER}</option>
                 <option>부적절한 닉네임</option>
                 <option>스팸/광고</option>

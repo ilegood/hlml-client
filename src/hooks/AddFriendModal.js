@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { addFriend, searchUsers } from "../../../api/friends";
-import { getImageUrl } from "../../../api/instance";
-import styles from "../css/AddFriendModal.module.css";
+import { addFriend, searchUsers } from "../api/friends";
+import { getImageUrl } from "../api/instance";
+import styles from "../components/sidebar_components/AddFriendModal.module.css";
 
 const AddFriendModal = ({ onClose }) => {
   const [query, setQuery] = useState("");

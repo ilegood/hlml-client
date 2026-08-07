@@ -4,8 +4,8 @@ import styles from "../pages/ChatMembersModal.module.css";
 import { getImageUrl } from "../api/instance";
 import { blockUser } from "../api/friends";
 import borderImg from "../assets/border.png";
-import UserProfileModal from "../components/modals/UserProfileModal";
-import ReportModal from "../components/modals/ReportModal";
+import UserProfileModal from "../components/user_components/UserProfileModal";
+import ReportModal from "../components/user_components/ReportModal";
 
 export default function ChatMembersModal({
   isOpen,
@@ -81,9 +81,7 @@ export default function ChatMembersModal({
                         )}
                       </div>
                     </div>
-                    <span className={styles.nickname}>
-                      {nickname}
-                    </span>
+                    <span className={styles.nickname}>{nickname}</span>
                   </div>
 
                   {isMeHost && !isHost && (

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../../context/AuthContext";
-import { getPosts } from "../../../api/posts";
-import styles from "../css/AppointmentModal.module.css";
+import { useAuth } from "../context/AuthContext";
+import { getPosts } from "../api/posts";
+import styles from "../components/sidebar_components/AppointmentModal.module.css";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 const CALENDAR_CELL_COUNT = 42;

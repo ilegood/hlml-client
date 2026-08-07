@@ -125,8 +125,9 @@ export const useFriendManagement = () => {
     setActiveMenuId(null);
   };
 
-  const filteredFriends = (Array.isArray(friends) ? friends : []).filter((friend) =>
-    (friend.name || "").toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredFriends = (Array.isArray(friends) ? friends : []).filter(
+    (friend) =>
+      (friend.name || "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleFriendClick = (e, friend, sidebarRect) => {

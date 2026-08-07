@@ -7,15 +7,11 @@ const addFriendModalJsx = {
   enforce: 'pre',
   transform(code, id) {
     if (
-      id.endsWith('/src/hooks/friend/AddFriendModal.js') ||
-      id.endsWith('/src/hooks/friend/AppointmentModal.js') ||
-      id.endsWith('/src/hooks/friend/BlockedListModal.js') ||
-      id.endsWith('/src/components/sidebar_components/js/AddFriendModal.js') ||
-      id.endsWith('/src/components/sidebar_components/js/AppointmentModal.js') ||
-      id.endsWith('/src/components/sidebar_components/js/BlockedListModal.js') ||
+      id.endsWith('/src/hooks/AddFriendModal.js') ||
+      id.endsWith('/src/hooks/AppointmentModal.js') ||
+      id.endsWith('/src/hooks/BlockedListModal.js') ||
       id.endsWith('/src/hooks/ChatMembersModal.js') ||
       id.endsWith('/src/hooks/CategorySelector.js')
-      || id.endsWith('/src/hooks/PostCard.js')
     ) {
       return transformWithOxc(code, id, { lang: 'jsx' })
     }

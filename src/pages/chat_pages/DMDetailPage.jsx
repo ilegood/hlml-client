@@ -4,28 +4,68 @@ import ChatScrollButton from "../../components/chat_components/ChatScrollButton"
 import DMHeader from "../../components/chat_components/DMHeader";
 import ChatInputArea from "../../components/chat_components/ChatInputArea";
 import useDMChat from "../../hooks/useDMChat";
-import UserProfileModal from "../../components/modals/UserProfileModal";
+import UserProfileModal from "../../components/user_components/UserProfileModal";
 import { formatChatPreview } from "../../utils/chatPreview";
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 export default function DMDetailPage() {
   const {
-    roomId, name, userId, messages, input, setInput,
-    targetUserId, targetNickname, targetProfileImg, targetOnline,
-    replyTo, editId, hoveredMsgId, setHoveredMsgId, showEmojiPicker, setShowEmojiPicker,
-    showMainEmojiPicker, setShowMainEmojiPicker, showScrollBtn,
-    showFileGallery, setShowFileGallery, notificationsMuted, sending,
-    selectedProfileId, setSelectedProfileId, socketRef,
-    bottomRef, messagesRef, inputRef, fileInputRef, typingEmitRef,
-    pendingFiles, showAttachMenu, setShowAttachMenu, fileAccept,
-    addPendingFiles, openFilePicker, removePendingFile, resizeInput,
-    handleEmojiSelect, handleScroll, scrollToBottom, toggleNotifications,
-    handleLeaveDM, handleSend, startEdit, startReply, handleDelete,
-    toggleReaction, scrollToMessage, cancelContext, handlePaste,
-    handleDrop, socketRoomId,
+    roomId,
+    name,
+    userId,
+    messages,
+    input,
+    setInput,
+    targetUserId,
+    targetNickname,
+    targetProfileImg,
+    targetOnline,
+    replyTo,
+    editId,
+    hoveredMsgId,
+    setHoveredMsgId,
+    showEmojiPicker,
+    setShowEmojiPicker,
+    showMainEmojiPicker,
+    setShowMainEmojiPicker,
+    showScrollBtn,
+    showFileGallery,
+    setShowFileGallery,
+    notificationsMuted,
+    sending,
+    selectedProfileId,
+    setSelectedProfileId,
+    socketRef,
+    bottomRef,
+    messagesRef,
+    inputRef,
+    fileInputRef,
+    typingEmitRef,
+    pendingFiles,
+    showAttachMenu,
+    setShowAttachMenu,
+    fileAccept,
+    addPendingFiles,
+    openFilePicker,
+    removePendingFile,
+    resizeInput,
+    handleEmojiSelect,
+    handleScroll,
+    scrollToBottom,
+    toggleNotifications,
+    handleLeaveDM,
+    handleSend,
+    startEdit,
+    startReply,
+    handleDelete,
+    toggleReaction,
+    scrollToMessage,
+    cancelContext,
+    handlePaste,
+    handleDrop,
+    socketRoomId,
   } = useDMChat();
-
 
   return (
     <div
@@ -63,7 +103,6 @@ export default function DMDetailPage() {
         scrollToMessage={scrollToMessage}
         setSelectedProfileId={setSelectedProfileId}
       />
-
 
       {showScrollBtn && (
         <ChatScrollButton

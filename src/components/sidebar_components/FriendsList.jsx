@@ -1,8 +1,8 @@
 import { useRef } from "react";
 import styles from "./FriendsList.module.css";
 import { getImageUrl } from "../../api/instance";
-import AddFriendModal from "./js/AddFriendModal";
-import ReportModal from "../modals/ReportModal";
+import AddFriendModal from "../../hooks/AddFriendModal";
+import ReportModal from "../user_components/ReportModal";
 import { useFriendManagement } from "../../hooks/useFriendManagement";
 
 const FriendsList = () => {

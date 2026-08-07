@@ -51,7 +51,9 @@ export default function UserProfileModal({ userId, onClose, currentUserId }) {
 
     try {
       const res = await addFriend(user.nickname);
-      toast.success(res.message || `${user.nickname}님께 친구 요청을 보냈습니다.`);
+      toast.success(
+        res.message || `${user.nickname}님께 친구 요청을 보냈습니다.`,
+      );
       onClose();
     } catch (err) {
       toast.error(err.response?.data?.message || "친구 요청에 실패했습니다.");
@@ -70,7 +72,10 @@ export default function UserProfileModal({ userId, onClose, currentUserId }) {
             <div className={styles.profileHeader}>
               <div className={styles.avatarContainer}>
                 {user.profile_img ? (
-                  <img src={getImageUrl(user.profile_img)} alt={user.nickname} />
+                  <img
+                    src={getImageUrl(user.profile_img)}
+                    alt={user.nickname}
+                  />
                 ) : (
                   <span className={styles.defaultAvatar}>
                     {user.nickname.slice(0, 1)}
@@ -93,21 +98,20 @@ export default function UserProfileModal({ userId, onClose, currentUserId }) {
                 >
                   게시글 {stats.posts || 0}
                 </button>
-                <span
-                  className={`${styles.metaLink}`}
-                >
+                <span className={`${styles.metaLink}`}>
                   약속 {stats.appointments || 0}
                 </span>
-                <span
-                  className={`${styles.metaLink}`}
-                >
+                <span className={`${styles.metaLink}`}>
                   신고기록 {stats.reports || 0}
                 </span>
               </div>
 
               <div className={styles.actions}>
                 {Number(user.user_id) !== Number(currentUserId) && (
-                  <button className={styles.addFriendBtn} onClick={handleAddFriend}>
+                  <button
+                    className={styles.addFriendBtn}
+                    onClick={handleAddFriend}
+                  >
                     친구 추가
                   </button>
                 )}

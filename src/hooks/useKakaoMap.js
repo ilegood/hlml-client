@@ -11,7 +11,9 @@ export const useKakaoMap = (mapRef, token, currentUserId) => {
             const hasLocation = p.latitude && p.longitude;
             const isAuthor = String(p.user_id) === String(currentUserId);
             const isLiked = (p.likedBy || []).includes(String(currentUserId));
-            const isJoined = (p.joinedUserIds || []).includes(String(currentUserId));
+            const isJoined = (p.joinedUserIds || []).includes(
+              String(currentUserId),
+            );
             return hasLocation && (isAuthor || isLiked || isJoined);
           });
 

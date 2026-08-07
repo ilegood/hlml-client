@@ -12,7 +12,7 @@ import { createPost, getPost, updatePost } from "../../api/posts";
 import CategorySelector from "../../hooks/CategorySelector";
 import ImageDropZone from "../../components/post_components/ImageDropZone";
 import MapPreview from "../../components/post_components/MapPreview";
-import PlaceSearchModal from "../../components/modals/PlaceSearchModal";
+import PlaceSearchModal from "../../components/map_components/PlaceSearchModal";
 import styles from "./WritePage.module.css";
 
 const WRITE_CATEGORY_EXCLUDES = ["인원"];
