@@ -1,6 +1,12 @@
+<<<<<<< Updated upstream
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+=======
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/auth";
+>>>>>>> Stashed changes
 import {
   getFriends,
   getFriendRequests,
@@ -10,7 +16,11 @@ import {
   updateFriendMemo,
 } from "../api/friends";
 import instance from "../api/instance";
+<<<<<<< Updated upstream
 import { toast } from "sonner";
+=======
+import { toast } from "sonner"; // Assuming toast is available globally or imported
+>>>>>>> Stashed changes
 
 export const useFriendManagement = () => {
   const navigate = useNavigate();
@@ -30,26 +40,41 @@ export const useFriendManagement = () => {
 
   const menuRef = useRef(null);
 
+<<<<<<< Updated upstream
   const fetchAll = useCallback(async () => {
+=======
+  const fetchAll = async () => {
+>>>>>>> Stashed changes
     if (!token) return;
 
     try {
       const fData = await getFriends();
+<<<<<<< Updated upstream
       const friendsArray = Array.isArray(fData) ? fData : [];
       setFriends(friendsArray);
 
       const initialMemos = {};
       friendsArray.forEach((friend) => {
+=======
+      setFriends(fData);
+
+      const initialMemos = {};
+      fData.forEach((friend) => {
+>>>>>>> Stashed changes
         if (friend.memo) initialMemos[friend.id] = friend.memo;
       });
       setMemos(initialMemos);
     } catch (err) {
       console.error("친구 목록 로드 실패", err);
+<<<<<<< Updated upstream
       setFriends([]);
+=======
+>>>>>>> Stashed changes
     }
 
     try {
       const rData = await getFriendRequests();
+<<<<<<< Updated upstream
       setRequests(Array.isArray(rData) ? rData : []);
     } catch (err) {
       console.error("친구 요청 로드 실패", err);
@@ -61,6 +86,17 @@ export const useFriendManagement = () => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll();
   }, [fetchAll]);
+=======
+      setRequests(rData);
+    } catch (err) {
+      console.error("친구 요청 로드 실패", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAll();
+  }, [token]);
+>>>>>>> Stashed changes
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -76,7 +112,11 @@ export const useFriendManagement = () => {
     try {
       await acceptFriend(id);
       fetchAll();
+<<<<<<< Updated upstream
     } catch {
+=======
+    } catch (err) {
+>>>>>>> Stashed changes
       toast.error("친구 요청 수락 실패");
     }
   };
@@ -85,7 +125,11 @@ export const useFriendManagement = () => {
     try {
       await rejectFriend(id);
       fetchAll();
+<<<<<<< Updated upstream
     } catch {
+=======
+    } catch (err) {
+>>>>>>> Stashed changes
       toast.error("친구 요청 거절 실패");
     }
   };
@@ -97,7 +141,11 @@ export const useFriendManagement = () => {
         fetchAll();
         setActiveMenuId(null);
         if (selectedFriend?.id === id) setSelectedFriend(null);
+<<<<<<< Updated upstream
       } catch {
+=======
+      } catch (err) {
+>>>>>>> Stashed changes
         toast.error("친구 삭제 실패");
       }
     }
@@ -111,21 +159,33 @@ export const useFriendManagement = () => {
         setActiveMenuId(null);
         if (selectedFriend?.id === id) setSelectedFriend(null);
         toast.success("사용자가 차단되었습니다.");
+<<<<<<< Updated upstream
       } catch {
+=======
+      } catch (err) {
+>>>>>>> Stashed changes
         toast.error("사용자 차단 실패");
       }
     }
   };
 
+<<<<<<< Updated upstream
   const [reportedFriend, setReportedFriend] = useState(null);
 
   const handleReport = (friend) => {
     setReportedFriend(friend);
+=======
+  const handleReport = () => {
+>>>>>>> Stashed changes
     setIsReportModalOpen(true);
     setActiveMenuId(null);
   };
 
+<<<<<<< Updated upstream
   const filteredFriends = (Array.isArray(friends) ? friends : []).filter((friend) =>
+=======
+  const filteredFriends = friends.filter((friend) =>
+>>>>>>> Stashed changes
     (friend.name || "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
@@ -165,7 +225,11 @@ export const useFriendManagement = () => {
       setMemos({ ...memos, [selectedFriend.id]: tempMemo });
       setIsEditingMemo(false);
       toast.success("메모가 저장되었습니다.");
+<<<<<<< Updated upstream
     } catch {
+=======
+    } catch (err) {
+>>>>>>> Stashed changes
       toast.error("메모 저장 실패");
     }
   };
@@ -174,9 +238,13 @@ export const useFriendManagement = () => {
 
   const handleStartDM = async () => {
     try {
+<<<<<<< Updated upstream
       const res = await instance.post("/chat/dm", {
         targetId: selectedFriend.id,
       });
+=======
+      const res = await instance.post("/chat/dm", { targetId: selectedFriend.id });
+>>>>>>> Stashed changes
       navigate(`/dms/${res.data.roomId}`);
       setIsOpen(false);
       setSelectedFriend(null);
@@ -195,8 +263,11 @@ export const useFriendManagement = () => {
     setRequests,
     selectedFriend,
     setSelectedFriend,
+<<<<<<< Updated upstream
     reportedFriend,
     setReportedFriend,
+=======
+>>>>>>> Stashed changes
     searchQuery,
     setSearchQuery,
     isAddModalOpen,

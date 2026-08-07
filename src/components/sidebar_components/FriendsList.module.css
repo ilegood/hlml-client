@@ -70,15 +70,21 @@
 .addPlusBtn {
   width: 38px;
   height: 38px;
+<<<<<<< Updated upstream:src/components/sidebar_components/FriendsList.module.css
   box-sizing: border-box;
+=======
+>>>>>>> Stashed changes:src/components/Sidebar_Components/FriendsList.module.css
   background-color: var(--color-active);
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 20px;
+<<<<<<< Updated upstream:src/components/sidebar_components/FriendsList.module.css
   line-height: 1;
   padding: 0;
+=======
+>>>>>>> Stashed changes:src/components/Sidebar_Components/FriendsList.module.css
   display: flex;
   align-items: center;
   justify-content: center;
@@ -168,6 +174,7 @@
   height: 32px;
   background-color: #555;
   border-radius: 50%;
+<<<<<<< Updated upstream:src/components/sidebar_components/FriendsList.module.css
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -184,6 +191,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+=======
+  display: inline-block;
+  background-size: cover;
+  background-position: center;
+>>>>>>> Stashed changes:src/components/Sidebar_Components/FriendsList.module.css
 }
 
 .nameCell {
@@ -218,10 +230,17 @@
   position: absolute;
   right: 0;
   top: 35px;
+<<<<<<< Updated upstream:src/components/sidebar_components/FriendsList.module.css
   background: var(--color-dropdown-bg);
   border: 1px solid var(--color-active);
   border-radius: 8px;
   box-shadow: 0 10px 28px var(--color-dropdown-shadow);
+=======
+  background: var(--color-sidebar);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+>>>>>>> Stashed changes:src/components/Sidebar_Components/FriendsList.module.css
   z-index: 1020;
   overflow: hidden;
   width: 100px;
@@ -232,15 +251,24 @@
   padding: 10px;
   border: none;
   background: none;
+<<<<<<< Updated upstream:src/components/sidebar_components/FriendsList.module.css
   color: var(--color-dropdown-text);
+=======
+  color: var(--color-text);
+>>>>>>> Stashed changes:src/components/Sidebar_Components/FriendsList.module.css
   font-size: 12px;
   cursor: pointer;
   text-align: left;
 }
 
 .dropdownMenu button:hover {
+<<<<<<< Updated upstream:src/components/sidebar_components/FriendsList.module.css
   background: var(--color-dropdown-hover-bg);
   color: var(--color-dropdown-hover-text);
+=======
+  background: var(--color-item-hover);
+  color: var(--color-active);
+>>>>>>> Stashed changes:src/components/Sidebar_Components/FriendsList.module.css
 }
 
 .dropdownMenu button.danger {
@@ -354,6 +382,8 @@
   position: absolute;
   bottom: -30px;
   left: 20px;
+  background-size: cover;
+  background-position: center;
 }
 
 .detailBody {

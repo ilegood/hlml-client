@@ -13,7 +13,11 @@
   position: fixed;
   top: 25px;
   height: calc(100vh - 25px);
+<<<<<<< Updated upstream:src/components/sidebar_components/Sidebar.module.css
   z-index: 5000;
+=======
+  z-index: 2000;
+>>>>>>> Stashed changes:src/components/Sidebar_Components/Sidebar.module.css
 }
 
 .sidebar.open {

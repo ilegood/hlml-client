@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream:src/components/chat_components/ChatAttachment.jsx
 import { Component, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "../../api/instance";
@@ -12,10 +13,28 @@ const normalizeUrl = (value) => {
 };
 
 const parseMessagePayload = (content) => {
+=======
+import { getImageUrl } from "../../api/instance";
+import styles from "../../pages/chat_pages/ChatRoomDetail.module.css";
+
+export const parseAttachment = (content) => {
   if (!content || typeof content !== "string") return null;
 
   try {
     const parsed = JSON.parse(content);
+    return parsed?.kind === "chat_attachment" ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+export const parseMessagePayload = (content) => {
+>>>>>>> Stashed changes:src/components/Chat_Components/ChatAttachment.jsx
+  if (!content || typeof content !== "string") return null;
+
+  try {
+    const parsed = JSON.parse(content);
+<<<<<<< Updated upstream:src/components/chat_components/ChatAttachment.jsx
     if (parsed?.kind === "share_post") {
       return {
         kind: "share_post",
@@ -28,6 +47,10 @@ const parseMessagePayload = (content) => {
     if (parsed?.kind === "chat_payload") {
       return {
         kind: "chat_payload",
+=======
+    if (parsed?.kind === "chat_payload") {
+      return {
+>>>>>>> Stashed changes:src/components/Chat_Components/ChatAttachment.jsx
         text: parsed.text || "",
         attachments: Array.isArray(parsed.attachments)
           ? parsed.attachments.filter(Boolean)
@@ -35,7 +58,11 @@ const parseMessagePayload = (content) => {
       };
     }
     if (parsed?.kind === "chat_attachment") {
+<<<<<<< Updated upstream:src/components/chat_components/ChatAttachment.jsx
       return { kind: "chat_payload", text: "", attachments: [parsed] };
+=======
+      return { text: "", attachments: [parsed] };
+>>>>>>> Stashed changes:src/components/Chat_Components/ChatAttachment.jsx
     }
   } catch {
     return null;
@@ -44,6 +71,7 @@ const parseMessagePayload = (content) => {
   return null;
 };
 
+<<<<<<< Updated upstream:src/components/chat_components/ChatAttachment.jsx
 const countHangul = (value) =>
   (String(value).match(/[\uAC00-\uD7A3]/g) || []).length;
 
@@ -596,6 +624,40 @@ function ChatMessageContentBody({ content }) {
       {fileAttachments.length > 0 && (
         <div className={"[display:flex] [flex-direction:column] [gap:10px]"}>
           {fileAttachments.map((attachment, index) => (
+=======
+export default function ChatAttachment({ attachment }) {
+  const src = getImageUrl(attachment.url);
+  const isVideo = attachment.mimeType?.startsWith("video/");
+
+  return (
+    <div className={styles.attachmentWrap}>
+      {isVideo ? (
+        <video className={styles.attachmentVideo} src={src} controls />
+      ) : (
+        <img
+          className={styles.attachmentImage}
+          src={src}
+          alt={attachment.name || "attachment"}
+        />
+      )}
+      {attachment.name && (
+        <div className={styles.attachmentName}>{attachment.name}</div>
+      )}
+    </div>
+  );
+}
+
+export function ChatMessageContent({ content }) {
+  const payload = parseMessagePayload(content);
+  if (!payload) return content;
+
+  return (
+    <div className={styles.messagePayload}>
+      {payload.text && <div className={styles.payloadText}>{payload.text}</div>}
+      {payload.attachments.length > 0 && (
+        <div className={styles.payloadAttachments}>
+          {payload.attachments.map((attachment, index) => (
+>>>>>>> Stashed changes:src/components/Chat_Components/ChatAttachment.jsx
             <ChatAttachment
               key={`${attachment.url || attachment.name || "file"}-${index}`}
               attachment={attachment}
@@ -606,6 +668,7 @@ function ChatMessageContentBody({ content }) {
     </div>
   );
 }
+<<<<<<< Updated upstream:src/components/chat_components/ChatAttachment.jsx
 
 class ChatMessageContentErrorBoundary extends Component {
   constructor(props) {
@@ -668,3 +731,5 @@ export function ChatMessageContent({ content }) {
     </ChatMessageContentErrorBoundary>
   );
 }
+=======
+>>>>>>> Stashed changes:src/components/Chat_Components/ChatAttachment.jsx

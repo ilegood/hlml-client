@@ -1,3 +1,4 @@
+<<<<<<<< Updated upstream:src/hooks/useKakaoMap.js
 import { useEffect } from "react";
 import { getPosts } from "../api/posts"; // Assuming getPosts is in this path
 
@@ -71,4 +72,30 @@ export const useKakaoMap = (mapRef, token, currentUserId) => {
       return () => clearTimeout(timer);
     }
   }, [mapRef, token, currentUserId]);
+========
+import { useState, useRef } from "react";
+import MapModal from "../modals/MapModal";
+import { useAuth } from "../../context/auth";
+import styles from "./CentralMapBar.module.css";
+import { useKakaoMap } from "../../hooks/useKakaoMap"; // Import the custom hook
+
+const CentralMapBar = () => {
+  const { token, userId: currentUserId } = useAuth();
+  const [isMapOpen, setIsMapOpen] = useState(false);
+  const mapRef = useRef(null);
+
+  // Use the custom hook to handle Kakao Map logic
+  useKakaoMap(mapRef, token, currentUserId);
+
+  if (!token) return null;
+
+  return (
+    <>
+      <div className={styles.mapBarContainer} onClick={() => setIsMapOpen(true)}>
+        <div ref={mapRef} className={styles.mapPreviewArea} />
+      </div>
+      {isMapOpen && <MapModal onClose={() => setIsMapOpen(false)} />}
+    </>
+  );
+>>>>>>>> Stashed changes:src/components/Post_Components/CentralMapBar.jsx
 };

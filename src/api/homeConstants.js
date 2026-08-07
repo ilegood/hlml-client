@@ -16,12 +16,16 @@ export const STATUS_CLASS = {
   [STATUS_CLOSED]: "status-full",
 };
 
+<<<<<<< Updated upstream
 export function normalizeStatus(status) {
   return String(status || "").trim() === STATUS_CLOSED
     ? STATUS_CLOSED
     : STATUS_OPEN;
 }
 
+=======
+// ── 유틸 ──────────────────────────────────────────────────
+>>>>>>> Stashed changes
 export function getTimeAgo(ts) {
   if (!ts) return "";
   const date = new Date(ts);
@@ -47,10 +51,14 @@ export function getTimeAgo(ts) {
 }
 
 export function countComments(comments = []) {
+<<<<<<< Updated upstream
   return comments.reduce(
     (sum, comment) => sum + 1 + (comment.replies || []).length,
     0,
   );
+=======
+  return comments.reduce((s, c) => s + 1 + (c.replies || []).length, 0);
+>>>>>>> Stashed changes
 }
 
 export function formatDateTime(dateStr, timeStr) {

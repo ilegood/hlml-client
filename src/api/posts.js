@@ -64,11 +64,13 @@ const normalizePost = (post) => ({
   latitude: post.latitude ? Number(post.latitude) : null,
   longitude: post.longitude ? Number(post.longitude) : null,
   categories: parseCategories(post.categories),
-  likedBy: Array.isArray(post.likedBy) ? post.likedBy.map(String) : [],
-  joinedBy: Array.isArray(post.joinedBy) ? post.joinedBy.map(String) : [],
-  joinedUserIds: Array.isArray(post.joinedUserIds)
-    ? post.joinedUserIds.map(String)
+  likedBy: Array.isArray(post.likedBy) ? post.likedBy : [],
+  joinedBy: Array.isArray(post.joinedBy) ? post.joinedBy : [],
+  joinedUserIds: Array.isArray(post.joinedUserIds) ? post.joinedUserIds : [],
+  participantDetails: Array.isArray(post.participantDetails)
+    ? post.participantDetails
     : [],
+<<<<<<< Updated upstream
   participantDetails: Array.isArray(post.participantDetails)
     ? post.participantDetails
     : [],
@@ -76,6 +78,10 @@ const normalizePost = (post) => ({
   comments: Array.isArray(post.comments)
     ? post.comments.map(normalizeComment)
     : [],
+=======
+  authorDetails: post.authorDetails || null,
+  comments: Array.isArray(post.comments) ? post.comments : [],
+>>>>>>> Stashed changes
   likes: post.likes || 0,
   participants: post.participants || 1,
 });
@@ -185,6 +191,7 @@ export const deletePostBan = async (id) => {
   return res.data;
 };
 
+<<<<<<< Updated upstream
 const toCommentFormData = (data) => {
   if (data instanceof FormData) return data;
   const formData = new FormData();
@@ -195,6 +202,8 @@ const toCommentFormData = (data) => {
   return formData;
 };
 
+=======
+>>>>>>> Stashed changes
 export const createComment = async (postId, data) => {
   const payload = data.image ? toCommentFormData(data) : data;
   const res = await instance.post(`${API_URL}/${postId}/comments`, payload);

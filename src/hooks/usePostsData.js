@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { getPosts } from "../api/posts";
 
@@ -31,11 +32,18 @@ const getSortFn = (sortBy) => {
       return (a, b) => new Date(b.createdAt) - new Date(a.createdAt);
   }
 };
+=======
+import { useState, useEffect } from "react";
+import { getPosts } from "../api/posts"; // Assuming getPosts is in this path
+
+const MAIN_CATEGORY_ORDER = ["인원", "성별", "나이", "흡연", "음주", "활동"]; // Keep this for filtering logic
+>>>>>>> Stashed changes
 
 export const usePostsData = () => {
   const [posts, setPosts] = useState([]);
   const [search, setSearch] = useState("");
   const [selCats, setSelCats] = useState({});
+<<<<<<< Updated upstream
   const [sortBy, setSortBy] = useState("latest");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -85,11 +93,61 @@ export const usePostsData = () => {
     setPosts,
     filteredPosts,
     paginatedPosts,
+=======
+
+  const fetchPosts = async () => {
+    try {
+      const data = await getPosts();
+      setPosts(data);
+    } catch (err) {
+      console.error("Failed to fetch posts:", err);
+    }
+  };
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadPosts = async () => {
+      try {
+        const data = await getPosts();
+        if (!ignore) setPosts(data);
+      } catch (err) {
+        console.error("Failed to fetch posts:", err);
+      }
+    };
+
+    loadPosts();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const filteredPosts = [...posts]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .filter((it) => {
+      const kw = search.toLowerCase();
+      const matchText =
+        it.title.toLowerCase().includes(kw) ||
+        it.content.toLowerCase().includes(kw);
+      const matchCat = Object.entries(selCats).every(([k, v]) => {
+        if (!v) return true;
+        if (k === "인원") return it.capacity === parseInt(v);
+        return it.categories?.[k] === v;
+      });
+      return matchText && matchCat;
+    });
+
+  return {
+    posts,
+    filteredPosts,
+>>>>>>> Stashed changes
     search,
     setSearch,
     selCats,
     setSelCats,
     fetchPosts,
+<<<<<<< Updated upstream
     sortBy,
     setSortBy,
     currentPage: effectivePage,
@@ -97,6 +155,8 @@ export const usePostsData = () => {
     totalPages,
     pageSize: PAGE_SIZE,
     SORT_OPTIONS,
+=======
+>>>>>>> Stashed changes
     MAIN_CATEGORY_ORDER,
   };
 };

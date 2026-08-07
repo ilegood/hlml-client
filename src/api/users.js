@@ -6,8 +6,15 @@ export const login = async (form) => {
 };
 
 export const updateProfile = async (profileData) => {
+<<<<<<< Updated upstream
   let dataToSend;
   let headers = {};
+=======
+  const token = localStorage.getItem("token");
+  
+  let dataToSend;
+  let headers = { Authorization: `Bearer ${token}` };
+>>>>>>> Stashed changes
 
   if (profileData.profile_img instanceof File) {
     dataToSend = new FormData();
