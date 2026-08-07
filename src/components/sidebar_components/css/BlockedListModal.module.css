@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .modalWrapper {
-  @apply fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 backdrop-blur-[4px];
+  @apply fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-[5px];
 }
 
 .modalContent {

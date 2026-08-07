@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import instance from "../../api/instance";
 import ProfileAvatar from "../ProfileAvatar";
 
-const ModalWrapper = ({ children, ...props }) => <div {...props} className="pointer-events-auto fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm [&>div]:w-[480px]">{children}</div>;
+const ModalWrapper = ({ children, ...props }) => <div {...props} className="pointer-events-auto fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm [&>div]:w-[480px]">{children}</div>;
 /* Tailwind component styles are kept local to this modal. */
 /*
   position: fixed;

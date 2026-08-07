@@ -5,7 +5,7 @@ import instance, { getImageUrl } from "../../api/instance";
 import { AuthContext } from "../../context/AuthContext.jsx";
 import ProfileAvatar from "../ProfileAvatar";
 
-const Overlay = ({ children, ...props }) => <div {...props} className="fixed inset-0 z-[5000] flex items-center justify-center bg-black/60 backdrop-blur-sm" >{children}</div>;
+const Overlay = ({ children, ...props }) => <div {...props} className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm" >{children}</div>;
 const Modal = ({ children, ...props }) => <div {...props} className="flex max-h-[80vh] w-[380px] flex-col rounded-[20px] bg-[var(--color-sidebar)] p-6 text-[var(--color-text)]">{children}</div>;
 const Header = ({ children, ...props }) => <div {...props} className="mb-4 flex items-center justify-between">{children}</div>;
 const SearchInput = (props) => <input {...props} className="mb-3 box-border w-full rounded-xl border-[1.5px] border-[var(--color-border)] bg-[var(--color-input-bg)] px-3.5 py-2.5 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-active)]" />;

@@ -212,7 +212,7 @@ export default function AppointmentModal({ onClose }) {
               </div>
             ))}
 
-            {calendarDays.map(({ key, day, date, isCurrentMonth }) => {
+            {calendarDays.map(({ key, day, date, isCurrentMonth }, index) => {
               const dayAppts = isCurrentMonth ? getDayAppts(date) : [];
               const hasAppt = dayAppts.length > 0;
               const cellClass = [
@@ -239,7 +239,9 @@ export default function AppointmentModal({ onClose }) {
                   {day}
                   {hasAppt && <div className={styles.dot} />}
                   {hoveredDay === key && hasAppt && (
-                    <div className={styles.dotPopup}>
+                    <div
+                      className={`${styles.dotPopup} ${index % 7 >= 4 ? styles.dotPopupRight : ""}`}
+                    >
                       {dayAppts.map((appt) => (
                         <div
                           key={appt.id}

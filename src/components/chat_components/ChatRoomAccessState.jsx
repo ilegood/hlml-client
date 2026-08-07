@@ -11,7 +11,7 @@ const ChatRoomAccessState = ({
   if (loadingPost) {
     return (
       <div className={"[display:flex] [flex-direction:column] [height:calc(100vh_-_25px)] [background:var(--color-bg)] [padding:0_200px] [font-family:inherit] [overflow-x:hidden]"}>
-        <div className={"[position:fixed] [inset:0] [z-index:3000] [display:flex] [align-items:center] [justify-content:center] [background:rgba(0,_0,_0,_0.45)]"}>
+        <div className={"[position:fixed] [inset:0] [z-index:10000] [display:flex] [align-items:center] [justify-content:center] [background:rgba(0,_0,_0,_0.45)] [backdrop-filter:blur(5px)]"}>
           <div className={"[width:min(420px,_calc(100vw_-_32px))] [border:1px_solid_var(--color-border)] [border-radius:8px] [background:var(--color-bg)] [color:var(--color-text)] [padding:20px] [box-shadow:0_16px_40px_rgba(0,_0,_0,_0.35)]"}>
             <p style={{ textAlign: "center" }}>로딩 중...</p>
           </div>
@@ -23,7 +23,7 @@ const ChatRoomAccessState = ({
   if (!postData) {
     return (
       <div className={"[display:flex] [flex-direction:column] [height:calc(100vh_-_25px)] [background:var(--color-bg)] [padding:0_200px] [font-family:inherit] [overflow-x:hidden]"}>
-        <div className={"[position:fixed] [inset:0] [z-index:3000] [display:flex] [align-items:center] [justify-content:center] [background:rgba(0,_0,_0,_0.45)]"}>
+        <div className={"[position:fixed] [inset:0] [z-index:10000] [display:flex] [align-items:center] [justify-content:center] [background:rgba(0,_0,_0,_0.45)] [backdrop-filter:blur(5px)]"}>
           <div className={"[width:min(420px,_calc(100vw_-_32px))] [border:1px_solid_var(--color-border)] [border-radius:8px] [background:var(--color-bg)] [color:var(--color-text)] [padding:20px] [box-shadow:0_16px_40px_rgba(0,_0,_0,_0.35)]"}>
             <h3>게시글을 찾을 수 없습니다.</h3>
             <p>존재하지 않거나 삭제된 게시글입니다.</p>
@@ -39,7 +39,7 @@ const ChatRoomAccessState = ({
   if (!isParticipant) {
     return (
       <div className={"[display:flex] [flex-direction:column] [height:calc(100vh_-_25px)] [background:var(--color-bg)] [padding:0_200px] [font-family:inherit] [overflow-x:hidden]"}>
-        <div className={"[position:fixed] [inset:0] [z-index:3000] [display:flex] [align-items:center] [justify-content:center] [background:rgba(0,_0,_0,_0.45)]"}>
+        <div className={"[position:fixed] [inset:0] [z-index:10000] [display:flex] [align-items:center] [justify-content:center] [background:rgba(0,_0,_0,_0.45)] [backdrop-filter:blur(5px)]"}>
           <div className={"[width:min(420px,_calc(100vw_-_32px))] [border:1px_solid_var(--color-border)] [border-radius:8px] [background:var(--color-bg)] [color:var(--color-text)] [padding:20px] [box-shadow:0_16px_40px_rgba(0,_0,_0,_0.35)]"}>
             <h2 style={{ marginTop: 0 }}>{postData.title}</h2>
             {(postData.date || postData.time) && (

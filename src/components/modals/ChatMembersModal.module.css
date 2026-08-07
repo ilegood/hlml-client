@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .overlay {
-  @apply fixed inset-0 z-[3000] flex justify-end bg-black/50;
+  @apply fixed inset-0 z-[10000] flex justify-end bg-black/50 backdrop-blur-[5px];
 }
 
 .drawer {
@@ -35,7 +35,7 @@
 }
 
 .memberItem {
-  @apply flex items-center px-5 py-3 transition-colors duration-200 hover:bg-[var(--color-item-hover,rgba(255,255,255,0.05))];
+  @apply relative flex items-center px-5 py-3 transition-colors duration-200 hover:bg-[var(--color-item-hover,rgba(255,255,255,0.05))];
 }
 
 .avatarWrap {
@@ -72,26 +72,22 @@
   @apply ml-2 inline-flex items-center rounded-[10px] bg-[var(--color-active,#f39c12)] px-1.5 py-0.5 text-[0.7rem] font-bold text-white;
 }
 
-.kickBtn,
-.reportBtn,
-.blockBtn {
-  @apply invisible cursor-pointer opacity-0 transition-all duration-200 ease-in-out;
+.actionMenu {
+  @apply relative ml-auto shrink-0;
 }
 
-.memberItem:hover .kickBtn,
-.memberItem:hover .reportBtn,
-.memberItem:hover .blockBtn {
-  @apply visible opacity-100;
+.menuBtn {
+  @apply flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[22px] font-bold leading-none text-[var(--color-deactive,#07b1bc)] hover:bg-[var(--color-input-bg)] hover:text-[var(--color-text)];
 }
 
-.kickBtn {
-  @apply ml-auto rounded-md border-0 bg-[#ff4757] px-2.5 py-1 text-[12px] font-semibold text-white;
+.actionDropdown {
+  @apply absolute right-0 top-[calc(100%+4px)] z-20 flex min-w-[112px] flex-col overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-sidebar)] p-1 shadow-[0_8px_24px_rgba(0,0,0,0.28)];
 }
 
-.reportBtn {
-  @apply ml-1.5 rounded-md border border-[var(--color-deactive,#07b1bc)] bg-transparent px-2.5 py-1 text-[12px] font-semibold text-[var(--color-deactive,#07b1bc)] hover:bg-[var(--color-deactive,#07b1bc)] hover:text-white;
+.actionDropdown button {
+  @apply cursor-pointer border-0 bg-transparent px-3 py-2 text-left text-[13px] font-semibold text-[var(--color-text)] hover:bg-[var(--color-item-hover)] disabled:cursor-not-allowed disabled:opacity-50;
 }
 
-.blockBtn {
-  @apply ml-1.5 rounded-md border border-[#ff6b6b] bg-transparent px-2.5 py-1 text-[12px] font-semibold text-[#ff6b6b] hover:not-disabled:bg-[#ff6b6b] hover:not-disabled:text-white disabled:cursor-default disabled:opacity-50;
+.actionDropdown .dangerMenuItem {
+  @apply text-[#ff6b6b] hover:bg-[#ff6b6b] hover:text-white;
 }

@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import ProfileAvatar from "../ProfileAvatar";
 import ReportModal from "./ReportModal";
 
-const ModalWrapper = ({ children, ...props }) => <div {...props} className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">{children}</div>;
+const ModalWrapper = ({ children, ...props }) => <div {...props} className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">{children}</div>;
 /*
   position: fixed;
   inset: 0;

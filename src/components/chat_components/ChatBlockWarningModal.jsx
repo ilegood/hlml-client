@@ -4,7 +4,7 @@ const ChatBlockWarningModal = ({ warning, onConfirm }) => {
   if (!warning) return null;
 
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/45">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/45 backdrop-blur-[5px]">
       <div className="w-[min(420px,calc(100vw-32px))] rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-5 text-[var(--color-text)] shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
         <h3 className="mb-2.5 text-[18px]">
           차단한 사용자가 이 채팅방에 있습니다.

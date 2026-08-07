@@ -382,7 +382,7 @@ export function MediaLightbox({ attachments, index, onClose, onMove }) {
   if (!attachment) return null;
 
   return (
-    <div className={"[position:fixed] [inset:0] [z-index:6000] [display:flex] [align-items:center] [justify-content:center] [background:rgba(0,_0,_0,_0.86)] [padding:56px] [box-sizing:border-box]"} onMouseDown={onClose}>
+    <div className={"[position:fixed] [inset:0] [z-index:10000] [display:flex] [align-items:center] [justify-content:center] [background:rgba(0,_0,_0,_0.86)] [padding:56px] [box-sizing:border-box] [backdrop-filter:blur(5px)]"} onMouseDown={onClose}>
       <div className="[position:fixed] [top:18px] [right:72px] [display:flex] [gap:8px] [z-index:1]" onMouseDown={(event) => event.stopPropagation()}>
         <button type="button" className="[height:40px] [padding:0_14px] [border:none] [border-radius:8px] [background:rgba(255,_255,_255,_0.12)] [color:#fff] [font:inherit] [font-size:13px] [font-weight:800] [cursor:pointer] hover:[background:rgba(255,_255,_255,_0.22)]" onClick={() => downloadAttachment(attachment)}>{"\uC774\uBBF8\uC9C0 \uB2E4\uC6B4\uB85C\uB4DC"}</button>
         {attachments.length > 1 && <button type="button" className="[height:40px] [padding:0_14px] [border:none] [border-radius:8px] [background:rgba(255,_255,_255,_0.12)] [color:#fff] [font:inherit] [font-size:13px] [font-weight:800] [cursor:pointer] hover:[background:rgba(255,_255,_255,_0.22)]" onClick={downloadAll}>{"\uBAA8\uB450 \uB2E4\uC6B4\uB85C\uB4DC"}</button>}

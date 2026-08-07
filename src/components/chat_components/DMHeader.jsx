@@ -11,7 +11,7 @@ const DMHeader = ({
   setShowFileGallery,
   handleLeaveDM,
 }) => (
-      <div className={"[display:flex] [align-items:center] [gap:12px] [padding:30px_16px_0] [height:80px] [min-height:80px] [border-bottom:1px_solid_var(--color-border)] [background:var(--color-bg)] [box-shadow:0_1px_0_rgba(0,_0,_0,_0.1)] [z-index:1500] [position:relative] [flex-shrink:0]"}>
+      <div className={"[display:flex] [align-items:center] [gap:12px] [padding:30px_16px_0] [height:80px] [min-height:80px] [border-bottom:1px_solid_var(--color-border)] [background:var(--color-bg)] [box-shadow:0_1px_0_rgba(0,_0,_0,_0.1)] [z-index:100] [position:relative] [flex-shrink:0]"}>
         <button
           type="button"
           className={`${"[width:32px] [height:32px] [border-radius:50%] [display:flex] [align-items:center] [justify-content:center] [overflow:hidden] [flex-shrink:0]"} ${"[border:0] [padding:0] [background:transparent] [cursor:pointer]"}`}

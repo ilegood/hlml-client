@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .modalOverlay {
-  @apply fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 pointer-events-auto;
+  @apply fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-[5px] pointer-events-auto;
 }
 
 .modalContent {

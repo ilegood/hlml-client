@@ -115,7 +115,7 @@
   background: var(--color-sidebar);
   color: var(--color-text);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-  z-index: 5100;
+  z-index: 5001;
 }
 
 .sidebar.open .notificationPanel {

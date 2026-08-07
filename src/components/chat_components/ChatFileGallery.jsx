@@ -90,7 +90,7 @@ export default function ChatFileGallery({ messages, onClose }) {
 
   return (
     <>
-      <div className={"[position:fixed] [inset:0] [z-index:5200] [display:flex] [align-items:center] [justify-content:center] [padding:32px] [background:rgba(0,_0,_0,_0.45)]"} onMouseDown={onClose}>
+      <div className={"[position:fixed] [inset:0] [z-index:10000] [display:flex] [align-items:center] [justify-content:center] [padding:32px] [background:rgba(0,_0,_0,_0.45)] [backdrop-filter:blur(5px)]"} onMouseDown={onClose}>
         <section
           className={"[width:min(760px,_100%)] [max-height:min(720px,_calc(100vh_-_64px))] [display:flex] [flex-direction:column] [border:1px_solid_var(--color-border)] [border-radius:8px] [background:var(--color-sidebar)] [color:var(--color-text)] [box-shadow:0_20px_60px_rgba(0,_0,_0,_0.28)] [overflow:hidden]"}
           onMouseDown={(event) => event.stopPropagation()}

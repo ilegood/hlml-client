@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import styles from "./ChatMembersModal.module.css";
 import { getImageUrl } from "../../api/instance";
-import { blockUser, getBlockedUsers, unblockUser } from "../../api/friends";
+import { addFriend, blockUser, getBlockedUsers, unblockUser } from "../../api/friends";
 import borderImg from "../../assets/border.png";
 import UserProfileModal from "./UserProfileModal";
 import ReportModal from "./ReportModal";
@@ -20,6 +20,7 @@ export default function ChatMembersModal({
   const [reportTarget, setReportTarget] = useState(null);
   const [blockingId, setBlockingId] = useState(null);
   const [blockedIds, setBlockedIds] = useState(() => new Set());
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -84,6 +85,17 @@ export default function ChatMembersModal({
     }
   };
 
+  const handleAddFriend = async (member) => {
+    try {
+      const result = await addFriend(member.nickname);
+      toast.success(result.message || `${member.nickname}님께 친구 요청을 보냈습니다.`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "친구 요청에 실패했습니다.");
+    } finally {
+      setOpenMenuId(null);
+    }
+  };
+
   return (
     <>
       <div className={styles.overlay} onMouseDown={onClose}>
@@ -136,51 +148,73 @@ export default function ChatMembersModal({
                     </span>
                   </div>
 
-                  {isMeHost && !isHost && (
-                    <button
-                      className={styles.kickBtn}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toast(`${nickname}님을 강퇴하시겠습니까?`, {
-                          action: {
-                            label: "강퇴",
-                            onClick: () => onKick(member),
-                          },
-                          duration: 4000,
-                        });
-                      }}
-                    >
-                      강퇴
-                    </button>
-                  )}
                   {Number(member.user_id) !== Number(currentUserId) && (
-                    <>
+                    <div className={styles.actionMenu}>
                       <button
-                        className={styles.reportBtn}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setReportTarget(member);
+                        type="button"
+                        className={styles.menuBtn}
+                        aria-label={`${nickname}님 메뉴`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setOpenMenuId((current) =>
+                            current === member.user_id ? null : member.user_id,
+                          );
                         }}
                       >
-                        신고
+                        ⋮
                       </button>
-                      <button
-                        className={styles.blockBtn}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          blockedIds.has(String(member.user_id))
-                            ? handleUnblock(member)
-                            : handleBlock(member);
-                        }}
-                        disabled={blockingId === member.user_id}
-                      >
-                        {blockingId === member.user_id
-                          ? "..."
-                          : blockedIds.has(String(member.user_id))
-                            ? "차단 해제"
-                            : "차단"}
-                      </button>
-                    </>
+                      {openMenuId === member.user_id && (
+                        <div className={styles.actionDropdown} onClick={(event) => event.stopPropagation()}>
+                          <button type="button" onClick={() => handleAddFriend(member)}>
+                            친구요청
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              blockedIds.has(String(member.user_id))
+                                ? handleUnblock(member)
+                                : handleBlock(member);
+                            }}
+                            disabled={blockingId === member.user_id}
+                          >
+                            {blockingId === member.user_id
+                              ? "처리 중..."
+                              : blockedIds.has(String(member.user_id))
+                                ? "차단 해제"
+                                : "차단"}
+                          </button>
+                          {isMeHost && !isHost && (
+                            <button
+                              type="button"
+                              className={styles.dangerMenuItem}
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                toast(`${nickname}님을 강퇴하시겠습니까?`, {
+                                  action: {
+                                    label: "강퇴",
+                                    onClick: () => onKick(member),
+                                  },
+                                  duration: 4000,
+                                });
+                              }}
+                            >
+                              강퇴
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className={styles.dangerMenuItem}
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              setReportTarget(member);
+                            }}
+                          >
+                            신고
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </li>
               );
