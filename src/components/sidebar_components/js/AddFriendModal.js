@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { addFriend, searchUsers } from "../../../api/friends";
-import { getImageUrl } from "../../../api/instance";
+import ProfileAvatar from "../../ProfileAvatar";
 import styles from "../css/AddFriendModal.module.css";
 
 const AddFriendModal = ({ onClose }) => {
@@ -55,13 +55,11 @@ const AddFriendModal = ({ onClose }) => {
           {results.length > 0
             ? results.map((user) => (
                 <div key={user.id} className={styles.userItem}>
-                  <div
+                  <ProfileAvatar
+                    profileImg={user.profile_img}
+                    nickname={user.nickname}
+                    size={40}
                     className={styles.avatar}
-                    style={{
-                      backgroundImage: user.profile_img
-                        ? `url(${getImageUrl(user.profile_img)})`
-                        : "none",
-                    }}
                   />
                   <span className={styles.nickname}>{user.nickname}</span>
                   <button

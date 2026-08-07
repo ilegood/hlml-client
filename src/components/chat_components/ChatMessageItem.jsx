@@ -3,6 +3,7 @@ import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import { getImageUrl } from "../../api/instance";
 import { ChatMessageContent, MessageRowErrorBoundary } from "./ChatAttachment";
+import ProfileAvatar from "../ProfileAvatar";
 import { formatChatPreview } from "../../utils/chatPreview";
 import {
   formatTime,
@@ -11,41 +12,16 @@ import {
   isCompact,
   displayName,
 } from "../../utils/chatHelpers";
-import borderImg from "../../assets/border.png";
 
 function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
-  const url = getImageUrl(profileImg);
-  const label = displayName(nickname);
   return (
-    <div
-      className={"[position:relative] [width:40px] [height:40px] [flex-shrink:0]"}
+    <ProfileAvatar
+      profileImg={profileImg}
+      nickname={nickname}
+      size={size}
       onClick={onClick}
-      style={{ cursor: onClick ? "pointer" : "default" }}
-    >
-      {isHost && (
-        <img
-          src={borderImg}
-          className={"[position:absolute] [top:-25%] [width:150%] [height:150%] [aspect-ratio:1/1] [object-fit:contain] [transform:scale(1.35)] [transform-origin:center] [z-index:5] [pointer-events:none]"}
-          alt="host-border"
-          draggable="false"
-        />
-      )}
-      <div
-        className={"[width:100%] [height:100%] [border-radius:50%] [background:gray] [display:flex] [align-items:center] [justify-content:center] [font-size:12px] [font-weight:700] [color:white] [flex-shrink:0] [overflow:hidden] [cursor:pointer]"}
-        style={{ width: size, height: size, fontSize: size * 0.3 }}
-      >
-        {url ? (
-          <img
-            src={url}
-            alt={label}
-            className={"[display:block] [width:100%] [height:100%] [object-fit:cover]"}
-            style={{ backgroundColor: "white" }}
-          />
-        ) : (
-          label.slice(0, 2)
-        )}
-      </div>
-    </div>
+      showHostBorder={isHost}
+    />
   );
 }
 
@@ -313,7 +289,7 @@ export default function ChatMessageItem({
           <button
             type="button"
             onClick={() => navigate(`/detail/${parsed.postId}`)}
-            className={"[flex-direction:column] [width:min(500px,_100%)] [min-height:auto] [overflow:hidden] [padding:0] [cursor:pointer] [text-align:left] [gap:0]"}
+            className={"[display:flex] [flex-direction:column] [width:min(500px,_100%)] [min-height:auto] [overflow:hidden] [padding:0] [cursor:pointer] [text-align:left] [gap:0] [border:1px_solid_var(--color-border)] [border-radius:16px] [background:var(--color-sidebar)] [box-shadow:0_4px_14px_rgba(0,_0,_0,_0.08)]"}
             disabled={!parsed.postId}
           >
             {parsed.postImage && (

@@ -204,6 +204,11 @@ export const ChatNotificationProvider = ({ children }) => {
       refresh();
     });
 
+    socket.on("friend_request_received", () => {
+      window.dispatchEvent(new Event("friend-request-received"));
+      toast.info("새로운 친구 요청이 도착했습니다.");
+    });
+
     socket.on("appointment_reminder", (item) => {
       showAppointmentReminder(item);
       refresh();

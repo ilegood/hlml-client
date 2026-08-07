@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getBlockedUsers, unblockUser } from "../../../api/friends";
-import { getImageUrl } from "../../../api/instance";
+import ProfileAvatar from "../../ProfileAvatar";
 import styles from "../css/BlockedListModal.module.css";
 
 export default function BlockedListModal({ onClose }) {
@@ -60,13 +60,11 @@ export default function BlockedListModal({ onClose }) {
             blockedUsers.map((user) => (
               <div key={user.id} className={styles.item}>
                 <div className={styles.userInfo}>
-                  <div
+                  <ProfileAvatar
+                    profileImg={user.profile_img}
+                    nickname={user.nickname}
+                    size={32}
                     className={styles.image}
-                    style={{
-                      backgroundImage: user.profile_img
-                        ? `url(${getImageUrl(user.profile_img)})`
-                        : "none",
-                    }}
                   />
                   <div className={styles.name}>{user.nickname}</div>
                 </div>

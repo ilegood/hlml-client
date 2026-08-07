@@ -99,6 +99,17 @@ export const useFriendManagement = () => {
 >>>>>>> Stashed changes
 
   useEffect(() => {
+    const handleFriendRequest = () => fetchAll();
+    const handleFocus = () => fetchAll();
+    window.addEventListener("friend-request-received", handleFriendRequest);
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("friend-request-received", handleFriendRequest);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [fetchAll]);
+
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setActiveMenuId(null);
