@@ -12,6 +12,7 @@ export default function ChatMembersModal({
   onClose,
   members,
   authorNickname,
+  authorUserId,
   onKick,
   currentUserId,
 }) {
@@ -42,7 +43,11 @@ export default function ChatMembersModal({
 
   if (!isOpen) return null;
 
-  const host = members.find((member) => member.nickname === authorNickname);
+  const host = members.find((member) =>
+    authorUserId != null
+      ? Number(member.user_id) === Number(authorUserId)
+      : member.nickname === authorNickname,
+  );
   const isMeHost = Number(host?.user_id) === Number(currentUserId);
 
   const handleBlock = async (member) => {
@@ -92,7 +97,9 @@ export default function ChatMembersModal({
           <ul className={styles.memberList}>
             {members.map((member) => {
               const nickname = member.nickname || "이름 없음";
-              const isHost = nickname === authorNickname;
+              const isHost = authorUserId != null
+                ? Number(member.user_id) === Number(authorUserId)
+                : nickname === authorNickname;
 
               return (
                 <li key={member.user_id} className={styles.memberItem}>

@@ -73,6 +73,8 @@ const normalizePost = (post) => ({
     ? post.participantDetails
     : [],
   authorDetails: post.authorDetails || null,
+  authorNickname:
+    post.authorNickname || post.author || post.authorDetails?.nickname || "",
   comments: Array.isArray(post.comments)
     ? post.comments.map(normalizeComment)
     : [],

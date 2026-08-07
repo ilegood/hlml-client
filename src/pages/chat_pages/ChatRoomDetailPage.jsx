@@ -66,6 +66,7 @@ export default function ChatRoomDetailPage() {
   const [roomTitle, setRoomTitle] = useState("");
   const [roomImage, setRoomImage] = useState("");
   const [roomAuthor, setRoomAuthor] = useState("");
+  const [roomAuthorId, setRoomAuthorId] = useState(null);
   const [roomLocation, setRoomLocation] = useState(null);
   const [roomAppointment, setRoomAppointment] = useState(() =>
     normalizeRoomAppointment(),
@@ -234,10 +235,11 @@ export default function ChatRoomDetailPage() {
     });
 
     socket.on("room_info", (info) => {
-      const { title, image, author, place, latitude, longitude } = info;
+      const { title, image, author, authorId, place, latitude, longitude } = info;
       setRoomTitle(title);
       setRoomImage(image);
       setRoomAuthor(author);
+      setRoomAuthorId(authorId ?? null);
       setRoomLocation({
         place,
         latitude: latitude ? Number(latitude) : null,
@@ -1265,7 +1267,9 @@ export default function ChatRoomDetailPage() {
                     <Avatar
                       profileImg={msg.profileImg}
                       nickname={msgNickname}
-                      isHost={msgNickname === roomAuthor}
+                      isHost={roomAuthorId != null
+                        ? String(msg.userId) === String(roomAuthorId)
+                        : msgNickname === roomAuthor}
                       onClick={() => setSelectedProfileId(msg.userId)}
                     />
                   )}
@@ -1281,7 +1285,9 @@ export default function ChatRoomDetailPage() {
                       >
                         {msgNickname}
                       </span>
-                      {msgNickname === roomAuthor && (
+                      {(roomAuthorId != null
+                        ? String(msg.userId) === String(roomAuthorId)
+                        : msgNickname === roomAuthor) && (
                         <span className={styles.msgHostBadge}>방장</span>
                       )}
                       <span className={styles.msgTimestamp}>
@@ -1794,6 +1800,7 @@ export default function ChatRoomDetailPage() {
         onClose={() => setShowMembers(false)}
         members={roomMembers}
         authorNickname={roomAuthor}
+        authorUserId={roomAuthorId}
         currentUserId={userId}
         onKick={(target) => {
           socketRef.current?.emit("kick_user", {

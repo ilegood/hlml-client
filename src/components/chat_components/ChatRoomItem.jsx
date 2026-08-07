@@ -46,7 +46,7 @@ const ChatRoomItem = ({ room, onDelete, hideUnreadBadge = false }) => {
           {room.isKicked && <span className={"[display:inline-block] [margin-left:8px] [background-color:#ff4757] [color:white] [font-size:11px] [padding:2px_6px] [border-radius:4px] [font-weight:600] [vertical-align:middle]"}>강퇴됨</span>}
         </div>
         <div className={"[font-size:14px] [color:var(--color-deactive)] [white-space:nowrap] [overflow:hidden] [text-overflow:ellipsis] [opacity:0.8]"}>
-          방장: {room.authorNickname || room.author || "이름 없음"}
+          방장: {room.authorNickname || room.author || room.authorDetails?.nickname || "이름 없음"}
         </div>
       </div>
 
