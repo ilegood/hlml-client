@@ -37,7 +37,7 @@
 }
 
 .avatar {
-  @apply h-10 w-10 rounded-full bg-[#555] bg-cover bg-center;
+  @apply h-10 w-10 rounded-full bg-[var(--color-avatar-placeholder,#555)] bg-cover bg-center;
 }
 
 .nickname {

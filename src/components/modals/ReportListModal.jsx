@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
 import { toast } from "sonner";
-import instance, { getImageUrl } from "../../api/instance";
+import instance from "../../api/instance";
 import { useAuth } from "../../context/AuthContext.jsx";
+import ProfileAvatar from "../ProfileAvatar";
+import ReportModal from "./ReportModal";
 
-const ModalWrapper = styled.div`
+const ModalWrapper = ({ children, ...props }) => <div {...props} className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">{children}</div>;
+/*
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
@@ -331,7 +333,7 @@ const ModalWrapper = styled.div`
     line-height: 1;
     padding: 4px;
   }
-`;
+*/
 
 const REASON_PLACEHOLDER = "신고 사유를 선택해주세요";
 
@@ -488,13 +490,26 @@ export default function ReportListModal({ onClose, onChanged }) {
     }
   };
 
+  if (view === "form") {
+    return (
+      <ReportModal
+        allowUserSearch
+        onClose={() => setView("list")}
+        onSubmitted={() => {
+          fetchReports();
+          onChanged?.();
+        }}
+      />
+    );
+  }
+
   return (
     <ModalWrapper onMouseDown={onClose}>
-      <div className="modal-content" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="w-[480px] max-w-[calc(100vw-32px)] rounded-3xl bg-[var(--color-sidebar)] p-6 text-[var(--color-text)] shadow-[0_20px_50px_rgba(0,0,0,0.35)] [&_.header]:mb-5 [&_.header]:flex [&_.header]:items-center [&_.header]:justify-between [&_.title-row]:flex [&_.title-row]:items-center [&_.title-row]:gap-2.5 [&_h2]:m-0 [&_h2]:text-xl [&_h2]:font-extrabold [&_h2]:text-[#eb4d4b] [&_.report-list-container]:flex [&_.report-list-container]:flex-col [&_.report-list-container]:gap-4 [&_.report-form]:flex [&_.report-form]:flex-col [&_.report-form]:gap-4 [&_.report-list]:flex [&_.report-list]:max-h-[400px] [&_.report-list]:flex-col [&_.report-list]:gap-3 [&_.report-list]:overflow-y-auto [&_.report-item]:rounded-xl [&_.report-item]:border [&_.report-item]:border-[var(--color-border)] [&_.report-item]:bg-[var(--color-input-bg)] [&_.report-item]:p-4 [&_.item-top]:mb-3 [&_.item-top]:flex [&_.item-top]:items-center [&_.item-top]:justify-between [&_.reported-user]:flex [&_.reported-user]:items-center [&_.reported-user]:gap-2.5 [&_.avatar]:flex [&_.avatar]:h-9 [&_.avatar]:w-9 [&_.avatar]:shrink-0 [&_.avatar]:items-center [&_.avatar]:justify-center [&_.avatar]:overflow-hidden [&_.avatar]:rounded-full [&_.avatar]:bg-[var(--color-avatar-placeholder,#555)] [&_.avatar_img]:h-full [&_.avatar_img]:w-full [&_.avatar_img]:object-cover [&_.status-badge]:rounded-full [&_.status-badge]:bg-[#eb4d4b]/10 [&_.status-badge]:px-2.5 [&_.status-badge]:py-1 [&_.status-badge]:text-[11px] [&_.status-badge]:font-bold [&_.status-badge]:text-[#eb4d4b] [&_.summary]:mb-2 [&_.summary]:font-bold [&_.reason]:mt-2 [&_.reason]:text-[13px] [&_.reason]:text-[var(--color-deactive)] [&_.content]:mt-1 [&_.content]:text-[13px] [&_.content]:leading-5 [&_.date]:mt-3 [&_.date]:text-right [&_.date]:text-[11px] [&_.date]:text-[var(--color-deactive)] [&_.report-form_.form-group]:flex [&_.report-form_.form-group]:flex-col [&_.report-form_.form-group]:gap-2 [&_.form-group_input]:w-full [&_.form-group_input]:rounded-xl [&_.form-group_input]:border [&_.form-group_input]:border-[var(--color-border)] [&_.form-group_input]:bg-[var(--color-input-bg)] [&_.form-group_input]:p-3 [&_.form-group_input]:text-sm [&_.form-group_input]:text-[var(--color-text)] [&_.form-group_select]:w-full [&_.form-group_select]:rounded-xl [&_.form-group_select]:border [&_.form-group_select]:border-[var(--color-border)] [&_.form-group_select]:bg-[var(--color-input-bg)] [&_.form-group_select]:p-3 [&_.form-group_select]:text-sm [&_.form-group_select]:text-[var(--color-text)] [&_.form-group_textarea]:min-h-[120px] [&_.form-group_textarea]:w-full [&_.form-group_textarea]:resize-none [&_.form-group_textarea]:rounded-xl [&_.form-group_textarea]:border [&_.form-group_textarea]:border-[var(--color-border)] [&_.form-group_textarea]:bg-[var(--color-input-bg)] [&_.form-group_textarea]:p-3 [&_.form-group_textarea]:text-sm [&_.form-group_textarea]:text-[var(--color-text)] [&_.selected-user-card]:flex [&_.selected-user-card]:items-center [&_.selected-user-card]:gap-3 [&_.selected-user-card]:rounded-xl [&_.selected-user-card]:border [&_.selected-user-card]:border-[var(--color-border)] [&_.selected-user-card]:bg-[var(--color-input-bg)] [&_.selected-user-card]:p-3 [&_.search-results]:max-h-40 [&_.search-results]:overflow-y-auto [&_.result-item]:flex [&_.result-item]:cursor-pointer [&_.result-item]:items-center [&_.result-item]:gap-3 [&_.result-item]:border-b [&_.result-item]:border-[var(--color-border)] [&_.result-item]:p-3 [&_.submit-btn]:w-full [&_.submit-btn]:rounded-xl [&_.submit-btn]:border-0 [&_.submit-btn]:bg-[#eb4d4b] [&_.submit-btn]:p-3.5 [&_.submit-btn]:font-extrabold [&_.submit-btn]:text-white" onMouseDown={(e) => e.stopPropagation()}>
         <div className="header">
           <div className="title-row">
             {view === "form" && (
-              <button className="back-btn" onClick={() => setView("list")}>
+              <button className="flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[var(--color-deactive)] hover:bg-[var(--color-input-bg)] hover:text-[#eb4d4b]" onClick={() => setView("list")}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
@@ -502,7 +517,7 @@ export default function ReportListModal({ onClose, onChanged }) {
             )}
             <h2>{view === "list" ? "신고 내역" : "새 신고하기"}</h2>
           </div>
-          <button className="close-btn" onClick={onClose}>
+          <button className="flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[var(--color-deactive)] hover:bg-[var(--color-input-bg)] hover:text-[#eb4d4b]" onClick={onClose}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -518,11 +533,11 @@ export default function ReportListModal({ onClose, onChanged }) {
                   <div key={report.id || `${report.targetUserId}-${index}`} className="report-item">
                     <div className="item-top">
                       <div className="reported-user">
-                        <div className="avatar">
-                          {report.targetProfileImg && (
-                            <img src={getImageUrl(report.targetProfileImg)} alt="" />
-                          )}
-                        </div>
+                        <ProfileAvatar
+                          profileImg={report.targetProfileImg}
+                          nickname={report.targetName}
+                          size={36}
+                        />
                         <span className="name">{report.targetName}</span>
                       </div>
                       <span className="status-badge">접수완료</span>
@@ -545,14 +560,14 @@ export default function ReportListModal({ onClose, onChanged }) {
                   </div>
                 ))
               ) : (
-                <div className="empty">
-                  <span className="icon">!</span>
+                <div className="empty py-8 text-center text-sm font-semibold text-[var(--color-deactive)]">
+                  <span className="hidden">!</span>
                   <p>최근 24시간 신고 내역이 없습니다.</p>
                 </div>
               )}
             </div>
             <div className="list-footer">
-              <button className="go-report-btn" onClick={() => setView("form")}>
+              <button className="flex w-full items-center justify-center gap-2 rounded-xl border-0 bg-[#eb4d4b] p-3.5 font-extrabold text-white hover:opacity-90" onClick={() => setView("form")}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
@@ -567,6 +582,7 @@ export default function ReportListModal({ onClose, onChanged }) {
               <label>유저 검색</label>
               <input
                 type="text"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input-bg)] p-3 text-sm text-[var(--color-text)] outline-none focus:border-[#eb4d4b]"
                 placeholder="신고할 유저의 닉네임을 입력하세요"
                 value={targetUser}
                 onChange={(e) => {
@@ -578,11 +594,11 @@ export default function ReportListModal({ onClose, onChanged }) {
               />
               {selectedUser && (
                 <div className="selected-user-card">
-                  <div className="avatar">
-                    {selectedUser.profile_img && (
-                      <img src={getImageUrl(selectedUser.profile_img)} alt="" />
-                    )}
-                  </div>
+                  <ProfileAvatar
+                    profileImg={selectedUser.profile_img}
+                    nickname={selectedUser.nickname}
+                    size={36}
+                  />
                   <div className="selected-user-meta">
                     <strong>{selectedUser.nickname}</strong>
                     <span>신고 대상 선택됨</span>
@@ -590,7 +606,7 @@ export default function ReportListModal({ onClose, onChanged }) {
                   </div>
                   <button
                     type="button"
-                    className="clear-selected-user"
+                    className="ml-auto cursor-pointer rounded-md border-0 bg-transparent px-2 py-1 text-lg text-[var(--color-deactive)] hover:bg-[var(--color-border)] hover:text-[#eb4d4b]"
                     onClick={() => {
                       setTargetUser("");
                       setTargetUserId(null);
@@ -614,11 +630,11 @@ export default function ReportListModal({ onClose, onChanged }) {
                         selectUser(user);
                       }}
                     >
-                      <div className="avatar">
-                        {user.profile_img && (
-                          <img src={getImageUrl(user.profile_img)} alt="" />
-                        )}
-                      </div>
+                      <ProfileAvatar
+                        profileImg={user.profile_img}
+                        nickname={user.nickname}
+                        size={36}
+                      />
                       <span>{user.nickname}</span>
                     </div>
                   ))}
@@ -629,7 +645,7 @@ export default function ReportListModal({ onClose, onChanged }) {
 
             <div className="form-group">
               <label>신고 사유</label>
-              <select value={reason} onChange={(e) => setReason(e.target.value)}>
+              <select className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input-bg)] p-3 text-sm text-[var(--color-text)] outline-none focus:border-[#eb4d4b]" value={reason} onChange={(e) => setReason(e.target.value)}>
                 <option>{REASON_PLACEHOLDER}</option>
                 <option>부적절한 닉네임</option>
                 <option>스팸/광고</option>
@@ -642,13 +658,14 @@ export default function ReportListModal({ onClose, onChanged }) {
             <div className="form-group">
               <label>상세 내용</label>
               <textarea
+                className="min-h-[120px] w-full resize-none rounded-xl border border-[var(--color-border)] bg-[var(--color-input-bg)] p-3 text-sm text-[var(--color-text)] outline-none focus:border-[#eb4d4b]"
                 placeholder="구체적인 상황을 설명해주세요"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
               />
             </div>
 
-            <button className="submit-btn" onClick={handleSubmit}>
+            <button className="w-full rounded-xl border-0 bg-[#eb4d4b] p-3.5 font-extrabold text-white hover:opacity-90" onClick={handleSubmit}>
               신고 제출
             </button>
           </div>

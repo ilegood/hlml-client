@@ -462,8 +462,10 @@ export default function DetailPage() {
 
         <div className="[display:flex] [gap:15px]">
           <button
-            className={`[flex:1] [display:flex] [align-items:center] [justify-content:center] [gap:8px] [padding:14px] [border:2px_solid_var(--color-border)] [border-radius:14px] [background:var(--color-input-bg)] [font-size:15px] [font-weight:800] [cursor:pointer] [color:var(--color-text)] [transition:all_0.15s] disabled:[opacity:0.8] disabled:[cursor:not-allowed] ${
-              liked ? "[border-color:#ff4757] [color:#ff4757] [background:#fff1f2]" : ""
+            className={`[flex:1] [display:flex] [align-items:center] [justify-content:center] [gap:8px] [padding:14px] [border-radius:14px] [background:var(--color-input-bg)] [font-size:15px] [font-weight:800] [cursor:pointer] [transition:all_0.15s] disabled:[opacity:0.8] disabled:[cursor:not-allowed] ${
+              liked
+                ? "[border:2px_solid_#ff4757] [color:#ff4757] [background:var(--color-liked-bg)]"
+                : "[border:2px_solid_var(--color-border)] [color:var(--color-text)]"
             }`}
             onClick={toggleLike}
             disabled={isAuthor || !token || !post.user_id}
@@ -474,7 +476,7 @@ export default function DetailPage() {
             찜하기 {post.likes || 0}
           </button>
           <button
-            className="[flex:1] [display:flex] [align-items:center] [justify-content:center] [gap:8px] [padding:14px] [border:2px_solid_var(--color-border)] [border-radius:14px] [background:var(--color-input-bg)] [font-size:15px] [font-weight:800] [cursor:pointer] [color:var(--color-text)] [transition:all_0.15s] [border-color:var(--color-active)] [background:var(--color-input-focus-bg)] [color:var(--color-active)] [border-color:#ff4757] [color:#ff4757] [background:#fff1f2] [box-shadow:0_0_0_3px_rgba(255,_71,_87,_0.7)] [transform:scale(0.98)] [background:var(--color-active)] [color:white] [box-shadow:0_0_0_3px_rgba(253,_147,_25,_0.7)] disabled:[opacity:0.8] disabled:[cursor:not-allowed] disabled:[background:var(--color-input-bg)] disabled:[color:var(--color-text)] disabled:[border-color:var(--color-border)]"
+            className="[flex:1] [display:flex] [align-items:center] [justify-content:center] [gap:8px] [padding:14px] [border:2px_solid_var(--color-border)] [border-radius:14px] [background:var(--color-input-bg)] [font-size:15px] [font-weight:800] [cursor:pointer] [color:var(--color-text)] [transition:all_0.15s] hover:[border-color:var(--color-active)] hover:[background:var(--color-input-focus-bg)] disabled:[opacity:0.8] disabled:[cursor:not-allowed] disabled:[background:var(--color-input-bg)] disabled:[color:var(--color-text)] disabled:[border-color:var(--color-border)]"
             onClick={() => setIsShareModalOpen(true)}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -486,7 +488,7 @@ export default function DetailPage() {
           </button>
           <button
             className={`[flex:1] [display:flex] [align-items:center] [justify-content:center] [gap:8px] [padding:14px] [border:2px_solid_var(--color-border)] [border-radius:14px] [background:var(--color-input-bg)] [font-size:15px] [font-weight:800] [cursor:pointer] [color:var(--color-text)] [transition:all_0.15s] disabled:[opacity:0.8] disabled:[cursor:not-allowed] ${
-              joined ? "[border-color:var(--color-active)] [background:var(--color-active)] [color:white]" : ""
+              joined ? "[border-color:var(--color-active)] [background:var(--color-active)] [color:var(--color-text)]" : ""
             }`}
             onClick={handleJoinBtn}
             disabled={joinDisabled}

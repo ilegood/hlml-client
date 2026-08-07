@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useChatNotifications } from "../../context/ChatNotificationContext";
-import { BASE_URL, getImageUrl } from "../../api/instance";
+import { BASE_URL } from "../../api/instance";
 import instance from "../../api/instance";
+import ProfileAvatar from "../../components/ProfileAvatar";
 
 const mediaLabelByMime = (mimeType) => {
   if (mimeType?.startsWith("image/")) return "이미지를 보냈습니다.";
@@ -160,18 +161,13 @@ const DMsPage = () => {
                 style={{ cursor: "pointer" }}
               >
               <div style={{ position: "relative" }}>
-                <div
-                  className={"[width:70px] [height:70px] [border-radius:18px] [flex-shrink:0] [background-size:cover] [background-position:center] [overflow:hidden] [border:1px_solid_var(--color-border)]"}
-                  style={{
-                    backgroundImage: dm.targetProfileImg
-                      ? `url(${getImageUrl(dm.targetProfileImg)})`
-                      : "none",
-                  }}
-                >
-                  {!dm.targetProfileImg && (
-                    <div className={"[width:100%] [height:100%] [background:linear-gradient(135deg,_var(--color-active)_0%,_#ffb35c_100%)] [opacity:0.2]"}></div>
-                  )}
-                </div>
+                <ProfileAvatar
+                  profileImg={dm.targetProfileImg}
+                  nickname={dm.targetNickname}
+                  size={70}
+                  rounded={false}
+                  className="border border-[var(--color-border)]"
+                />
                 {onlineUsers.has(Number(dm.targetId)) && (
                   <div style={{
                     position: "absolute",

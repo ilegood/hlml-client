@@ -4,6 +4,7 @@ import styles from "./UserProfileModal.module.css";
 import { getUserActivity } from "../../api/users";
 import { addFriend } from "../../api/friends";
 import { getImageUrl } from "../../api/instance";
+import ProfileAvatar from "../ProfileAvatar";
 import { toast } from "sonner";
 
 const TAB_LABELS = {
@@ -69,13 +70,12 @@ export default function UserProfileModal({ userId, onClose, currentUserId }) {
           <>
             <div className={styles.profileHeader}>
               <div className={styles.avatarContainer}>
-                {user.profile_img ? (
-                  <img src={getImageUrl(user.profile_img)} alt={user.nickname} />
-                ) : (
-                  <span className={styles.defaultAvatar}>
-                    {user.nickname.slice(0, 1)}
-                  </span>
-                )}
+                <ProfileAvatar
+                  profileImg={user.profile_img}
+                  nickname={user.nickname}
+                  size={80}
+                  className="!h-full !w-full"
+                />
               </div>
             </div>
 

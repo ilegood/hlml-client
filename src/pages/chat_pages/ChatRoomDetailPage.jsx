@@ -15,6 +15,7 @@ import {
   MessageRowErrorBoundary,
 } from "../../components/chat_components/ChatAttachment";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
+import ProfileAvatar from "../../components/ProfileAvatar";
 import RoomSettingsModal from "../../components/modals/RoomSettingsModal";
 import ChatMembersModal from "../../components/modals/ChatMembersModal";
 import UserProfileModal from "../../components/modals/UserProfileModal";
@@ -36,38 +37,20 @@ import {
   getEditableMessageText,
   buildEditedMessageContent,
 } from "../../utils/chatHelpers";
-import borderImg from "../../assets/border.png";
 
 // ── Avatar 컴포넌트 ────────────────────────────────────────────────────────────
 
 // Avatar 컴포넌트
 function Avatar({ profileImg, nickname, isHost, size = 40, onClick }) {
-  const url = getImageUrl(profileImg);
-  const label = displayName(nickname);
   return (
-    <div
-      className={styles.avatarWrapSmall}
+    <ProfileAvatar
+      profileImg={profileImg}
+      nickname={nickname}
+      size={size}
       onClick={onClick}
-      style={{ cursor: onClick ? "pointer" : "default" }}
-    >
-      {isHost && (
-        <img
-          src={borderImg}
-          className={styles.avatarBorderSmall}
-          alt="host-border"
-        />
-      )}
-      <div
-        className={styles.msgAvatar}
-        style={{ width: size, height: size, fontSize: size * 0.3 }}
-      >
-        {url ? (
-          <img src={url} alt={label} style={{ backgroundColor: "white" }} />
-        ) : (
-          label.slice(0, 2)
-        )}
-      </div>
-    </div>
+      showHostBorder={isHost}
+      className={`${styles.avatarWrapSmall} ${styles.msgAvatar}`}
+    />
   );
 }
 

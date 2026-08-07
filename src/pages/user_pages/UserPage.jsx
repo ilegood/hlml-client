@@ -1,7 +1,6 @@
-import { getImageUrl } from "../../api/instance";
 import UserPageModals from "../../components/modals/UserPageModals";
+import ProfileAvatar from "../../components/ProfileAvatar";
 import { useUserPage } from "../../hooks/useUserPage";
-import { displayName } from "../../utils/chatHelpers";
 
 const menuButtonClass =
   "h-[200px] w-[200px] cursor-pointer rounded-[10px] border border-[var(--color-border)] bg-[var(--color-sidebar)] text-[18px] font-medium text-[var(--color-text)] shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-200 hover:-translate-y-[6px] hover:border-[var(--color-active)] hover:bg-[var(--color-active)] hover:text-white";
@@ -28,18 +27,12 @@ export default function UserPage() {
   return (
     <div className="flex h-[calc(100vh-25px)] flex-col items-center justify-center">
       <div className="mb-[50px] flex w-full items-center justify-center border-b-2 border-[var(--color-border)] pb-[50px]">
-        <div className="mr-[25px] flex h-[100px] w-[100px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[gray] text-[30px] font-bold text-white">
-          {userInfo.profile_img ? (
-            <img
-              className="block h-full w-full object-cover"
-              src={getImageUrl(userInfo.profile_img)}
-              alt={displayName(userInfo.name)}
-              style={{ backgroundColor: "white" }}
-            />
-          ) : (
-            displayName(userInfo.name).slice(0, 2)
-          )}
-        </div>
+        <ProfileAvatar
+          profileImg={userInfo.profile_img}
+          nickname={userInfo.name}
+          size={100}
+          className="mr-[25px] cursor-pointer text-[30px]"
+        />
 
         <div className="mr-[200px] flex flex-col gap-[2px] text-[var(--color-text)]">
           <h3 className="m-0">{userInfo.name} 님</h3>

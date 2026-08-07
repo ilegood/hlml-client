@@ -77,10 +77,16 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--color-avatar-placeholder, #555);
   border: 1px solid var(--color-border);
   overflow: hidden;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .preview img {

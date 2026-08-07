@@ -4,7 +4,7 @@
   flex-direction: column;
   height: calc(100vh - 25px);
   background: var(--color-bg);
-  padding: 0 200px;
+  padding: 0 clamp(16px, 8vw, 120px);
   font-family: inherit;
   overflow-x: hidden;
 }
@@ -186,6 +186,11 @@
 }
 
 @media (max-width: 900px) {
+  .chatWrap {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
   .appointmentCard {
     grid-template-columns: 1fr;
   }
@@ -390,7 +395,7 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: gray;
+  background: var(--color-avatar-placeholder, #555);
   display: flex;
   align-items: center;
   justify-content: center;

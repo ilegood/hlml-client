@@ -5,6 +5,7 @@ import AddFriendModal from "./js/AddFriendModal";
 import ReportModal from "../modals/ReportModal";
 import { useFriendManagement } from "../../hooks/useFriendManagement";
 import { displayName } from "../../utils/chatHelpers";
+import ProfileAvatar from "../ProfileAvatar";
 
 const FriendsList = () => {
   const {
@@ -82,13 +83,12 @@ const FriendsList = () => {
               </h3>
               {requests.map((req) => (
                 <div key={req.id} className={styles.requestItem}>
-                  <div className={styles.avatar}>
-                    {req.profile_img ? (
-                      <img src={getImageUrl(req.profile_img)} alt={displayName(req.name)} />
-                    ) : (
-                      displayName(req.name).slice(0, 2)
-                    )}
-                  </div>
+                  <ProfileAvatar
+                    profileImg={req.profile_img}
+                    nickname={req.name}
+                    size={32}
+                    className={styles.avatar}
+                  />
                   <span className={styles.requestName}>{req.name}</span>
                   <div className={styles.actionBtns}>
                     <button

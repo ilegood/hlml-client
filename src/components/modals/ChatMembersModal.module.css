@@ -43,7 +43,7 @@
 }
 
 .avatar {
-  @apply flex h-full w-full shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[gray] text-[12px] font-bold text-white;
+  @apply flex h-full w-full shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[var(--color-avatar-placeholder,#555)] text-[12px] font-bold text-white;
 }
 
 .avatarBorder {

@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { updateProfile } from "../../api/users";
 import { getImageUrl } from "../../api/instance";
+import ProfileAvatar from "../ProfileAvatar";
 import styles from "./ProfileEditModal.module.css";
 
 const ProfileEditModal = ({ onClose, onSave }) => {
@@ -81,7 +82,12 @@ const ProfileEditModal = ({ onClose, onSave }) => {
         {/* ── 프로필 이미지 ── */}
         <div className={styles.profileImageEdit}>
           <div className={styles.preview}>
-            {previewUrl && <img src={previewUrl} alt="preview" />}
+            <ProfileAvatar
+              profileImg={previewUrl}
+              nickname={form.nickname}
+              size={60}
+              className="!h-full !w-full"
+            />
           </div>
           <input
             type="file"

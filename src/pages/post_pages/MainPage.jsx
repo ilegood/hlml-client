@@ -136,11 +136,15 @@ export default function MainPage() {
       <div className="[margin-top:24px] [display:flex] [align-items:center] [justify-content:center] [gap:10px] [flex-wrap:wrap]">
         <button
           type="button"
-          className="[min-width:38px] [height:34px] [padding:0_12px] [border:1.5px_solid_var(--color-border)] [border-radius:20px] [background:var(--color-sidebar)] [color:var(--color-text)] [font:inherit] [font-size:12px] [font-weight:700] [cursor:pointer] [transition:border-color_0.15s,_color_0.15s,_background_0.15s] [border-color:var(--color-active)] [color:var(--color-active)] disabled:[opacity:0.45] disabled:[cursor:not-allowed]"
+          className="[display:flex] [align-items:center] [justify-content:center] [width:38px] [height:34px] [padding:0] [border:1.5px_solid_var(--color-border)] [border-radius:20px] [background:var(--color-sidebar)] [color:var(--color-active)] [cursor:pointer] [transition:border-color_0.15s,_color_0.15s,_background_0.15s] disabled:[opacity:0.45] disabled:[cursor:not-allowed]"
           onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
           disabled={currentPage === 1}
+          aria-label="이전 페이지"
+          title="이전 페이지"
         >
-          이전
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
         </button>
 
         <div className="[display:flex] [align-items:center] [gap:6px] [flex-wrap:wrap] [justify-content:center]">
@@ -162,11 +166,15 @@ export default function MainPage() {
 
         <button
           type="button"
-          className="[min-width:38px] [height:34px] [padding:0_12px] [border:1.5px_solid_var(--color-border)] [border-radius:20px] [background:var(--color-sidebar)] [color:var(--color-text)] [font:inherit] [font-size:12px] [font-weight:700] [cursor:pointer] [transition:border-color_0.15s,_color_0.15s,_background_0.15s] [border-color:var(--color-active)] [color:var(--color-active)] disabled:[opacity:0.45] disabled:[cursor:not-allowed]"
+          className="[display:flex] [align-items:center] [justify-content:center] [width:38px] [height:34px] [padding:0] [border:1.5px_solid_var(--color-border)] [border-radius:20px] [background:var(--color-sidebar)] [color:var(--color-active)] [cursor:pointer] [transition:border-color_0.15s,_color_0.15s,_background_0.15s] disabled:[opacity:0.45] disabled:[cursor:not-allowed]"
           onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
           disabled={currentPage === totalPages}
+          aria-label="다음 페이지"
+          title="다음 페이지"
         >
-          다음
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m9 18 6-6-6-6" />
+          </svg>
         </button>
       </div>
     </main>

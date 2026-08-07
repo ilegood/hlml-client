@@ -4,6 +4,7 @@ import { getImageUrl } from "../../../api/instance";
 import AddFriendModal from "./friend/hooks/AddFriendModal";
 import ReportModal from "../../modals/ReportModal";
 import { useFriendManagement } from "../../../hooks/useFriendManagement";
+import ProfileAvatar from "../../ProfileAvatar";
 
 const FriendsList = () => {
   const {
@@ -81,13 +82,11 @@ const FriendsList = () => {
               </h3>
               {requests.map((req) => (
                 <div key={req.id} className={styles.requestItem}>
-                  <div
+                  <ProfileAvatar
+                    profileImg={req.profile_img}
+                    nickname={req.name}
+                    size={32}
                     className={styles.avatar}
-                    style={{
-                      backgroundImage: req.profile_img
-                        ? `url(${getImageUrl(req.profile_img)})`
-                        : "none",
-                    }}
                   />
                   <span className={styles.requestName}>{req.name}</span>
                   <div className={styles.actionBtns}>

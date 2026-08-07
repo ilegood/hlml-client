@@ -124,6 +124,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+  margin-top: 3px;
 }
 
 .tag {
@@ -190,7 +191,7 @@
   align-items: center;
   gap: 4px;
   background: none;
-  border: 1.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 4px 10px;
   font-size: 12px;
@@ -207,11 +208,9 @@
 }
 
 .actionBtn.liked {
-  border-color: #ff4757;
+  border-color: rgba(255, 71, 87, 0.22);
   color: #ff4757;
-  background: #fff1f2;
-  box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.7); /* Increased intensity */
-  transform: scale(0.98); /* Simulate press */
+  background: var(--color-liked-bg);
 }
 
 .actionBtn:disabled {

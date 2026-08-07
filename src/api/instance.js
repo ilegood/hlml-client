@@ -29,4 +29,28 @@ instance.interceptors.request.use((config) => {
   return config;
 });
 
+instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const message = String(error.response?.data?.message || "").toLowerCase();
+    const isInvalidToken =
+      status === 401 &&
+      (message.includes("token") || message.includes("jwt") || message.includes("인증"));
+
+    if (isInvalidToken && localStorage.getItem("token")) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("auth_api_base");
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("name");
+      localStorage.removeItem("email");
+      localStorage.removeItem("bio");
+      localStorage.removeItem("profile_img");
+      window.dispatchEvent(new Event("auth:expired"));
+    }
+
+    return Promise.reject(error);
+  },
+);
+
 export default instance;

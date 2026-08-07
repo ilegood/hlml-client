@@ -46,6 +46,8 @@ export const updateFriendMemo = async (targetId, memo) => {
 };
 
 export const searchUsers = async (query) => {
-  const response = await instance.get(`/users/search?q=${query}`);
+  const response = await instance.get("/users/search", {
+    params: { q: String(query || "").trim() },
+  });
   return response.data;
 };
