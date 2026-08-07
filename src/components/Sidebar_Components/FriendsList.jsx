@@ -1,9 +1,11 @@
 import { useRef } from "react";
 import styles from "./FriendsList.module.css";
 import { getImageUrl } from "../../api/instance";
-import AddFriendModal from "../AddFriendModal";
+import AddFriendModal from "./js/AddFriendModal";
 import ReportModal from "../modals/ReportModal";
 import { useFriendManagement } from "../../hooks/useFriendManagement";
+import { displayName } from "../../utils/chatHelpers";
+import ProfileAvatar from "../ProfileAvatar";
 
 const FriendsList = () => {
   const {
@@ -13,6 +15,9 @@ const FriendsList = () => {
     isAddModalOpen,
     setIsAddModalOpen,
     isReportModalOpen,
+    setIsReportModalOpen,
+    reportedFriend,
+    setReportedFriend,
     handleToggleSidebar,
     handleAccept,
     handleReject,
@@ -46,7 +51,10 @@ const FriendsList = () => {
 
   return (
     <div className={styles.sidebarWrapper}>
-      <div ref={sidebarRef} className={`${styles.friendSidebar} ${isOpen ? styles.active : ""}`}>
+      <div
+        ref={sidebarRef}
+        className={`${styles.friendSidebar} ${isOpen ? styles.active : ""}`}
+      >
         <button className={styles.toggleBtn} onClick={handleToggleSidebar}>
           {isOpen ? "〉" : "〈"}
         </button>
@@ -75,13 +83,11 @@ const FriendsList = () => {
               </h3>
               {requests.map((req) => (
                 <div key={req.id} className={styles.requestItem}>
-                  <div
+                  <ProfileAvatar
+                    profileImg={req.profile_img}
+                    nickname={req.name}
+                    size={32}
                     className={styles.avatar}
-                    style={{
-                      backgroundImage: req.profile_img
-                        ? `url(${getImageUrl(req.profile_img)})`
-                        : "none",
-                    }}
                   />
                   <span className={styles.requestName}>{req.name}</span>
                   <div className={styles.actionBtns}>
@@ -116,14 +122,13 @@ const FriendsList = () => {
                     onClick={(e) => handleClick(e, friend)}
                   >
                     <td className={styles.avatarCell}>
-                      <div
-                        className={styles.avatar}
-                        style={{
-                          backgroundImage: friend.profile_img
-                            ? `url(${getImageUrl(friend.profile_img)})`
-                            : "none",
-                        }}
-                      />
+                      <div className={styles.avatar}>
+                        {friend.profile_img ? (
+                          <img src={getImageUrl(friend.profile_img)} alt={displayName(friend.name)} />
+                        ) : (
+                          displayName(friend.name).slice(0, 2)
+                        )}
+                      </div>
                     </td>
                     <td className={styles.nameCell}>{friend.name}</td>
                     <td
@@ -150,7 +155,7 @@ const FriendsList = () => {
                           </button>
                           <button
                             className={styles.danger}
-                            onClick={handleReport}
+                            onClick={() => handleReport(friend)}
                           >
                             신고하기
                           </button>
@@ -169,14 +174,16 @@ const FriendsList = () => {
           style={{ top: `${cardTop}px` }}
         >
           <div className={styles.detailHeader}>
-            <div
-              className={styles.detailAvatarLarge}
-              style={{
-                backgroundImage: selectedFriend?.profile_img
-                  ? `url(${getImageUrl(selectedFriend.profile_img)})`
-                  : "none",
-              }}
-            />
+            <div className={styles.detailAvatarLarge}>
+              {selectedFriend?.profile_img ? (
+                <img
+                  src={getImageUrl(selectedFriend.profile_img)}
+                  alt={displayName(selectedFriend.name)}
+                />
+              ) : (
+                displayName(selectedFriend?.name).slice(0, 2)
+              )}
+            </div>
           </div>
           <div className={styles.detailBody}>
             <h4>{selectedFriend?.name}</h4>
@@ -231,7 +238,14 @@ const FriendsList = () => {
         <AddFriendModal onClose={() => setIsAddModalOpen(false)} />
       )}
       {isReportModalOpen && (
-        <ReportModal onClose={() => setIsReportModalOpen(false)} />
+        <ReportModal
+          onClose={() => {
+            setIsReportModalOpen(false);
+            setReportedFriend(null);
+          }}
+          targetUserId={reportedFriend?.id}
+          targetName={reportedFriend?.name}
+        />
       )}
     </div>
   );
