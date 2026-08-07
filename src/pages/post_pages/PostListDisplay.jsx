@@ -1,5 +1,5 @@
-import PostCard from "../post_components/PostCard";
-import styles from "../../pages/post_pages/MainPage.module.css";
+import PostCard from "../../components/post_components/PostCard";
+import styles from "./MainPage.module.css";
 
 export default function PostListDisplay({
   filteredPosts,

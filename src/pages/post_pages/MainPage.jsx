@@ -8,7 +8,7 @@ import SortDropdown from "../../components/post_components/SortDropdown";
 import CentralMapBar from "../../components/post_components/CentralMapBar";
 import styles from "./MainPage.module.css";
 import { usePostsData } from "../../hooks/usePostsData";
-import PostListDisplay from "../../components/post_pages/PostListDisplay";
+import PostListDisplay from "./PostListDisplay";
 
 export default function MainPage() {
   const navigate = useNavigate();
