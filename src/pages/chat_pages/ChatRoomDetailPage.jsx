@@ -13,7 +13,7 @@ import Picker from "@emoji-mart/react";
 import {
   ChatMessageContent,
   MessageRowErrorBoundary,
-} from "../../components/chat_components/ChatAttachment";
+} from "../../components/chat_components/ChatMessageContent";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import RoomSettingsModal from "../../components/user_components/RoomSettingsModal";
 import ChatMembersModal from "../../hooks/ChatMembersModal";
