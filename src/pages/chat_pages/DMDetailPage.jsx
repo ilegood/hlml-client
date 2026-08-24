@@ -1,10 +1,3 @@
-﻿import { useEffect, useRef, useState, useContext, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { io } from "socket.io-client";
-import { AuthContext } from "../../context/AuthContext.jsx";
-import instance, { BASE_URL, getImageUrl } from "../../api/instance";
-import { uploadChatFile } from "../../api/chat";
-import { toast } from "sonner";
 import ChatFileGallery from "../../components/chat_components/ChatFileGallery";
 import ChatMessageList from "../../components/chat_components/ChatMessageList";
 import ChatScrollButton from "../../components/chat_components/ChatScrollButton";
@@ -18,12 +11,12 @@ import { formatChatPreview } from "../../utils/chatPreview";
 
 export default function DMDetailPage() {
   const {
-    roomId, name, userId, profileImg, messages, input, setInput,
+    roomId, name, userId, messages, input, setInput,
     targetUserId, targetNickname, targetProfileImg, targetOnline,
     replyTo, editId, hoveredMsgId, setHoveredMsgId, showEmojiPicker, setShowEmojiPicker,
     showMainEmojiPicker, setShowMainEmojiPicker, showScrollBtn,
     showFileGallery, setShowFileGallery, notificationsMuted, sending,
-    selectedProfileId, setSelectedProfileId, typingNickname, socketRef,
+    selectedProfileId, setSelectedProfileId, socketRef,
     bottomRef, messagesRef, inputRef, fileInputRef, typingEmitRef,
     pendingFiles, showAttachMenu, setShowAttachMenu, fileAccept,
     addPendingFiles, openFilePicker, removePendingFile, resizeInput,

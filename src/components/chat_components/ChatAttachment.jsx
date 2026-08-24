@@ -188,8 +188,6 @@ const createLinkPreview = (url) => {
 const getLinkPreviews = (text) =>
   extractUrls(text).map(createLinkPreview).filter(Boolean);
 
-const getLinkPreview = (text) => getLinkPreviews(text)[0] || null;
-
 const renderTextWithLinks = (value) => {
   const text = String(value || "");
   if (!text) return "";

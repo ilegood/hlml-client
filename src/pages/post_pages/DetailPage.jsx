@@ -13,7 +13,6 @@ import {
   createComment,
   deleteComment as deletePostComment,
   deletePost,
-  getPost,
   togglePostJoin,
   togglePostLike,
   updateComment as updatePostComment,

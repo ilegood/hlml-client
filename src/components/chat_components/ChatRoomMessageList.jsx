@@ -7,6 +7,7 @@ import {
 } from "./ChatAttachment";
 import { Avatar } from "./ChatMessageItem";
 import MapPreview from "../post_components/MapPreview";
+import { formatChatPreview } from "../../utils/chatPreview";
 import {
   formatTime,
   formatDate,

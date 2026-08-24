@@ -157,11 +157,6 @@ export const deletePost = async (id) => {
   return res.data;
 };
 
-export const updatePostJson = async (id, data) => {
-  const res = await instance.patch(`/posts/${id}/json`, data);
-  return res.data;
-};
-
 export const togglePostLike = async (id) => {
   const res = await instance.post(`${API_URL}/${id}/like`);
   return normalizePost(res.data);

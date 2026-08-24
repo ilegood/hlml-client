@@ -25,12 +25,4 @@ const addFriendModalJsx = {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [addFriendModalJsx, react(), tailwindcss()],
-  optimizeDeps: {
-    include: ["emoji-mart", "@emoji-mart/react", "@emoji-mart/data"],
-    esbuildOptions: {
-      loader: {
-        ".js": "jsx",
-      },
-    },
-  },
 })

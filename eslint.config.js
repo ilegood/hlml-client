@@ -24,6 +24,11 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // This app intentionally starts async data loading from effects; the
+      // React Compiler-oriented rule treats those updates as lint errors.
+      'react-hooks/set-state-in-effect': 'off',
+      // Context modules export their context and hook alongside providers.
+      'react-refresh/only-export-components': 'off',
     },
   },
 ])

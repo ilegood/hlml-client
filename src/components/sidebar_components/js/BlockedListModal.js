@@ -16,7 +16,6 @@ export default function BlockedListModal({ onClose }) {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBlockedUsers();
   }, [fetchBlockedUsers]);
 

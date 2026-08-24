@@ -58,7 +58,6 @@ export const useFriendManagement = () => {
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll();
   }, [fetchAll]);
 

@@ -7,9 +7,7 @@ import { BASE_URL } from "../api/instance";
 import { getRoomBlockWarning, uploadChatFile } from "../api/chat";
 import { leavePost, getPost, togglePostJoin } from "../api/posts";
 import { toast } from "sonner";
-import { formatChatPreview } from "../utils/chatPreview";
 import {
-  formatAppointmentDateTime,
   displayName,
   createClientMessageId,
   normalizeRoomAppointment,

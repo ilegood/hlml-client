@@ -10,7 +10,7 @@ export default function useMainPage() {
   const { userId, token } = useAuth();
   const posts = usePostsData();
 
-  const fetchOnFocus = useCallback(() => posts.fetchPosts(), [posts.fetchPosts]);
+  const fetchOnFocus = useCallback(() => posts.fetchPosts(), [posts]);
   useEffect(() => {
     window.addEventListener("focus", fetchOnFocus);
     return () => window.removeEventListener("focus", fetchOnFocus);

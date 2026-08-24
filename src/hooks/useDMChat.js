@@ -32,7 +32,7 @@ export default function useDMChat() {
   );
   const [sending, setSending] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
-  const [typingNickname, setTypingNickname] = useState("");
+  const [_typingNickname, setTypingNickname] = useState("");
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
@@ -664,10 +664,10 @@ export default function useDMChat() {
   return {
     roomId, name, userId, profileImg, messages, input, setInput,
     targetUserId, targetNickname, targetProfileImg, targetOnline,
-    replyTo, editId, hoveredMsgId, showEmojiPicker, setShowEmojiPicker,
+    replyTo, editId, hoveredMsgId, setHoveredMsgId, showEmojiPicker, setShowEmojiPicker,
     showMainEmojiPicker, setShowMainEmojiPicker, showScrollBtn,
     showFileGallery, setShowFileGallery, notificationsMuted, sending,
-    selectedProfileId, setSelectedProfileId, typingNickname, socketRef,
+    selectedProfileId, setSelectedProfileId, socketRef,
     bottomRef, messagesRef, inputRef, fileInputRef, typingEmitRef,
     pendingFiles, showAttachMenu, setShowAttachMenu, fileAccept,
     addPendingFiles, openFilePicker, removePendingFile, resizeInput,
