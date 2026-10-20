@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import MapModal from "../modals/MapModal";
 import { useAuth } from "../../context/AuthContext.jsx";
-import styles from "./CentralMapBar.module.css";
+import styles from "../Post_Components/CentralMapBar.module.css";
 import { useKakaoMap } from "../../hooks/useKakaoMap"; // Import the custom hook
 
 const CentralMapBar = () => {
