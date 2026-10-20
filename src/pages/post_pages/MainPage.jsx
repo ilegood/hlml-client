@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { togglePostLike } from "../../api/posts";
 import CategorySelector from "../../components/post_components/CategorySelector";
 import SortDropdown from "../../components/Post_Components/SortDropdown";
-import CentralMapBar from "../../components/Post_Components/CentralMapBar";
+import CentralMapBar from "../../components/post_components/CentralMapBar";
 import { usePostsData } from "../../hooks/usePostsData";
 import PostListDisplay from "../../components/post_pages/PostListDisplay";
 
