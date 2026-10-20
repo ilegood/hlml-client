@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import styles from "./MapPreview.module.css";
+import styles from "../Post_Components/MapPreview.module.css";
 
 const MapPreview = ({ latitude, longitude }) => {
   const mapRef = useRef(null);
